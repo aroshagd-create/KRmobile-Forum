@@ -1,254 +1,374 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KR Mobile Forum - 대한민국 모바일 커뮤니티</title>
-  <style>
-    :root {
-      --primary-color: #007bff;
-      --bg-color: #f8f9fa;
-      --card-bg: #ffffff;
-      --text-color: #333333;
-      --border-color: #e9ecef;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KMW FORUM - Korean Mobile Works</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #0a0d14;
+            --panel-bg: #121824;
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --accent-cyan: #00f2fe;
+            --accent-orange: #ff9f43;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+        }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      line-height: 1.6;
-    }
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Pretendard', -apple-system, sans-serif;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 50% 0%, rgba(0, 242, 254, 0.05) 0%, transparent 60%);
+            background-attachment: fixed;
+        }
 
-    /* Header */
-    header {
-      background-color: var(--card-bg);
-      border-bottom: 1px solid var(--border-color);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
+        /* 🔝 상단 네비게이션 헤더 */
+        header {
+            background: rgba(18, 24, 36, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--panel-border);
+            height: 64px;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
 
-    .header-container {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--accent-cyan);
+            letter-spacing: 1px;
+            cursor: pointer;
+        }
 
-    .logo {
-      font-size: 1.4rem;
-      font-weight: bold;
-      color: var(--primary-color);
-      text-decoration: none;
-    }
+        /* 💻 PC 메뉴 */
+        .pc-menu {
+            display: flex;
+            gap: 28px;
+            list-style: none;
+        }
 
-    nav a {
-      margin-left: 1rem;
-      text-decoration: none;
-      color: #666;
-      font-size: 0.95rem;
-    }
+        .pc-menu a {
+            color: var(--text-sub);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
 
-    nav a:hover {
-      color: var(--primary-color);
-    }
+        .pc-menu a:hover, .pc-menu a.active {
+            color: var(--text-main);
+        }
 
-    /* Main Content */
-    .container {
-      max-width: 1000px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-      display: grid;
-      grid-template-columns: 3fr 1fr;
-      gap: 1.5rem;
-    }
+        /* 📱 모바일 메뉴 버튼 & 드롭다운 */
+        .mobile-toggle-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+        }
 
-    @media (max-width: 768px) {
-      .container {
-        grid-template-columns: 1fr;
-      }
-    }
+        .mobile-dropdown {
+            display: none;
+            position: absolute;
+            top: 64px;
+            right: 16px;
+            width: 180px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            overflow: hidden;
+            z-index: 1001;
+        }
 
-    /* Board / Post List */
-    .card {
-      background: var(--card-bg);
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-      padding: 1.2rem;
-      margin-bottom: 1.5rem;
-    }
+        .mobile-dropdown a {
+            display: block;
+            padding: 14px 20px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--panel-border);
+        }
 
-    .card-title {
-      font-size: 1.1rem;
-      margin-bottom: 1rem;
-      font-weight: bold;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+        .mobile-dropdown a:last-child {
+            border-bottom: none;
+        }
 
-    .write-btn {
-      background-color: var(--primary-color);
-      color: white;
-      border: none;
-      padding: 0.4rem 0.8rem;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
+        .mobile-dropdown a:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--accent-cyan);
+        }
 
-    .post-list {
-      list-style: none;
-    }
+        /* 📱 모바일 반응형 처리 */
+        @media (max-width: 768px) {
+            .pc-menu {
+                display: none;
+            }
+            .mobile-toggle-btn {
+                display: block;
+            }
+            .mobile-dropdown.active {
+                display: block;
+            }
+        }
 
-    .post-item {
-      padding: 0.8rem 0;
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+        /* 🏠 메인 컨테이너 레이아웃 */
+        .main-wrapper {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 36px 20px 80px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
 
-    .post-item:last-child {
-      border-bottom: none;
-    }
+        /* ℹ️ 1. Info 영역 */
+        .info-section {
+            text-align: center;
+            padding: 20px 10px 10px;
+        }
 
-    .post-info {
-      display: flex;
-      flex-direction: column;
-    }
+        .info-tag {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
 
-    .post-title {
-      text-decoration: none;
-      color: var(--text-color);
-      font-weight: 500;
-      margin-bottom: 0.2rem;
-    }
+        .info-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 32px;
+            font-weight: 900;
+            line-height: 1.2;
+            margin-bottom: 12px;
+            background: linear-gradient(180deg, #ffffff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-    .post-title:hover {
-      color: var(--primary-color);
-    }
+        .info-desc {
+            font-size: 15px;
+            color: var(--text-sub);
+            line-height: 1.6;
+        }
 
-    .post-meta {
-      font-size: 0.8rem;
-      color: #888;
-    }
+        /* 📦 2 & 3. HRR / LRR 카드 박스 */
+        .card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 28px 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, border-color 0.2s;
+        }
 
-    .badge {
-      background: #e7f1ff;
-      color: var(--primary-color);
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: bold;
-    }
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
 
-    /* Sidebar */
-    .sidebar .card {
-      margin-bottom: 1rem;
-    }
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
 
-    /* Footer */
-    footer {
-      text-align: center;
-      padding: 2rem 1rem;
-      color: #888;
-      font-size: 0.85rem;
-      border-top: 1px solid var(--border-color);
-      margin-top: 3rem;
-    }
-  </style>
+        .card-badge {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .badge-hrr {
+            background: rgba(0, 242, 254, 0.15);
+            color: var(--accent-cyan);
+        }
+
+        .badge-lrr {
+            background: rgba(255, 159, 67, 0.15);
+            color: var(--accent-orange);
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .card-text {
+            font-size: 14px;
+            color: var(--text-sub);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        /* 버튼 스타일 */
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px 0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: opacity 0.2s;
+        }
+
+        .btn-hrr {
+            background: var(--accent-cyan);
+            color: #000;
+        }
+
+        .btn-lrr {
+            background: var(--accent-orange);
+            color: #000;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        /* 섹션 전환 처리 (임시 리스트 영역) */
+        .page-section {
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+        }
+    </style>
 </head>
 <body>
 
-  <header>
-    <div class="header-container">
-      <a href="#" class="logo">KR Mobile Forum</a>
-      <nav>
-        <a href="#">자유게시판</a>
-        <a href="#">기기 정보</a>
-        <a href="#">질문/답변</a>
-        <a href="#">로그인</a>
-      </nav>
-    </div>
-  </header>
+    <header>
+        <div class="logo" onclick="showSection('home')">KMW FORUM</div>
 
-  <div class="container">
-    
-    <main>
-      <div class="card">
-        <div class="card-title">
-          <span>📱 최신 모바일 소식 & 게시글</span>
-          <button class="write-btn" onclick="alert('글쓰기 기능은 준비 중입니다.')">글쓰기</button>
-        </div>
-        
-        <ul class="post-list">
-          <li class="post-item">
-            <div class="post-info">
-              <a href="#" class="post-title">[자유] 이번 최신 모바일 기기 성능 어떤가요?</a>
-              <span class="post-meta">작성자: 유저1 • 10분 전</span>
-            </div>
-            <span class="badge">자유</span>
-          </li>
-          <li class="post-item">
-            <div class="post-info">
-              <a href="#" class="post-title">[정보] 2026년 하반기 스마트폰 업데이트 일정 정리</a>
-              <span class="post-meta">작성자: 관리자 • 1시간 전</span>
-            </div>
-            <span class="badge">정보</span>
-          </li>
-          <li class="post-item">
-            <div class="post-info">
-              <a href="#" class="post-title">[질문] 커스텀 도메인 연결 시 SSL 연결 문제 해결법</a>
-              <span class="post-meta">작성자: 개발자 • 2시간 전</span>
-            </div>
-            <span class="badge">질문</span>
-          </li>
-          <li class="post-item">
-            <div class="post-info">
-              <a href="#" class="post-title">[팁] 배터리 수명 오래 유지하는 설정 3가지</a>
-              <span class="post-meta">작성자: 모바일러 • 3시간 전</span>
-            </div>
-            <span class="badge">팁</span>
-          </li>
+        <ul class="pc-menu">
+            <li><a href="#" onclick="showSection('hrr')">HRR 리스트</a></li>
+            <li><a href="#" onclick="showSection('lrr')">LRR 리스트</a></li>
+            <li><a href="#" onclick="showSection('stats')">스탯랭킹</a></li>
+            <li><a href="https://discord.gg/FpqRcxDXwa" target="_blank">Discord</a></li>
         </ul>
-      </div>
-    </main>
 
-    <aside class="sidebar">
-      <div class="card">
-        <div class="card-title">📢 공지사항</div>
-        <p style="font-size: 0.9rem; color: #555;">
-          KR Mobile Forum 커뮤니티에 오신 것을 환영합니다! 클린한 포럼 환경을 위해 규칙을 준수해 주세요.
-        </p>
-      </div>
+        <button class="mobile-toggle-btn" id="menuBtn">☰</button>
 
-      <div class="card">
-        <div class="card-title">🔥 인기 키워드</div>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <span class="badge">#스마트폰</span>
-          <span class="badge">#태블릿</span>
-          <span class="badge">#업데이트</span>
-          <span class="badge">#GitHub</span>
+        <div class="mobile-dropdown" id="mobileMenu">
+            <a href="#" onclick="showSection('hrr')">HRR 리스트</a>
+            <a href="#" onclick="showSection('lrr')">LRR 리스트</a>
+            <a href="#" onclick="showSection('stats')">스탯랭킹</a>
+            <a href="https://discord.gg/FpqRcxDXwa" target="_blank">Discord</a>
         </div>
-      </div>
-    </aside>
+    </header>
 
-  </div>
+    <div id="homeView" class="page-section active">
+        <div class="main-wrapper">
+            
+            <section class="info-section">
+                <div class="info-tag">KOREAN MOBILE WORKS</div>
+                <h1 class="info-title">KMW FORUM</h1>
+                <p class="info-desc">
+                    지오메트리 대시 한국 모바일 포럼에 오신 것을 환영합니다!<br>
+                    원하시는 주사율 리스트를 선택해 접속하세요.
+                </p>
+            </section>
 
-  <footer>
-    <p>&copy; 2026 KR Mobile Forum. All rights reserved.</p>
-  </footer>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-badge badge-hrr">90Hz+</span>
+                    <h2 class="card-title">📱 HRR List</h2>
+                </div>
+                <p class="card-text">
+                    고주사율(90Hz 이상) 모바일 기기로 달성한 등재 맵 목록 및 클리어 순위표를 확인합니다.
+                </p>
+                <button class="btn btn-hrr" onclick="showSection('hrr')">HRR 리스트 바로가기 →</button>
+            </div>
 
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-badge badge-lrr">60Hz</span>
+                    <h2 class="card-title">📱 LRR List</h2>
+                </div>
+                <p class="card-text">
+                    저주사율(60Hz 이하) 모바일 기기로 달성한 등재 맵 목록 및 클리어 순위표를 확인합니다.
+                </p>
+                <button class="btn btn-lrr" onclick="showSection('lrr')">LRR 리스트 바로가기 →</button>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="hrrView" class="page-section">
+        <div class="main-wrapper" style="text-align: center;">
+            <h2 style="font-family: 'Orbitron'; color: var(--accent-cyan); font-size: 28px;">HRR LIST</h2>
+            <p style="color: var(--text-sub); margin-top: 10px;">90Hz+ Google Sheet 데이터 연동 공간입니다.</p>
+            <button class="btn btn-hrr" style="margin-top: 30px;" onclick="showSection('home')">← 메인으로 돌아가기</button>
+        </div>
+    </div>
+
+    <div id="lrrView" class="page-section">
+        <div class="main-wrapper" style="text-align: center;">
+            <h2 style="font-family: 'Orbitron'; color: var(--accent-orange); font-size: 28px;">LRR LIST</h2>
+            <p style="color: var(--text-sub); margin-top: 10px;">60Hz Google Sheet 데이터 연동 공간입니다.</p>
+            <button class="btn btn-lrr" style="margin-top: 30px;" onclick="showSection('home')">← 메인으로 돌아가기</button>
+        </div>
+    </div>
+
+    <script>
+        // 모바일 메뉴 드롭다운 토글
+        const menuBtn = document.getElementById('menuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            mobileMenu.classList.toggle('active');
+        });
+
+        document.addEventListener('click', () => {
+            mobileMenu.classList.remove('active');
+        });
+
+        // 페이지 섹션 전환 스크립트
+        function showSection(sectionName) {
+            document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+            mobileMenu.classList.remove('active');
+
+            if (sectionName === 'hrr') {
+                document.getElementById('hrrView').classList.add('active');
+            } else if (sectionName === 'lrr') {
+                document.getElementById('lrrView').classList.add('active');
+            } else {
+                document.getElementById('homeView').classList.add('active');
+            }
+        }
+    </script>
 </body>
 </html>
- 
