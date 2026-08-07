@@ -368,19 +368,28 @@
             
             mapDataList = [];
             let currentRank = 1;
+            let foundStart = false;
 
-            // Waterfall이 있는 행부터 정확히 시작하도록 고정 (인덱스 2)
-            for (let i = 2; i < rows.length; i++) {
+            for (let i = 0; i < rows.length; i++) {
                 const row = rows[i].c;
                 if (!row || !row[0] || !row[0].v) continue;
 
                 const levelName = String(row[0].v).trim();
+
+                // 'Waterfall'을 만나거나 그 이후부터 진짜 레벨 데이터로 인정
+                if (!foundStart) {
+                    if (levelName.toLowerCase() === 'waterfall') {
+                        foundStart = true;
+                    } else {
+                        continue;
+                    }
+                }
                 
-                if (levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
-                    break;
+                if (levelName.toLowerCase() === 'levels' || levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
+                    continue;
                 }
 
-                // [수정 완료] 숫자가 아니거나 '1 (Or 2)'처럼 괄호가 섞여 있어도 텍스트 그대로 안전하게 읽어오도록 수정
+                // 텍스트 그대로 안전하게 읽어오기 ('1 (Or 2)' 같은 표현도 깨지지 않음)
                 const totalVictors = (row[1] && row[1].v !== null) ? String(row[1].v).trim() : '0';
                 const aredlPlacement = (row[2] && row[2].v !== null) ? String(row[2].v) : '';
 
