@@ -346,17 +346,26 @@
                 const totalVictors = cols[1] || '0';
                 const aredlPlacement = cols[2] || '';
 
+                // F열(인덱스 5)부터 셀들을 탐색하여 이름과 링크 매핑
                 const rawVictors = cols.slice(5).filter(cell => cell && cell.length > 0);
                 const victors = [];
+                let firstVideoUrl = null;
 
                 rawVictors.forEach(item => {
                     const cleanItem = item.trim();
                     const isUrl = cleanItem.startsWith('http');
                     
-                    victors.push({
-                        name: isUrl ? 'Victor Record' : cleanItem,
-                        link: isUrl ? cleanItem : null
-                    });
+                    if (isUrl) {
+                        if (!firstVideoUrl) firstVideoUrl = cleanItem;
+                        // 직전 클리어자의 링크로 바인딩하거나 독립 링크 항목 생성
+                        if (victors.length > 0 && !victors[victors.length - 1].link) {
+                            victors[victors.length - 1].link = cleanItem;
+                        } else {
+                            victors.push({ name: 'Victor Record', link: cleanItem });
+                        }
+                    } else {
+                        victors.push({ name: cleanItem, link: null });
+                    }
                 });
 
                 mapDataList.push({
@@ -365,10 +374,10 @@
                     aredl: aredlPlacement,
                     totalVictors: totalVictors,
                     listPoints: '-',
+                    videoUrl: firstVideoUrl, // 첫 번째로 감지된 영상 링크 저장
                     victors: victors
                 });
 
-                // 🎯 HRR 리스트의 마지막 맵인 Red World 파싱 후 종료
                 if (levelName.trim().toLowerCase() === 'red world') {
                     break;
                 }
@@ -423,8 +432,9 @@
             document.getElementById('totalVictorsCount').innerText = map.totalVictors;
             document.getElementById('listPoints').innerText = map.listPoints;
 
+            // 영상 연결: 추출된 videoUrl 활용
             const videoBox = document.getElementById('videoContainer');
-            let targetVideo = map.victors.find(v => v.link !== null)?.link || null;
+            let targetVideo = map.videoUrl;
 
             if (targetVideo && targetVideo.includes('youtu')) {
                 const videoId = extractYoutubeId(targetVideo);
@@ -437,6 +447,7 @@
                 videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
             }
 
+            // 첫 번째 클리어자 이름 표시
             if (map.victors.length > 0) {
                 document.getElementById('firstVictorName').innerText = map.victors[0].name;
             } else {
