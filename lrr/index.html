@@ -43,7 +43,13 @@
             z-index: 1000;
         }
 
-        .logo { font-family: 'Orbitron'; font-size: 20px; font-weight: 900; color: var(--accent-orange); text-decoration: none; }
+        .logo { 
+            font-family: 'Orbitron'; 
+            font-size: 20px; 
+            font-weight: 900; 
+            color: var(--accent-orange); 
+            text-decoration: none; 
+        }
 
         .container {
             display: flex;
@@ -80,7 +86,12 @@
             font-size: 14px;
         }
 
-        .map-list { flex-grow: 1; overflow-y: auto; list-style: none; }
+        .map-list { 
+            flex-grow: 1; 
+            overflow-y: auto; 
+            list-style: none; 
+        }
+
         .map-item {
             padding: 14px 18px;
             border-bottom: 1px solid var(--panel-border);
@@ -90,9 +101,23 @@
             align-items: center;
             gap: 12px;
         }
+
         .map-item:hover, .map-item.active { background: rgba(255, 159, 67, 0.1); }
-        .map-item .rank { font-family: 'Orbitron'; color: var(--accent-orange); font-weight: 800; font-size: 14px; flex-shrink: 0; min-width: 45px; }
-        .map-item .title { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .map-item .rank { 
+            font-family: 'Orbitron'; 
+            color: var(--accent-orange); 
+            font-weight: 800; 
+            font-size: 14px; 
+            flex-shrink: 0; 
+            min-width: 45px; 
+        }
+        .map-item .title { 
+            font-weight: 700; 
+            font-size: 15px; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+        }
 
         .toggle-btn {
             position: absolute;
@@ -107,6 +132,7 @@
             cursor: pointer;
             transition: left 0.3s ease;
         }
+
         .sidebar.collapsed + .toggle-btn { left: 0; }
 
         .main-content {
@@ -168,7 +194,7 @@
         .video-box iframe { width: 100%; height: 100%; border: none; }
 
         .info-side { display: flex; flex-direction: column; gap: 16px; }
-        
+
         .stat-card {
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
@@ -331,14 +357,14 @@
 
                 currentRank++;
 
-                // 🎯 Precipitance를 추가한 뒤 그 아래 행부터는 파싱 완전 종료
+                // 🎯 Precipitance를 리스트에 담은 후 그 아래 행들은 완전히 파싱 종료
                 if (levelName.trim().toLowerCase() === 'precipitance') {
                     break;
                 }
             }
 
             renderSidebar(mapDataList);
-            
+
             const hash = window.location.hash.replace('#', '');
             const targetIndex = hash ? parseInt(hash) - 1 : 0;
             selectMap(Math.max(0, targetIndex));
@@ -371,7 +397,7 @@
             });
 
             document.getElementById('mapTitle').innerText = `${map.rank}. ${map.title}`;
-            
+
             const aredlBadge = document.getElementById('mapAredlBadge');
             if (map.aredl && map.aredl !== '-') {
                 aredlBadge.innerText = `AREDL ${map.aredl}`;
@@ -415,7 +441,7 @@
                 const item = document.createElement('div');
                 item.className = 'victor-item';
                 const rankSpan = `<span class="victor-rank">${idx + 1}.</span>`;
-                
+
                 let nameEl = v.link 
                     ? `<a href="${v.link}" target="_blank" class="victor-name has-link">${v.name}</a>`
                     : `<span class="victor-name">${v.name}</span>`;
