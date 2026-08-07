@@ -322,27 +322,6 @@
             }
         }
 
-        // CSV 한 줄을 따옴표 고려하여 정확하게 분할하는 함수
-        function parseCSVLine(line) {
-            const result = [];
-            let current = '';
-            let inQuotes = false;
-
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-                if (char === '"') {
-                    inQuotes = !inQuotes;
-                } else if (char === ',' && !inQuotes) {
-                    result.push(current.trim());
-                    current = '';
-                } else {
-                    current += char;
-                }
-            }
-            result.push(current.trim());
-            return result.map(c => c.replace(/^"(.*)"$/, '$1').trim());
-        }
-
         function parseCSV(text) {
             const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
             mapDataList = [];
@@ -350,7 +329,7 @@
             let currentRank = 1;
 
             for (let i = 2; i < lines.length; i++) {
-                const cols = parseCSVLine(lines[i]);
+                const cols = lines[i].split(',').map(c => c.replace(/^"(.*)"$/, '$1').trim());
                 const levelName = cols[0];
 
                 if (!levelName) continue;
@@ -362,21 +341,14 @@
                 const totalVictors = cols[1] || '0';
                 const aredlPlacement = cols[2] || '';
 
-                // E열(index 4)부터 클리어자 목록 시작 (빈 항목 제거)
-                const rawVictors = cols.slice(4).filter(cell => cell && cell.length > 0);
-
-                // 노트/비고 등 특수 문구 제거 및 클리어자 추출
-                const victors = [];
-                for (const item of rawVictors) {
-                    // 순수 클리어자 링크나 이름만 수집
-                    if (item.toLowerCase().includes('noclip') || item.includes('"')) {
-                        continue; // 비고 문구 제외
-                    }
-                    victors.push({
-                        name: item,
-                        link: item.startsWith('http') ? item : null
-                    });
-                }
+                // 구글 시트 구조: E열(index 4)은 노트/비고, F열(index 5)부터 실제 클리어자 데이터 시작
+                // Acu 등 E열이 비어있는 경우를 대응하기 위해, F열부터 탐색하되 유효한 값들을 클리어자로 수집
+                const victorRawCells = cols.slice(5).filter(cell => cell && cell.length > 0);
+                
+                const victors = victorRawCells.map(item => ({
+                    name: item,
+                    link: item.startsWith('http') ? item : null
+                }));
 
                 mapDataList.push({
                     rank: `#${currentRank}`,
@@ -388,7 +360,6 @@
 
                 currentRank++;
 
-                // 🎯 Red World를 리스트에 담은 후 그 아래 행들은 완전히 파싱 종료
                 if (levelName.trim().toLowerCase() === 'red world') {
                     break;
                 }
