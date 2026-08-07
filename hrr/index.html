@@ -285,6 +285,7 @@
     </div>
 
     <script>
+        // HRR 구글 시트 ID
         const HRR_SHEET_ID = '1f1lwB1kbOpD4IWBiTf-D3wDeqpCA5nz-fkNIhr4ZO14';
         const CSV_URL = `https://docs.google.com/spreadsheets/d/${HRR_SHEET_ID}/export?format=csv&gid=0`;
 
@@ -302,7 +303,7 @@
             }
         }
 
-        // 따옴표와 쉼표 처리가 완전한 정식 CSV 파서
+        // CSV 정규식 기반 토큰 분리기 (쉼표 및 큰따옴표 완벽 대처)
         function parseCSVLine(line) {
             const values = [];
             let current = '';
@@ -340,25 +341,25 @@
 
                 if (!levelName) continue;
 
+                // 시트 하단의 부가 정보 텍스트가 나오면 중단
                 if (levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
                     break;
                 }
 
-                /* [구글 시트 열 매핑]
-                  A열(cols[0]): Levels (맵 이름)
-                  B열(cols[1]): Total Victors (총 클리어 수)
-                  C열(cols[2]): Aredl Placements (AREDL 순위)
-                  D열(cols[3]): HRR List Placements (List Points)
-                  E열(cols[4]): Notes / 비고
-                  F열(cols[5]): Video Links (최초 클리어 영상 링크)
-                  G열~(cols[6]~): Victors (클리어자 이름 및 개별 링크)
+                /* [HRR 시트 열 매핑]
+                   A(cols[0]): 맵 이름 (Levels)
+                   B(cols[1]): 클리어 수 (Total Victors)
+                   C(cols[2]): AREDL 순위
+                   D(cols[3]): HRR List Points
+                   E(cols[4]): 비고 (Notes)
+                   F(cols[5]): 최초 클리어 대표 영상 URL
+                   G~(cols[6]~): Victors 클리어자 명단 및 개인 링크
                 */
                 const totalVictors = cols[1] || '0';
                 const aredlPlacement = cols[2] || '';
                 const listPoints = cols[3] || '-';
                 const mainVideoUrl = cols[5] || '';
 
-                // G열부터 클리어자 목록 시작
                 const rawVictors = cols.slice(6).filter(cell => cell && cell.length > 0);
                 const victors = rawVictors.map(item => {
                     const cleanItem = item.replace(/^"(.*)"$/, '$1').trim();
@@ -382,8 +383,6 @@
             }
 
             renderSidebar(mapDataList);
-            
-            // 뒤로가기/URL Hash 대응
             handleHashChange();
         }
 
@@ -391,7 +390,6 @@
             const listEl = document.getElementById('mapList');
             listEl.innerHTML = '';
             data.forEach((map) => {
-                // 검색 시 인덱스 꼬임 방지를 위해 원본 인덱스 참조
                 const originalIndex = mapDataList.findIndex(m => m.rank === map.rank);
                 const li = document.createElement('li');
                 li.className = 'map-item';
@@ -409,7 +407,6 @@
             const map = mapDataList[index];
             if (!map) return;
 
-            // URL Hash 업데이트 (뒤로가기/앞으로가기 지원)
             if (window.location.hash !== `#${index + 1}`) {
                 history.pushState(null, null, `#${index + 1}`);
             }
@@ -432,7 +429,7 @@
             document.getElementById('totalVictorsCount').innerText = map.totalVictors;
             document.getElementById('listPoints').innerText = map.listPoints;
 
-            // 영상 영역 처리 (F열의 Video URL 우선, 없을 경우 첫 클리어자 링크 확인)
+            // 영상 연결
             const videoBox = document.getElementById('videoContainer');
             let targetVideo = map.videoUrl;
 
@@ -451,7 +448,7 @@
                 videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
             }
 
-            // 최초 클리어자 이름 표시 (첫 번째 Victor 이름)
+            // 최초 클리어자 처리
             if (map.victors.length > 0) {
                 document.getElementById('firstVictorName').innerText = map.victors[0].name;
             } else {
@@ -484,7 +481,6 @@
             });
         }
 
-        // 유튜브 일반 URL, Short, embed 형태 모두 파싱 가능
         function extractYoutubeId(url) {
             const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
             const match = url.match(regExp);
@@ -501,7 +497,6 @@
             document.getElementById('arrowIcon').innerText = box.classList.contains('active') ? '▲' : '▼';
         }
 
-        // 검색 기능 (검색 시에도 원래 클릭 인덱스가 유지됨)
         function filterMaps() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const filtered = mapDataList.filter(m => m.title.toLowerCase().includes(query));
@@ -516,7 +511,6 @@
             }
         }
 
-        // 브라우저 뒤로가기 / 앞으로가기 이벤트 핸들링
         window.addEventListener('hashchange', handleHashChange);
 
         loadSheetData();
