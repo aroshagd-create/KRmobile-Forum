@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LRR List - KRM FORUM</title>
+    <title>KRM FORUM</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
@@ -25,6 +25,7 @@
             color: var(--text-main);
             font-family: 'Pretendard', sans-serif;
             min-height: 100vh;
+            background-image: radial-gradient(circle at 50% 20%, rgba(0, 242, 254, 0.08) 0%, transparent 65%);
             display: flex;
             flex-direction: column;
         }
@@ -33,8 +34,8 @@
             background: rgba(18, 24, 36, 0.85);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--panel-border);
-            height: 64px;
-            padding: 0 24px;
+            height: 72px;
+            padding: 0 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -43,420 +44,134 @@
             z-index: 1000;
         }
 
-        .logo { font-family: 'Orbitron'; font-size: 20px; font-weight: 900; color: var(--accent-orange); text-decoration: none; }
-
-        .container {
-            display: flex;
-            flex-grow: 1;
-            height: calc(100vh - 64px);
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* ⬅️ 접을 수 있는 사이드바 */
-        .sidebar {
-            width: 340px;
-            background: var(--panel-bg);
-            border-right: 1px solid var(--panel-border);
-            display: flex;
-            flex-direction: column;
-            transition: margin-left 0.3s ease;
-            z-index: 10;
-        }
-
-        .sidebar.collapsed { margin-left: -340px; }
-
-        .sidebar-header {
-            padding: 16px;
-            border-bottom: 1px solid var(--panel-border);
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 10px 14px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--panel-border);
-            border-radius: 8px;
-            color: #fff;
-            font-size: 14px;
-        }
-
-        .map-list { flex-grow: 1; overflow-y: auto; list-style: none; }
-        .map-item {
-            padding: 14px 18px;
-            border-bottom: 1px solid var(--panel-border);
-            cursor: pointer;
-            transition: background 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .map-item:hover, .map-item.active { background: rgba(255, 159, 67, 0.1); }
-        .map-info { display: flex; align-items: center; gap: 8px; overflow: hidden; }
-        .map-item .rank { font-family: 'Orbitron'; color: var(--accent-orange); font-weight: 800; font-size: 14px; flex-shrink: 0; }
-        .map-item .title { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .aredl-tag { font-family: 'Orbitron'; color: var(--accent-orange); font-size: 11px; font-weight: 700; flex-shrink: 0; margin-left: 6px; }
-
-        .toggle-btn {
-            position: absolute;
-            left: 340px;
-            top: 16px;
-            z-index: 20;
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            color: var(--text-main);
-            padding: 8px 12px;
-            border-radius: 0 8px 8px 0;
-            cursor: pointer;
-            transition: left 0.3s ease;
-        }
-        .sidebar.collapsed + .toggle-btn { left: 0; }
-
-        /* ➡️ 메인 콘텐츠 영역 */
-        .main-content {
-            flex-grow: 1;
-            padding: 40px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .content-box { width: 100%; max-width: 960px; }
-
-        .map-header-row {
-            display: flex;
-            align-items: baseline;
-            gap: 16px;
-            margin-bottom: 28px;
-            flex-wrap: wrap;
-        }
-
-        .map-main-title {
+        .logo {
             font-family: 'Orbitron', sans-serif;
-            font-size: 36px;
+            font-size: 22px;
             font-weight: 900;
-        }
-
-        .map-aredl-badge {
-            font-family: 'Orbitron';
-            color: var(--accent-orange);
-            font-size: 18px;
-            font-weight: 800;
-            background: rgba(255, 159, 67, 0.12);
-            padding: 4px 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 159, 67, 0.3);
-        }
-
-        .detail-grid {
-            display: grid;
-            grid-template-columns: 16fr 9fr;
-            gap: 24px;
-            margin-bottom: 32px;
-        }
-
-        .video-box {
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            background: #000;
-            border-radius: 16px;
-            overflow: hidden;
-            border: 1px solid var(--panel-border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-sub);
-        }
-
-        .video-box iframe { width: 100%; height: 100%; border: none; }
-
-        .info-side { display: flex; flex-direction: column; gap: 16px; }
-        
-        .stat-card {
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            border-radius: 16px;
-            padding: 20px;
-        }
-
-        .stat-label { font-size: 13px; color: var(--text-sub); margin-bottom: 6px; font-weight: 600; }
-        .stat-value { font-size: 22px; font-weight: 800; }
-
-        .victors-btn {
-            width: 100%;
-            padding: 16px;
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            color: var(--text-main);
-            border-radius: 14px;
-            font-size: 16px;
-            font-weight: 700;
+            color: var(--accent-cyan);
+            letter-spacing: 1.5px;
             cursor: pointer;
-            text-align: left;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            text-decoration: none;
         }
 
-        .victors-list-box {
-            display: none;
-            margin-top: 12px;
+        .pc-menu { display: flex; gap: 36px; list-style: none; }
+        .pc-menu a { color: var(--text-sub); text-decoration: none; font-size: 16px; font-weight: 600; transition: color 0.2s; }
+        .pc-menu a:hover { color: var(--text-main); }
+
+        .main-wrapper {
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 60px 32px 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 52px;
+            flex-grow: 1;
+            justify-content: center;
+        }
+
+        .info-section { text-align: center; }
+        .info-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 64px;
+            font-weight: 900;
+            margin-bottom: 24px;
+            background: linear-gradient(180deg, #ffffff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .info-desc { font-size: 21px; color: var(--text-sub); line-height: 1.6; }
+
+        .cards-container { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; }
+        .card {
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
-            border-radius: 14px;
-            max-height: 280px;
-            overflow-y: auto;
-            padding: 16px 20px;
-        }
-
-        .victors-list-box.active { display: block; }
-
-        .victor-item {
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 24px;
+            padding: 44px 38px;
             display: flex;
-            gap: 12px;
-            align-items: center;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 280px;
+            transition: transform 0.25s;
         }
+        .card:hover { transform: translateY(-4px); }
 
-        .victor-item:last-child { border-bottom: none; }
-        .victor-rank { font-family: 'Orbitron'; color: var(--text-sub); font-size: 14px; width: 36px; }
-        .victor-name { font-size: 16px; color: var(--text-main); text-decoration: none; }
-        .victor-name.has-link { text-decoration: underline; color: var(--accent-orange); cursor: pointer; }
+        .card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+        .card-badge { font-family: 'Orbitron'; font-size: 13px; font-weight: 800; padding: 6px 14px; border-radius: 8px; }
+        .badge-hrr { background: rgba(0, 242, 254, 0.15); color: var(--accent-cyan); }
+        .badge-lrr { background: rgba(255, 159, 67, 0.15); color: var(--accent-orange); }
+
+        .btn {
+            display: block; width: 100%; padding: 18px 0; border-radius: 14px; font-size: 17px; font-weight: 700;
+            text-align: center; text-decoration: none; cursor: pointer; border: none; margin-top: 24px;
+        }
+        .btn-hrr { background: var(--accent-cyan); color: #000; }
+        .btn-lrr { background: var(--accent-orange); color: #000; }
+
+        .page-section { display: none; width: 100%; }
+        .page-section.active { display: block; }
     </style>
 </head>
 <body>
 
     <header>
         <a href="/" class="logo">KRM FORUM</a>
-        <div style="font-family:'Orbitron'; font-weight:800; color:var(--accent-orange);">LRR LIST</div>
+        <ul class="pc-menu">
+            <li><a href="#" onclick="showSection('ranking')">포인트 랭킹</a></li>
+            <li><a href="https://discord.gg/FpqRcxDXwa" target="_blank">Discord</a></li>
+        </ul>
     </header>
 
-    <div class="container">
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <input type="text" class="search-input" id="searchInput" placeholder="맵 이름 검색..." oninput="filterMaps()">
-            </div>
-            <ul class="map-list" id="mapList"></ul>
-        </aside>
+    <div id="homeView" class="page-section active">
+        <div class="main-wrapper">
+            <section class="info-section">
+                <h1 class="info-title">KRM FORUM</h1>
+                <p class="info-desc">지오메트리 대시 한국 모바일 포럼에 오신 것을 환영합니다!<br>원하시는 주사율 리스트를 선택해 접속하세요.</p>
+            </section>
 
-        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-
-        <main class="main-content">
-            <div class="content-box">
-                <div class="map-header-row">
-                    <h1 class="map-main-title" id="mapTitle">#1. Loading...</h1>
-                    <span class="map-aredl-badge" id="mapAredlBadge" style="display:none;">AREDL -</span>
+            <div class="cards-container">
+                <div class="card">
+                    <div>
+                        <div class="card-header">
+                            <span class="card-badge badge-hrr">90Hz+</span>
+                            <h2 style="font-size:28px;">📱 HRR List</h2>
+                        </div>
+                        <p style="color:var(--text-sub); font-size:17px; line-height:1.6;">고주사율(90Hz 이상) 모바일 기기로 달성한 등재 맵 목록 및 클리어 순위표를 확인합니다.</p>
+                    </div>
+                    <a href="/hrr/" class="btn btn-hrr">HRR 리스트 바로가기 →</a>
                 </div>
 
-                <div class="detail-grid">
-                    <div class="video-box" id="videoContainer">
-                        <span>영상을 불러오는 중...</span>
+                <div class="card">
+                    <div>
+                        <div class="card-header">
+                            <span class="card-badge badge-lrr">60Hz</span>
+                            <h2 style="font-size:28px;">📱 LRR List</h2>
+                        </div>
+                        <p style="color:var(--text-sub); font-size:17px; line-height:1.6;">저주사율(60Hz 이하) 모바일 기기로 달성한 등재 맵 목록 및 클리어 순위표를 확인합니다.</p>
                     </div>
-
-                    <div class="info-side">
-                        <div class="stat-card" style="border-left: 4px solid var(--accent-orange);">
-                            <div class="stat-label">First Korean LRR Mobile Victor</div>
-                            <div class="stat-value" id="firstVictorName">-</div>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-label">Total Victors</div>
-                            <div class="stat-value" id="totalVictorsCount">-</div>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-label">List Points</div>
-                            <div class="stat-value" id="listPoints">-</div>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="victors-btn" onclick="toggleVictorsBox()">
-                    <span>전체 클리어자 목록 (Victors)</span>
-                    <span id="arrowIcon">▼</span>
-                </button>
-                <div class="victors-list-box" id="victorsBox">
-                    <div id="victorsContainer"></div>
+                    <a href="/lrr/" class="btn btn-lrr">LRR 리스트 바로가기 →</a>
                 </div>
             </div>
-        </main>
+        </div>
+    </div>
+
+    <div id="rankingView" class="page-section">
+        <div class="main-wrapper" style="text-align: center;">
+            <h2 style="font-family: 'Orbitron'; color: var(--accent-cyan); font-size: 56px;">Soon...</h2>
+            <p style="color: var(--text-sub); margin-top: 16px; font-size: 20px;">포인트 랭킹 기능은 현재 준비 중입니다.</p>
+            <button class="btn btn-hrr" style="margin: 40px auto 0; max-width: 320px;" onclick="showSection('home')">← 메인으로 돌아가기</button>
+        </div>
     </div>
 
     <script>
-        // LRR 시트 ID로 설정
-        const LRR_SHEET_ID = '1yP5sJXHAA_dO0iv74nhx4vaT21J2Rl0cNXdzipsB-Y8';
-        const CSV_URL = `https://docs.google.com/spreadsheets/d/${LRR_SHEET_ID}/export?format=csv&gid=0`;
-
-        let mapDataList = [];
-
-        async function loadSheetData() {
-            try {
-                const response = await fetch(CSV_URL);
-                const csvText = await response.text();
-                parseCSV(csvText);
-            } catch (err) {
-                console.error("데이터 로드 실패:", err);
-            }
-        }
-
-        function parseCSV(text) {
-            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-            mapDataList = [];
-
-            let currentRank = 1;
-
-            for (let i = 2; i < lines.length; i++) {
-                const cols = lines[i].split(',').map(c => c.replace(/^"(.*)"$/, '$1').trim());
-                const levelName = cols[0];
-
-                if (!levelName) continue;
-
-                if (levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
-                    break;
-                }
-
-                const totalVictors = cols[1] || '0';
-                const aredlPlacement = cols[2] || '';
-
-                const rawVictors = cols.slice(5).filter(cell => cell && cell.length > 0);
-                const victors = rawVictors.map(item => ({
-                    name: item,
-                    link: item.startsWith('http') ? item : null
-                }));
-
-                mapDataList.push({
-                    rank: `#${currentRank}`,
-                    title: levelName,
-                    aredl: aredlPlacement,
-                    totalVictors: totalVictors,
-                    victors: victors
-                });
-
-                currentRank++;
-
-                if (levelName.trim().toLowerCase() === 'red world') {
-                    break;
-                }
-            }
-
-            renderSidebar(mapDataList);
-            
-            const hash = window.location.hash.replace('#', '');
-            const targetIndex = hash ? parseInt(hash) - 1 : 0;
-            selectMap(Math.max(0, targetIndex));
-        }
-
-        function renderSidebar(data) {
-            const listEl = document.getElementById('mapList');
-            listEl.innerHTML = '';
-            data.forEach((map, index) => {
-                const li = document.createElement('li');
-                li.className = 'map-item';
-                li.onclick = () => selectMap(index);
-
-                const aredlTag = (map.aredl && map.aredl !== '-') ? `<span class="aredl-tag">AREDL ${map.aredl}</span>` : '';
-
-                li.innerHTML = `
-                    <div class="map-info">
-                        <span class="rank">${map.rank}</span>
-                        <span class="title">${map.title}</span>
-                    </div>
-                    ${aredlTag}
-                `;
-                listEl.appendChild(li);
-            });
-        }
-
-        function selectMap(index) {
-            const map = mapDataList[index];
-            if (!map) return;
-
-            window.location.hash = index + 1;
-
-            document.querySelectorAll('.map-item').forEach((el, i) => {
-                el.classList.toggle('active', i === index);
-            });
-
-            document.getElementById('mapTitle').innerText = `${map.rank}. ${map.title}`;
-            
-            const aredlBadge = document.getElementById('mapAredlBadge');
-            if (map.aredl && map.aredl !== '-') {
-                aredlBadge.innerText = `AREDL ${map.aredl}`;
-                aredlBadge.style.display = 'inline-block';
+        function showSection(name) {
+            document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+            if(name === 'ranking') {
+                document.getElementById('rankingView').classList.add('active');
             } else {
-                aredlBadge.style.display = 'none';
+                document.getElementById('homeView').classList.add('active');
             }
-
-            document.getElementById('totalVictorsCount').innerText = map.totalVictors;
-            document.getElementById('listPoints').innerText = '-';
-
-            const videoBox = document.getElementById('videoContainer');
-            if (map.victors.length > 0) {
-                const firstVictor = map.victors[0];
-                document.getElementById('firstVictorName').innerText = firstVictor.name;
-
-                if (firstVictor.link && firstVictor.link.includes('youtu')) {
-                    const videoId = extractYoutubeId(firstVictor.link);
-                    videoBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>`;
-                } else {
-                    videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
-                }
-            } else {
-                document.getElementById('firstVictorName').innerText = '-';
-                videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
-            }
-
-            renderVictorsList(map.victors);
         }
-
-        function renderVictorsList(victors) {
-            const container = document.getElementById('victorsContainer');
-            container.innerHTML = '';
-
-            if (victors.length === 0) {
-                container.innerHTML = '<div style="color:var(--text-sub); font-size:14px;">클리어자가 없습니다.</div>';
-                return;
-            }
-
-            victors.forEach((v, idx) => {
-                const item = document.createElement('div');
-                item.className = 'victor-item';
-                const rankSpan = `<span class="victor-rank">${idx + 1}.</span>`;
-                
-                let nameEl = v.link 
-                    ? `<a href="${v.link}" target="_blank" class="victor-name has-link">${v.name}</a>`
-                    : `<span class="victor-name">${v.name}</span>`;
-
-                item.innerHTML = rankSpan + nameEl;
-                container.appendChild(item);
-            });
-        }
-
-        function extractYoutubeId(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
-        }
-
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-        }
-
-        function toggleVictorsBox() {
-            const box = document.getElementById('victorsBox');
-            box.classList.toggle('active');
-            document.getElementById('arrowIcon').innerText = box.classList.contains('active') ? '▲' : '▼';
-        }
-
-        function filterMaps() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = mapDataList.filter(m => m.title.toLowerCase().includes(query));
-            renderSidebar(filtered);
-        }
-
-        loadSheetData();
     </script>
 </body>
 </html>
