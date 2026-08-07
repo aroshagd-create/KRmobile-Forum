@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KMW FORUM - Korean Mobile Works</title>
+    <title>KRM FORUM</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
-    
     <style>
         :root {
             --bg-dark: #0a0d14;
@@ -19,28 +18,24 @@
             --text-sub: #94a3b8;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             background-color: var(--bg-dark);
             color: var(--text-main);
-            font-family: 'Pretendard', -apple-system, sans-serif;
+            font-family: 'Pretendard', sans-serif;
             min-height: 100vh;
-            background-image: radial-gradient(circle at 50% 0%, rgba(0, 242, 254, 0.05) 0%, transparent 60%);
-            background-attachment: fixed;
+            background-image: radial-gradient(circle at 50% 20%, rgba(0, 242, 254, 0.08) 0%, transparent 65%);
+            display: flex;
+            flex-direction: column;
         }
 
-        /* 🔝 상단 네비게이션 헤더 */
         header {
             background: rgba(18, 24, 36, 0.85);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--panel-border);
-            height: 64px;
-            padding: 0 24px;
+            height: 72px;
+            padding: 0 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -51,320 +46,128 @@
 
         .logo {
             font-family: 'Orbitron', sans-serif;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 900;
             color: var(--accent-cyan);
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
             cursor: pointer;
-        }
-
-        /* 💻 PC 메뉴 */
-        .pc-menu {
-            display: flex;
-            gap: 28px;
-            list-style: none;
-        }
-
-        .pc-menu a {
-            color: var(--text-sub);
             text-decoration: none;
-            font-size: 15px;
-            font-weight: 600;
-            transition: color 0.2s;
         }
 
-        .pc-menu a:hover, .pc-menu a.active {
-            color: var(--text-main);
-        }
+        .pc-menu { display: flex; gap: 36px; list-style: none; }
+        .pc-menu a { color: var(--text-sub); text-decoration: none; font-size: 16px; font-weight: 600; transition: color 0.2s; }
+        .pc-menu a:hover { color: var(--text-main); }
 
-        /* 📱 모바일 메뉴 버튼 & 드롭다운 */
-        .mobile-toggle-btn {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--text-main);
-            font-size: 24px;
-            cursor: pointer;
-            padding: 4px;
-        }
-
-        .mobile-dropdown {
-            display: none;
-            position: absolute;
-            top: 64px;
-            right: 16px;
-            width: 180px;
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            overflow: hidden;
-            z-index: 1001;
-        }
-
-        .mobile-dropdown a {
-            display: block;
-            padding: 14px 20px;
-            color: var(--text-main);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            border-bottom: 1px solid var(--panel-border);
-        }
-
-        .mobile-dropdown a:last-child {
-            border-bottom: none;
-        }
-
-        .mobile-dropdown a:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--accent-cyan);
-        }
-
-        /* 📱 모바일 반응형 처리 */
-        @media (max-width: 768px) {
-            .pc-menu {
-                display: none;
-            }
-            .mobile-toggle-btn {
-                display: block;
-            }
-            .mobile-dropdown.active {
-                display: block;
-            }
-        }
-
-        /* 🏠 메인 컨테이너 레이아웃 */
         .main-wrapper {
-            max-width: 680px;
+            width: 100%;
+            max-width: 1280px;
             margin: 0 auto;
-            padding: 36px 20px 80px;
+            padding: 60px 32px 100px;
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 52px;
+            flex-grow: 1;
+            justify-content: center;
         }
 
-        /* ℹ️ 1. Info 영역 */
-        .info-section {
-            text-align: center;
-            padding: 20px 10px 10px;
-        }
-
-        .info-tag {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--accent-cyan);
-            letter-spacing: 2px;
-            margin-bottom: 8px;
-        }
-
+        .info-section { text-align: center; }
         .info-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 32px;
+            font-size: 64px;
             font-weight: 900;
-            line-height: 1.2;
-            margin-bottom: 12px;
+            margin-bottom: 24px;
             background: linear-gradient(180deg, #ffffff 0%, #94a3b8 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+        .info-desc { font-size: 21px; color: var(--text-sub); line-height: 1.6; }
 
-        .info-desc {
-            font-size: 15px;
-            color: var(--text-sub);
-            line-height: 1.6;
-        }
-
-        /* 📦 2 & 3. HRR / LRR 카드 박스 */
+        .cards-container { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; }
         .card {
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
-            border-radius: 16px;
-            padding: 28px 24px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s, border-color 0.2s;
-        }
-
-        .card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .card-header {
+            border-radius: 24px;
+            padding: 44px 38px;
             display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 280px;
+            transition: transform 0.25s;
         }
+        .card:hover { transform: translateY(-4px); }
 
-        .card-badge {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 11px;
-            font-weight: 800;
-            padding: 4px 10px;
-            border-radius: 6px;
-        }
+        .card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+        .card-badge { font-family: 'Orbitron'; font-size: 13px; font-weight: 800; padding: 6px 14px; border-radius: 8px; }
+        .badge-hrr { background: rgba(0, 242, 254, 0.15); color: var(--accent-cyan); }
+        .badge-lrr { background: rgba(255, 159, 67, 0.15); color: var(--accent-orange); }
 
-        .badge-hrr {
-            background: rgba(0, 242, 254, 0.15);
-            color: var(--accent-cyan);
-        }
-
-        .badge-lrr {
-            background: rgba(255, 159, 67, 0.15);
-            color: var(--accent-orange);
-        }
-
-        .card-title {
-            font-size: 20px;
-            font-weight: 800;
-        }
-
-        .card-text {
-            font-size: 14px;
-            color: var(--text-sub);
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-
-        /* 버튼 스타일 */
         .btn {
-            display: block;
-            width: 100%;
-            padding: 14px 0;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 700;
-            text-align: center;
-            text-decoration: none;
-            cursor: pointer;
-            border: none;
-            transition: opacity 0.2s;
+            display: block; width: 100%; padding: 18px 0; border-radius: 14px; font-size: 17px; font-weight: 700;
+            text-align: center; text-decoration: none; cursor: pointer; border: none; margin-top: 24px;
         }
+        .btn-hrr { background: var(--accent-cyan); color: #000; }
+        .btn-lrr { background: var(--accent-orange); color: #000; }
 
-        .btn-hrr {
-            background: var(--accent-cyan);
-            color: #000;
-        }
-
-        .btn-lrr {
-            background: var(--accent-orange);
-            color: #000;
-        }
-
-        .btn:hover {
-            opacity: 0.9;
-        }
-
-        /* 섹션 전환 처리 (임시 리스트 영역) */
-        .page-section {
-            display: none;
-        }
-
-        .page-section.active {
-            display: block;
-        }
+        .page-section { display: none; width: 100%; }
+        .page-section.active { display: block; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo" onclick="showSection('home')">KMW FORUM</div>
-
+        <a href="/" class="logo">KRM FORUM</a>
         <ul class="pc-menu">
-            <li><a href="#" onclick="showSection('hrr')">HRR 리스트</a></li>
-            <li><a href="#" onclick="showSection('lrr')">LRR 리스트</a></li>
-            <li><a href="#" onclick="showSection('stats')">스탯랭킹</a></li>
+            <li><a href="#" onclick="showSection('ranking')">포인트 랭킹</a></li>
             <li><a href="https://discord.gg/FpqRcxDXwa" target="_blank">Discord</a></li>
         </ul>
-
-        <button class="mobile-toggle-btn" id="menuBtn">☰</button>
-
-        <div class="mobile-dropdown" id="mobileMenu">
-            <a href="#" onclick="showSection('hrr')">HRR 리스트</a>
-            <a href="#" onclick="showSection('lrr')">LRR 리스트</a>
-            <a href="#" onclick="showSection('stats')">스탯랭킹</a>
-            <a href="https://discord.gg/FpqRcxDXwa" target="_blank">Discord</a>
-        </div>
     </header>
 
     <div id="homeView" class="page-section active">
         <div class="main-wrapper">
-            
             <section class="info-section">
-                <div class="info-tag">KOREAN MOBILE WORKS</div>
-                <h1 class="info-title">KMW FORUM</h1>
-                <p class="info-desc">
-                    지오메트리 대시 한국 모바일 포럼에 오신 것을 환영합니다!<br>
-                    원하시는 주사율 리스트를 선택해 접속하세요.
-                </p>
+                <h1 class="info-title">KRM FORUM</h1>
+                <p class="info-desc">지오메트리 대시 한국 모바일 포럼에 오신 것을 환영합니다!<br>원하시는 주사율 리스트를 선택해 접속하세요.</p>
             </section>
 
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-badge badge-hrr">90Hz+</span>
-                    <h2 class="card-title">📱 HRR List</h2>
+            <div class="cards-container">
+                <div class="card">
+                    <div>
+                        <div class="card-header">
+                            <span class="card-badge badge-hrr">90Hz+</span>
+                            <h2 style="font-size:28px;">📱 HRR List</h2>
+                        </div>
+                        <p style="color:var(--text-sub); font-size:17px; line-height:1.6;">고주사율(90Hz 이상) 모바일 기기로 달성한 등재 맵 목록 및 클리어 순위표를 확인합니다.</p>
+                    </div>
+                    <a href="/hrr/" class="btn btn-hrr">HRR 리스트 바로가기 →</a>
                 </div>
-                <p class="card-text">
-                    고주사율(90Hz 이상) 모바일 기기로 달성한 등재 맵 목록 및 클리어 순위표를 확인합니다.
-                </p>
-                <button class="btn btn-hrr" onclick="showSection('hrr')">HRR 리스트 바로가기 →</button>
-            </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-badge badge-lrr">60Hz</span>
-                    <h2 class="card-title">📱 LRR List</h2>
+                <div class="card">
+                    <div>
+                        <div class="card-header">
+                            <span class="card-badge badge-lrr">60Hz</span>
+                            <h2 style="font-size:28px;">📱 LRR List</h2>
+                        </div>
+                        <p style="color:var(--text-sub); font-size:17px; line-height:1.6;">저주사율(60Hz 이하) 모바일 기기로 달성한 등재 맵 목록 및 클리어 순위표를 확인합니다.</p>
+                    </div>
+                    <a href="/lrr/" class="btn btn-lrr">LRR 리스트 바로가기 →</a>
                 </div>
-                <p class="card-text">
-                    저주사율(60Hz 이하) 모바일 기기로 달성한 등재 맵 목록 및 클리어 순위표를 확인합니다.
-                </p>
-                <button class="btn btn-lrr" onclick="showSection('lrr')">LRR 리스트 바로가기 →</button>
             </div>
-
         </div>
     </div>
 
-    <div id="hrrView" class="page-section">
+    <div id="rankingView" class="page-section">
         <div class="main-wrapper" style="text-align: center;">
-            <h2 style="font-family: 'Orbitron'; color: var(--accent-cyan); font-size: 28px;">HRR LIST</h2>
-            <p style="color: var(--text-sub); margin-top: 10px;">90Hz+ Google Sheet 데이터 연동 공간입니다.</p>
-            <button class="btn btn-hrr" style="margin-top: 30px;" onclick="showSection('home')">← 메인으로 돌아가기</button>
-        </div>
-    </div>
-
-    <div id="lrrView" class="page-section">
-        <div class="main-wrapper" style="text-align: center;">
-            <h2 style="font-family: 'Orbitron'; color: var(--accent-orange); font-size: 28px;">LRR LIST</h2>
-            <p style="color: var(--text-sub); margin-top: 10px;">60Hz Google Sheet 데이터 연동 공간입니다.</p>
-            <button class="btn btn-lrr" style="margin-top: 30px;" onclick="showSection('home')">← 메인으로 돌아가기</button>
+            <h2 style="font-family: 'Orbitron'; color: var(--accent-cyan); font-size: 56px;">Soon...</h2>
+            <p style="color: var(--text-sub); margin-top: 16px; font-size: 20px;">포인트 랭킹 기능은 현재 준비 중입니다.</p>
+            <button class="btn btn-hrr" style="margin: 40px auto 0; max-width: 320px;" onclick="showSection('home')">← 메인으로 돌아가기</button>
         </div>
     </div>
 
     <script>
-        // 모바일 메뉴 드롭다운 토글
-        const menuBtn = document.getElementById('menuBtn');
-        const mobileMenu = document.getElementById('mobileMenu');
-
-        menuBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            mobileMenu.classList.toggle('active');
-        });
-
-        document.addEventListener('click', () => {
-            mobileMenu.classList.remove('active');
-        });
-
-        // 페이지 섹션 전환 스크립트
-        function showSection(sectionName) {
+        function showSection(name) {
             document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
-            mobileMenu.classList.remove('active');
-
-            if (sectionName === 'hrr') {
-                document.getElementById('hrrView').classList.add('active');
-            } else if (sectionName === 'lrr') {
-                document.getElementById('lrrView').classList.add('active');
+            if(name === 'ranking') {
+                document.getElementById('rankingView').classList.add('active');
             } else {
                 document.getElementById('homeView').classList.add('active');
             }
