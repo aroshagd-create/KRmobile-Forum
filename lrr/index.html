@@ -331,40 +331,13 @@
             }
         }
 
-        // 💡 표준 CSV 파서 (줄바꿈/큰따옴표 손상 방지)
         function parseCSVRows(text) {
+            const lines = text.split(/\r?\n/);
             const rows = [];
-            let currentRow = [];
-            let currentCell = '';
-            let inQuotes = false;
-
-            for (let i = 0; i < text.length; i++) {
-                const char = text[i];
-                const nextChar = text[i + 1];
-
-                if (char === '"') {
-                    if (inQuotes && nextChar === '"') {
-                        currentCell += '"';
-                        i++;
-                    } else {
-                        inQuotes = !inQuotes;
-                    }
-                } else if (char === ',' && !inQuotes) {
-                    currentRow.push(currentCell.trim());
-                    currentCell = '';
-                } else if ((char === '\r' || char === '\n') && !inQuotes) {
-                    if (char === '\r' && nextChar === '\n') i++;
-                    currentRow.push(currentCell.trim());
-                    if (currentRow.some(c => c.length > 0)) rows.push(currentRow);
-                    currentRow = [];
-                    currentCell = '';
-                } else {
-                    currentCell += char;
-                }
-            }
-            if (currentCell || currentRow.length > 0) {
-                currentRow.push(currentCell.trim());
-                if (currentRow.some(c => c.length > 0)) rows.push(currentRow);
+            for (let line of lines) {
+                if (!line.trim()) continue;
+                const cols = line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+                rows.push(cols);
             }
             return rows;
         }
@@ -377,22 +350,22 @@
 
             for (let i = 2; i < rows.length; i++) {
                 const cols = rows[i];
-                const levelName = cols[0];
+                if (!cols || cols.length === 0) continue;
 
+                const levelName = cols[0];
                 if (!levelName) continue;
 
-                if (levelName.startsWith('Last update') || levelName.startsWith('Records & Information') || levelName === 'Levels') {
-                    break;
+                if (levelName.startsWith('Last update') || 
+                    levelName.startsWith('Last Update') || 
+                    levelName.startsWith('Records & Information') || 
+                    levelName.includes('function') || 
+                    levelName.includes('var ') || 
+                    levelName === 'Levels') {
+                    continue;
                 }
 
                 const totalVictors = cols[1] || '0';
                 const aredlPlacement = cols[2] || '';
-                const lrrPlacement = cols[3] || '';
-
-                if (!lrrPlacement || lrrPlacement === '-') {
-                    if (levelName.trim().toLowerCase() === 'precipitance') break;
-                    continue;
-                }
 
                 const rawVictors = cols.slice(5).filter(cell => cell && cell.length > 0);
                 const victors = rawVictors.map(item => ({
