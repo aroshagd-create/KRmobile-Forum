@@ -219,7 +219,6 @@
         .victor-item:last-child { border-bottom: none; }
         .victor-rank { font-family: 'Orbitron'; color: var(--text-sub); font-size: 14px; width: 36px; }
         .victor-name { font-size: 16px; color: var(--text-main); text-decoration: none; }
-        .victor-name.has-link { text-decoration: underline; color: var(--accent-cyan); cursor: pointer; }
 
         @media (max-width: 768px) {
             .detail-grid { grid-template-columns: 1fr; }
@@ -285,41 +284,84 @@
     </div>
 
     <script>
-        const HRR_SHEET_ID = '1f1lwB1kbOpD4IWBiTf-D3wDeqpCA5nz-fkNIhr4ZO14';
-        const GVIZ_URL = `https://docs.google.com/spreadsheets/d/${HRR_SHEET_ID}/gviz/tq?tqx=out:json`;
+        // 원본 메인 시트 ID
+        const MAIN_SHEET_ID = '1f1lwB1kbOpD4IWBiTf-D3wDeqpCA5nz-fkNIhr4ZO14';
+        const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
+
+        // 새로 만드신 개인 비디오 시트 ID
+        const VIDEO_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8';
+        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json`;
 
         let mapDataList = [];
+        let videoMap = {}; // { 'shardscapes': 'https://...', ... }
 
         async function loadSheetData() {
             try {
-                const response = await fetch(GVIZ_URL);
-                if (!response.ok) throw new Error('Network response was not ok');
-                
-                const rawText = await response.text();
-                // JSONP 형식의 응답에서 JSON 문자열만 추출
-                const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
-                const data = JSON.parse(jsonText);
-                
-                parseVizData(data);
+                // 메인 시트와 개인 비디오 시트를 동시에 호출
+                const [mainRes, videoRes] = await Promise.allSettled([
+                    fetch(MAIN_SHEET_URL),
+                    fetch(VIDEO_SHEET_URL)
+                ]);
+
+                // 1. 비디오 시트 데이터 파싱
+                if (videoRes.status === 'fulfilled' && videoRes.value.ok) {
+                    const videoRaw = await videoRes.value.text();
+                    parseVideoSheet(videoRaw);
+                }
+
+                // 2. 메인 시트 데이터 파싱
+                if (mainRes.status === 'fulfilled' && mainRes.value.ok) {
+                    const mainRaw = await mainRes.value.text();
+                    parseMainSheet(mainRaw);
+                } else {
+                    throw new Error('Main sheet load failed');
+                }
+
             } catch (err) {
                 console.error("데이터 로드 실패:", err);
                 document.getElementById('mapTitle').innerText = "데이터 로드 실패";
             }
         }
 
-        function parseVizData(data) {
+        // 개인 비디오 시트 파싱 (A열: 맵 이름, B열: 유튜브 링크)
+        function parseVideoSheet(rawText) {
+            try {
+                const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
+                const data = JSON.parse(jsonText);
+                const rows = data.table.rows;
+
+                videoMap = {};
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i].c;
+                    if (!row || !row[0] || !row[0].v) continue;
+
+                    const mapName = String(row[0].v).trim().toLowerCase();
+                    const url = (row[1] && row[1].v) ? String(row[1].v).trim() : null;
+
+                    if (mapName && url) {
+                        videoMap[mapName] = url;
+                    }
+                }
+            } catch(e) {
+                console.warn("비디오 시트 파싱 중 오류:", e);
+            }
+        }
+
+        // 메인 시트 파싱
+        function parseMainSheet(rawText) {
+            const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
+            const data = JSON.parse(jsonText);
             const rows = data.table.rows;
+            
             mapDataList = [];
             let currentRank = 1;
 
-            // 헤더(1~2행) 제외 후 데이터 파싱
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i].c;
                 if (!row || !row[0] || !row[0].v) continue;
 
                 const levelName = String(row[0].v).trim();
                 
-                // 예외 헤더 조건
                 if (levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
                     break;
                 }
@@ -328,28 +370,16 @@
                 const aredlPlacement = (row[2] && row[2].v !== null) ? String(row[2].v) : '';
 
                 const victors = [];
-                let firstVideoUrl = null;
-
-                // F열(인덱스 5)부터 클리어자 명단 탐색
                 for (let j = 5; j < row.length; j++) {
                     if (!row[j] || row[j].v === null) continue;
-                    
                     const val = String(row[j].v).trim();
-                    const isUrl = val.startsWith('http');
-
-                    if (isUrl) {
-                        if (!firstVideoUrl) firstVideoUrl = val;
-                        
-                        // 이전 닉네임 항목에 링크 바인딩
-                        if (victors.length > 0 && !victors[victors.length - 1].link) {
-                            victors[victors.length - 1].link = val;
-                        } else {
-                            victors.push({ name: 'Victor Record', link: val });
-                        }
-                    } else if (val !== '') {
-                        victors.push({ name: val, link: null });
+                    if (val !== '' && !val.startsWith('http')) {
+                        victors.push({ name: val });
                     }
                 }
+
+                // 개인 비디오 시트에서 맵 이름(소문자 변환)으로 URL 매칭
+                const targetVideoUrl = videoMap[levelName.toLowerCase()] || null;
 
                 mapDataList.push({
                     rank: `#${currentRank}`,
@@ -357,11 +387,10 @@
                     aredl: aredlPlacement,
                     totalVictors: totalVictors,
                     listPoints: '-',
-                    videoUrl: firstVideoUrl,
+                    videoUrl: targetVideoUrl,
                     victors: victors
                 });
 
-                // Red World에서 자르기
                 if (levelName.toLowerCase() === 'red world') {
                     break;
                 }
@@ -416,7 +445,7 @@
             document.getElementById('totalVictorsCount').innerText = map.totalVictors;
             document.getElementById('listPoints').innerText = map.listPoints;
 
-            // 영상 연결
+            // 영상 표시 로직
             const videoBox = document.getElementById('videoContainer');
             let targetVideo = map.videoUrl;
 
@@ -453,13 +482,7 @@
             victors.forEach((v, idx) => {
                 const item = document.createElement('div');
                 item.className = 'victor-item';
-                const rankSpan = `<span class="victor-rank">${idx + 1}.</span>`;
-                
-                let nameEl = v.link 
-                    ? `<a href="${v.link}" target="_blank" class="victor-name has-link">${v.name} 🔗</a>`
-                    : `<span class="victor-name">${v.name}</span>`;
-
-                item.innerHTML = rankSpan + nameEl;
+                item.innerHTML = `<span class="victor-rank">${idx + 1}.</span><span class="victor-name">${v.name}</span>`;
                 container.appendChild(item);
             });
         }
