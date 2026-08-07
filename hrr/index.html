@@ -219,6 +219,7 @@
         .victor-item:last-child { border-bottom: none; }
         .victor-rank { font-family: 'Orbitron'; color: var(--text-sub); font-size: 14px; width: 36px; }
         .victor-name { font-size: 16px; color: var(--text-main); text-decoration: none; }
+        .victor-name.has-link { text-decoration: underline; color: var(--accent-cyan); cursor: pointer; }
 
         @media (max-width: 768px) {
             .detail-grid { grid-template-columns: 1fr; }
@@ -284,32 +285,27 @@
     </div>
 
     <script>
-        // 원본 메인 시트 ID
         const MAIN_SHEET_ID = '1f1lwB1kbOpD4IWBiTf-D3wDeqpCA5nz-fkNIhr4ZO14';
         const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
 
-        // 새로 만드신 개인 비디오 시트 ID
         const VIDEO_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8';
         const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json`;
 
         let mapDataList = [];
-        let videoMap = {}; // { 'shardscapes': 'https://...', ... }
+        let videoMap = {}; // { 'shardscapes': { videoUrl: '...', victors: [...] } }
 
         async function loadSheetData() {
             try {
-                // 메인 시트와 개인 비디오 시트를 동시에 호출
                 const [mainRes, videoRes] = await Promise.allSettled([
                     fetch(MAIN_SHEET_URL),
                     fetch(VIDEO_SHEET_URL)
                 ]);
 
-                // 1. 비디오 시트 데이터 파싱
                 if (videoRes.status === 'fulfilled' && videoRes.value.ok) {
                     const videoRaw = await videoRes.value.text();
                     parseVideoSheet(videoRaw);
                 }
 
-                // 2. 메인 시트 데이터 파싱
                 if (mainRes.status === 'fulfilled' && mainRes.value.ok) {
                     const mainRaw = await mainRes.value.text();
                     parseMainSheet(mainRaw);
@@ -323,7 +319,7 @@
             }
         }
 
-        // 개인 비디오 시트 파싱 (A열: 맵 이름, B열: 유튜브 링크)
+        // 개인 비디오 시트 파싱 (A: 맵이름, B: 대표영상, C,D,E,F... 클리어자 이름 및 링크)
         function parseVideoSheet(rawText) {
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
@@ -336,10 +332,28 @@
                     if (!row || !row[0] || !row[0].v) continue;
 
                     const mapName = String(row[0].v).trim().toLowerCase();
-                    const url = (row[1] && row[1].v) ? String(row[1].v).trim() : null;
+                    const mainVideoUrl = (row[1] && row[1].v) ? String(row[1].v).trim() : null;
 
-                    if (mapName && url) {
-                        videoMap[mapName] = url;
+                    const customVictors = [];
+                    // C열(인덱스 2)부터 [이름, 링크] 쌍으로 순회
+                    for (let j = 2; j < row.length; j += 2) {
+                        const nameCell = row[j];
+                        const linkCell = row[j + 1];
+
+                        if (nameCell && nameCell.v !== null) {
+                            const name = String(nameCell.v).trim();
+                            const link = (linkCell && linkCell.v !== null) ? String(linkCell.v).trim() : null;
+                            if (name !== '') {
+                                customVictors.push({ name, link });
+                            }
+                        }
+                    }
+
+                    if (mapName) {
+                        videoMap[mapName] = {
+                            videoUrl: mainVideoUrl,
+                            victors: customVictors
+                        };
                     }
                 }
             } catch(e) {
@@ -347,7 +361,6 @@
             }
         }
 
-        // 메인 시트 파싱
         function parseMainSheet(rawText) {
             const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
             const data = JSON.parse(jsonText);
@@ -369,17 +382,21 @@
                 const totalVictors = (row[1] && row[1].v !== null) ? String(row[1].v) : '0';
                 const aredlPlacement = (row[2] && row[2].v !== null) ? String(row[2].v) : '';
 
-                const victors = [];
+                // 메인 시트 기본 클리어자 명단 추출
+                const defaultVictors = [];
                 for (let j = 5; j < row.length; j++) {
                     if (!row[j] || row[j].v === null) continue;
                     const val = String(row[j].v).trim();
                     if (val !== '' && !val.startsWith('http')) {
-                        victors.push({ name: val });
+                        defaultVictors.push({ name: val, link: null });
                     }
                 }
 
-                // 개인 비디오 시트에서 맵 이름(소문자 변환)으로 URL 매칭
-                const targetVideoUrl = videoMap[levelName.toLowerCase()] || null;
+                // 개인 비디오 시트에서 데이터 가져오기 (없으면 메인 시트 데이터 유지)
+                const customData = videoMap[levelName.toLowerCase()];
+                const finalVideoUrl = customData ? customData.videoUrl : null;
+                // 개인 시트에 클리어자 링크 정보가 있으면 그것을 우선 사용, 없으면 기본 클리어자 명단 사용
+                const finalVictors = (customData && customData.victors.length > 0) ? customData.victors : defaultVictors;
 
                 mapDataList.push({
                     rank: `#${currentRank}`,
@@ -387,8 +404,8 @@
                     aredl: aredlPlacement,
                     totalVictors: totalVictors,
                     listPoints: '-',
-                    videoUrl: targetVideoUrl,
-                    victors: victors
+                    videoUrl: finalVideoUrl,
+                    victors: finalVictors
                 });
 
                 if (levelName.toLowerCase() === 'red world') {
@@ -460,7 +477,7 @@
                 videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
             }
 
-            // 첫 번째 클리어자
+            // 첫 번째 클리어자 이름 표기
             if (map.victors.length > 0) {
                 document.getElementById('firstVictorName').innerText = map.victors[0].name;
             } else {
@@ -482,7 +499,14 @@
             victors.forEach((v, idx) => {
                 const item = document.createElement('div');
                 item.className = 'victor-item';
-                item.innerHTML = `<span class="victor-rank">${idx + 1}.</span><span class="victor-name">${v.name}</span>`;
+                const rankSpan = `<span class="victor-rank">${idx + 1}.</span>`;
+                
+                // 클리어자 링크가 있으면 파란색 밑줄 및 클릭 시 새 창으로 이동
+                let nameEl = (v.link && v.link.startsWith('http'))
+                    ? `<a href="${v.link}" target="_blank" class="victor-name has-link">${v.name} 🔗</a>`
+                    : `<span class="victor-name">${v.name}</span>`;
+
+                item.innerHTML = rankSpan + nameEl;
                 container.appendChild(item);
             });
         }
