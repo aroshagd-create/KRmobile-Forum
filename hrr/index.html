@@ -1,4 +1,4 @@
-html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -168,7 +168,7 @@ html>
         .video-box iframe { width: 100%; height: 100%; border: none; }
 
         .info-side { display: flex; flex-direction: column; gap: 16px; }
-        
+
         .stat-card {
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
@@ -220,6 +220,10 @@ html>
         .victor-rank { font-family: 'Orbitron'; color: var(--text-sub); font-size: 14px; width: 36px; }
         .victor-name { font-size: 16px; color: var(--text-main); text-decoration: none; }
         .victor-name.has-link { text-decoration: underline; color: var(--accent-cyan); cursor: pointer; }
+
+        @media (max-width: 768px) {
+            .detail-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -289,22 +293,50 @@ html>
         async function loadSheetData() {
             try {
                 const response = await fetch(CSV_URL);
+                if (!response.ok) throw new Error('Network response was not ok');
                 const csvText = await response.text();
                 parseCSV(csvText);
             } catch (err) {
                 console.error("데이터 로드 실패:", err);
+                document.getElementById('mapTitle').innerText = "데이터 로드 실패";
             }
         }
 
+        // CSV 구문 분석용 정규식 기반 토큰 분리기
+        function parseCSVLine(line) {
+            const values = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    if (inQuotes && line[i + 1] === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    values.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            values.push(current.trim());
+            return values;
+        }
+
         function parseCSV(text) {
-            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
             mapDataList = [];
 
             let currentRank = 1;
 
             for (let i = 2; i < lines.length; i++) {
-                const cols = lines[i].split(',').map(c => c.replace(/^"(.*)"$/, '$1').trim());
-                const levelName = cols[0];
+                const cols = parseCSVLine(lines[i]);
+                const levelName = cols[0] ? cols[0].replace(/^"(.*)"$/, '$1').trim() : '';
 
                 if (!levelName) continue;
 
@@ -316,10 +348,13 @@ html>
                 const aredlPlacement = cols[2] || '';
 
                 const rawVictors = cols.slice(5).filter(cell => cell && cell.length > 0);
-                const victors = rawVictors.map(item => ({
-                    name: item,
-                    link: item.startsWith('http') ? item : null
-                }));
+                const victors = rawVictors.map(item => {
+                    const cleanItem = item.replace(/^"(.*)"$/, '$1').trim();
+                    return {
+                        name: cleanItem,
+                        link: cleanItem.startsWith('http') ? cleanItem : null
+                    };
+                });
 
                 mapDataList.push({
                     rank: `#${currentRank}`,
@@ -331,7 +366,6 @@ html>
 
                 currentRank++;
 
-                // 🎯 Red World를 리스트에 담은 후 그 아래 행들은 완전히 파싱 종료
                 if (levelName.trim().toLowerCase() === 'red world') {
                     break;
                 }
@@ -341,16 +375,17 @@ html>
             
             const hash = window.location.hash.replace('#', '');
             const targetIndex = hash ? parseInt(hash) - 1 : 0;
-            selectMap(Math.max(0, targetIndex));
+            selectMap(Math.max(0, Math.min(targetIndex, mapDataList.length - 1)));
         }
 
         function renderSidebar(data) {
             const listEl = document.getElementById('mapList');
             listEl.innerHTML = '';
-            data.forEach((map, index) => {
+            data.forEach((map) => {
+                const originalIndex = mapDataList.findIndex(m => m.rank === map.rank);
                 const li = document.createElement('li');
                 li.className = 'map-item';
-                li.onclick = () => selectMap(index);
+                li.onclick = () => selectMap(originalIndex);
 
                 li.innerHTML = `
                     <span class="rank">${map.rank}</span>
@@ -366,8 +401,9 @@ html>
 
             window.location.hash = index + 1;
 
-            document.querySelectorAll('.map-item').forEach((el, i) => {
-                el.classList.toggle('active', i === index);
+            document.querySelectorAll('.map-item').forEach((el) => {
+                const isSelected = el.querySelector('.rank')?.innerText === map.rank;
+                el.classList.toggle('active', isSelected);
             });
 
             document.getElementById('mapTitle').innerText = `${map.rank}. ${map.title}`;
@@ -390,7 +426,11 @@ html>
 
                 if (firstVictor.link && firstVictor.link.includes('youtu')) {
                     const videoId = extractYoutubeId(firstVictor.link);
-                    videoBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>`;
+                    if (videoId) {
+                        videoBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>`;
+                    } else {
+                        videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
+                    }
                 } else {
                     videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
                 }
@@ -406,7 +446,7 @@ html>
             const container = document.getElementById('victorsContainer');
             container.innerHTML = '';
 
-            if (victors.length === 0) {
+            if (!victors || victors.length === 0) {
                 container.innerHTML = '<div style="color:var(--text-sub); font-size:14px;">클리어자가 없습니다.</div>';
                 return;
             }
