@@ -13,6 +13,7 @@
             --panel-bg: #121824;
             --panel-border: rgba(255, 255, 255, 0.08);
             --accent-cyan: #00f2fe;
+            --accent-orange: #ff9f43;
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
         }
@@ -54,7 +55,7 @@
 
         /* ⬅️ 접을 수 있는 사이드바 */
         .sidebar {
-            width: 320px;
+            width: 340px;
             background: var(--panel-bg);
             border-right: 1px solid var(--panel-border);
             display: flex;
@@ -63,13 +64,11 @@
             z-index: 10;
         }
 
-        .sidebar.collapsed { margin-left: -320px; }
+        .sidebar.collapsed { margin-left: -340px; }
 
         .sidebar-header {
             padding: 16px;
             border-bottom: 1px solid var(--panel-border);
-            display: flex;
-            gap: 10px;
         }
 
         .search-input {
@@ -84,18 +83,23 @@
 
         .map-list { flex-grow: 1; overflow-y: auto; list-style: none; }
         .map-item {
-            padding: 16px 20px;
+            padding: 14px 18px;
             border-bottom: 1px solid var(--panel-border);
             cursor: pointer;
             transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
         .map-item:hover, .map-item.active { background: rgba(0, 242, 254, 0.08); }
-        .map-item .rank { font-family: 'Orbitron'; color: var(--accent-cyan); font-weight: 800; font-size: 14px; margin-right: 6px; }
-        .map-item .title { font-weight: 700; font-size: 16px; }
+        .map-info { display: flex; align-items: center; gap: 8px; overflow: hidden; }
+        .map-item .rank { font-family: 'Orbitron'; color: var(--accent-cyan); font-weight: 800; font-size: 14px; flex-shrink: 0; }
+        .map-item .title { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .aredl-tag { font-family: 'Orbitron'; color: var(--accent-orange); font-size: 11px; font-weight: 700; flex-shrink: 0; margin-left: 6px; }
 
         .toggle-btn {
             position: absolute;
-            left: 320px;
+            left: 340px;
             top: 16px;
             z-index: 20;
             background: var(--panel-bg);
@@ -108,7 +112,7 @@
         }
         .sidebar.collapsed + .toggle-btn { left: 0; }
 
-        /* ➡️ 메인 콘텐츠 영역 (그림판 스케치 구현) */
+        /* ➡️ 메인 콘텐츠 영역 */
         .main-content {
             flex-grow: 1;
             padding: 40px;
@@ -120,12 +124,29 @@
 
         .content-box { width: 100%; max-width: 960px; }
 
-        /* n. blabla 타이틀 */
+        .map-header-row {
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
         .map-main-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 38px;
+            font-size: 36px;
             font-weight: 900;
-            margin-bottom: 28px;
+        }
+
+        .map-aredl-badge {
+            font-family: 'Orbitron';
+            color: var(--accent-orange);
+            font-size: 18px;
+            font-weight: 800;
+            background: rgba(255, 159, 67, 0.12);
+            padding: 4px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 159, 67, 0.3);
         }
 
         .detail-grid {
@@ -135,7 +156,6 @@
             margin-bottom: 32px;
         }
 
-        /* 비디오 / 검은 화면 박스 */
         .video-box {
             width: 100%;
             aspect-ratio: 16 / 9;
@@ -151,7 +171,6 @@
 
         .video-box iframe { width: 100%; height: 100%; border: none; }
 
-        /* 오른쪽 정보 스탯 카드들 */
         .info-side { display: flex; flex-direction: column; gap: 16px; }
         
         .stat-card {
@@ -164,7 +183,6 @@
         .stat-label { font-size: 13px; color: var(--text-sub); margin-bottom: 6px; font-weight: 600; }
         .stat-value { font-size: 22px; font-weight: 800; }
 
-        /* 클리어자 목록 accordion */
         .victors-btn {
             width: 100%;
             padding: 16px;
@@ -203,17 +221,9 @@
         }
 
         .victor-item:last-child { border-bottom: none; }
-        
         .victor-rank { font-family: 'Orbitron'; color: var(--text-sub); font-size: 14px; width: 36px; }
-
         .victor-name { font-size: 16px; color: var(--text-main); text-decoration: none; }
-        
-        /* 🔗 링크가 있는 유저 -> 밑줄 표시 */
-        .victor-name.has-link {
-            text-decoration: underline;
-            color: var(--accent-cyan);
-            cursor: pointer;
-        }
+        .victor-name.has-link { text-decoration: underline; color: var(--accent-cyan); cursor: pointer; }
     </style>
 </head>
 <body>
@@ -235,7 +245,10 @@
 
         <main class="main-content">
             <div class="content-box">
-                <h1 class="map-main-title" id="mapTitle">#1. Loading...</h1>
+                <div class="map-header-row">
+                    <h1 class="map-main-title" id="mapTitle">#1. Loading...</h1>
+                    <span class="map-aredl-badge" id="mapAredlBadge" style="display:none;">AREDL -</span>
+                </div>
 
                 <div class="detail-grid">
                     <div class="video-box" id="videoContainer">
@@ -277,7 +290,6 @@
 
         let mapDataList = [];
 
-        // 구글 시트 CSV 파싱 및 동적 로드
         async function loadSheetData() {
             try {
                 const response = await fetch(CSV_URL);
@@ -292,37 +304,48 @@
             const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
             mapDataList = [];
 
-            // 헤더(2번 줄) 제외하고 데이터 파싱
+            let currentRank = 1;
+
+            // 헤더(2번 줄) 제외하고 A3(3번째 줄, 인덱스 2)부터 파싱
             for (let i = 2; i < lines.length; i++) {
                 const cols = lines[i].split(',').map(c => c.replace(/^"(.*)"$/, '$1').trim());
-                if (!cols[0]) continue; // 맵 이름 없으면 스킵
-
                 const levelName = cols[0];
+
+                if (!levelName) continue;
+
+                // 하단 보조 정보 및 날짜 행 제외
+                if (levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
+                    break;
+                }
+
                 const totalVictors = cols[1] || '0';
-                const rank = cols[3] || `#${i - 1}`;
-                
-                // 비디오/클리어자 정보 (F열 이후의 유효한 셀만 모음 - 빈셀 스킵)
+                const aredlPlacement = cols[2] || ''; // C열 AREDL 순위 (#101 등)
+
+                // F열 이후의 클리어 유저/링크 파싱 (빈셀 자동 스킵)
                 const rawVictors = cols.slice(5).filter(cell => cell && cell.length > 0);
-                
-                const victors = rawVictors.map(item => {
-                    // 텍스트/링크 구조 파악
-                    return {
-                        name: item,
-                        link: item.startsWith('http') ? item : null // URL 형식 체크
-                    };
-                });
+                const victors = rawVictors.map(item => ({
+                    name: item,
+                    link: item.startsWith('http') ? item : null
+                }));
 
                 mapDataList.push({
-                    rank: rank,
+                    rank: `#${currentRank}`,
                     title: levelName,
+                    aredl: aredlPlacement,
                     totalVictors: totalVictors,
                     victors: victors
                 });
+
+                currentRank++;
+
+                // 'Red World' 맵까지 읽고 이후 무관한 맵 제외
+                if (levelName.trim().toLowerCase() === 'red world') {
+                    break;
+                }
             }
 
             renderSidebar(mapDataList);
             
-            // URL 파라미터 체크 (예: /hrr/#2 -> 2등 로드, 없으면 1등 로드)
             const hash = window.location.hash.replace('#', '');
             const targetIndex = hash ? parseInt(hash) - 1 : 0;
             selectMap(Math.max(0, targetIndex));
@@ -335,7 +358,16 @@
                 const li = document.createElement('li');
                 li.className = 'map-item';
                 li.onclick = () => selectMap(index);
-                li.innerHTML = `<span class="rank">${map.rank}</span><span class="title">${map.title}</span>`;
+
+                const aredlTag = (map.aredl && map.aredl !== '-') ? `<span class="aredl-tag">AREDL ${map.aredl}</span>` : '';
+
+                li.innerHTML = `
+                    <div class="map-info">
+                        <span class="rank">${map.rank}</span>
+                        <span class="title">${map.title}</span>
+                    </div>
+                    ${aredlTag}
+                `;
                 listEl.appendChild(li);
             });
         }
@@ -344,31 +376,35 @@
             const map = mapDataList[index];
             if (!map) return;
 
-            // 주소 변경 (#순위 형태)
             window.location.hash = index + 1;
 
-            // 사이드바 하이라이트
             document.querySelectorAll('.map-item').forEach((el, i) => {
                 el.classList.toggle('active', i === index);
             });
 
-            // 화면 데이터 업데이트
             document.getElementById('mapTitle').innerText = `${map.rank}. ${map.title}`;
+            
+            // AREDL 주황색 뱃지 표시
+            const aredlBadge = document.getElementById('mapAredlBadge');
+            if (map.aredl && map.aredl !== '-') {
+                aredlBadge.innerText = `AREDL ${map.aredl}`;
+                aredlBadge.style.display = 'inline-block';
+            } else {
+                aredlBadge.style.display = 'none';
+            }
+
             document.getElementById('totalVictorsCount').innerText = map.totalVictors;
             document.getElementById('listPoints').innerText = '-';
 
-            // 최초 승리자 & 영상 연동 처리
             const videoBox = document.getElementById('videoContainer');
             if (map.victors.length > 0) {
                 const firstVictor = map.victors[0];
                 document.getElementById('firstVictorName').innerText = firstVictor.name;
 
-                // 유튜브 링크가 있는 경우
                 if (firstVictor.link && firstVictor.link.includes('youtu')) {
                     const videoId = extractYoutubeId(firstVictor.link);
                     videoBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>`;
                 } else {
-                    // 링크가 없으면 검은 화면만 출력
                     videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
                 }
             } else {
@@ -376,7 +412,6 @@
                 videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
             }
 
-            // 전체 클리어자 목록 생성
             renderVictorsList(map.victors);
         }
 
@@ -392,16 +427,11 @@
             victors.forEach((v, idx) => {
                 const item = document.createElement('div');
                 item.className = 'victor-item';
-
                 const rankSpan = `<span class="victor-rank">${idx + 1}.</span>`;
                 
-                // 링크 있으면 밑줄 닉네임, 없으면 일반 이름
-                let nameEl = '';
-                if (v.link) {
-                    nameEl = `<a href="${v.link}" target="_blank" class="victor-name has-link">${v.name}</a>`;
-                } else {
-                    nameEl = `<span class="victor-name">${v.name}</span>`;
-                }
+                let nameEl = v.link 
+                    ? `<a href="${v.link}" target="_blank" class="victor-name has-link">${v.name}</a>`
+                    : `<span class="victor-name">${v.name}</span>`;
 
                 item.innerHTML = rankSpan + nameEl;
                 container.appendChild(item);
