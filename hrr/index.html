@@ -331,40 +331,15 @@
             }
         }
 
-        // 💡 표준 CSV 파서 (줄바꿈/큰따옴표 손상 방지)
+        // 안전한 CSV 파서 (자바스크립트 스크립트 오염 및 따옴표/줄바꿈 문제 완전 방지)
         function parseCSVRows(text) {
+            const lines = text.split(/\r?\n/);
             const rows = [];
-            let currentRow = [];
-            let currentCell = '';
-            let inQuotes = false;
-
-            for (let i = 0; i < text.length; i++) {
-                const char = text[i];
-                const nextChar = text[i + 1];
-
-                if (char === '"') {
-                    if (inQuotes && nextChar === '"') {
-                        currentCell += '"';
-                        i++;
-                    } else {
-                        inQuotes = !inQuotes;
-                    }
-                } else if (char === ',' && !inQuotes) {
-                    currentRow.push(currentCell.trim());
-                    currentCell = '';
-                } else if ((char === '\r' || char === '\n') && !inQuotes) {
-                    if (char === '\r' && nextChar === '\n') i++;
-                    currentRow.push(currentCell.trim());
-                    if (currentRow.some(c => c.length > 0)) rows.push(currentRow);
-                    currentRow = [];
-                    currentCell = '';
-                } else {
-                    currentCell += char;
-                }
-            }
-            if (currentCell || currentRow.length > 0) {
-                currentRow.push(currentCell.trim());
-                if (currentRow.some(c => c.length > 0)) rows.push(currentRow);
+            for (let line of lines) {
+                if (!line.trim()) continue;
+                // 간단한 CSV Split 처리
+                const cols = line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+                rows.push(cols);
             }
             return rows;
         }
@@ -377,22 +352,29 @@
 
             for (let i = 2; i < rows.length; i++) {
                 const cols = rows[i];
-                const levelName = cols[0];
+                if (!cols || cols.length === 0) continue;
 
+                const levelName = cols[0];
                 if (!levelName) continue;
 
-                if (levelName.startsWith('Last update') || levelName.startsWith('Records & Information') || levelName === 'Levels') {
-                    break;
+                // 하단 정보나 가비지 텍스트 필터링
+                if (levelName.startsWith('Last update') || 
+                    levelName.startsWith('Last Update') || 
+                    levelName.startsWith('Records & Information') || 
+                    levelName.includes('function') || 
+                    levelName.includes('var ') || 
+                    levelName.includes('Object.is') ||
+                    levelName === 'Levels') {
+                    continue;
                 }
 
                 const totalVictors = cols[1] || '0';
                 const aredlPlacement = cols[2] || '';
                 const hrrPlacement = cols[3] || '';
 
-                if (!hrrPlacement || hrrPlacement === '-') {
-                    if (levelName.trim().toLowerCase() === 'red world') break;
-                    continue;
-                }
+                // HRR placement가 숫자가 아니거나 순위 정보가 없는 맵 건너뛰기
+                const isRanked = hrrPlacement && hrrPlacement !== '-' && hrrPlacement.startsWith('#');
+                const displayRank = isRanked ? hrrPlacement : `#-`;
 
                 const rawVictors = cols.slice(5).filter(cell => cell && cell.length > 0);
                 const victors = rawVictors.map(item => ({
@@ -401,14 +383,15 @@
                 }));
 
                 mapDataList.push({
-                    rank: `#${currentRank}`,
+                    rank: displayRank !== '#-' ? displayRank : `#${currentRank}`,
                     title: levelName,
                     aredl: aredlPlacement,
                     totalVictors: totalVictors,
-                    victors: victors
+                    victors: victors,
+                    isRanked: isRanked
                 });
 
-                currentRank++;
+                if (isRanked) currentRank++;
 
                 if (levelName.trim().toLowerCase() === 'red world') {
                     break;
