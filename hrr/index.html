@@ -88,8 +88,7 @@
         }
 
         .map-list { flex-grow: 1; overflow-y: auto; list-style: none; }
-        
-        /* 🎯 사이드바 줄맞춤 정밀 수정 */
+
         .map-item {
             padding: 0 18px;
             height: 52px;
@@ -332,19 +331,57 @@
             }
         }
 
+        // 💡 표준 CSV 파서 (줄바꿈/큰따옴표 손상 방지)
+        function parseCSVRows(text) {
+            const rows = [];
+            let currentRow = [];
+            let currentCell = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const nextChar = text[i + 1];
+
+                if (char === '"') {
+                    if (inQuotes && nextChar === '"') {
+                        currentCell += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    currentRow.push(currentCell.trim());
+                    currentCell = '';
+                } else if ((char === '\r' || char === '\n') && !inQuotes) {
+                    if (char === '\r' && nextChar === '\n') i++;
+                    currentRow.push(currentCell.trim());
+                    if (currentRow.some(c => c.length > 0)) rows.push(currentRow);
+                    currentRow = [];
+                    currentCell = '';
+                } else {
+                    currentCell += char;
+                }
+            }
+            if (currentCell || currentRow.length > 0) {
+                currentRow.push(currentCell.trim());
+                if (currentRow.some(c => c.length > 0)) rows.push(currentRow);
+            }
+            return rows;
+        }
+
         function parseCSV(text) {
-            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            const rows = parseCSVRows(text);
             mapDataList = [];
 
             let currentRank = 1;
 
-            for (let i = 2; i < lines.length; i++) {
-                const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"(.*)"$/, '$1').trim());
+            for (let i = 2; i < rows.length; i++) {
+                const cols = rows[i];
                 const levelName = cols[0];
 
                 if (!levelName) continue;
 
-                if (levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
+                if (levelName.startsWith('Last update') || levelName.startsWith('Records & Information') || levelName === 'Levels') {
                     break;
                 }
 
