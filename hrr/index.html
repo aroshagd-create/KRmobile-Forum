@@ -322,6 +322,19 @@
             }
         }
 
+        // CSV 한 줄을 안전하게 정규식으로 분할
+        function parseCSVLine(text) {
+            const regex = /(?:^|,)(?:"([^"]*)"|([^,]*))/g;
+            const matches = [];
+            let match;
+            while ((match = regex.exec(text)) !== null) {
+                // 따옴표 내부 값 우선, 없으면 일반 값
+                let value = match[1] !== undefined ? match[1] : match[2];
+                matches.push(value.trim());
+            }
+            return matches;
+        }
+
         function parseCSV(text) {
             const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
             mapDataList = [];
@@ -329,7 +342,7 @@
             let currentRank = 1;
 
             for (let i = 2; i < lines.length; i++) {
-                const cols = lines[i].split(',').map(c => c.replace(/^"(.*)"$/, '$1').trim());
+                const cols = parseCSVLine(lines[i]);
                 const levelName = cols[0];
 
                 if (!levelName) continue;
@@ -341,8 +354,7 @@
                 const totalVictors = cols[1] || '0';
                 const aredlPlacement = cols[2] || '';
 
-                // 구글 시트 구조: E열(index 4)은 노트/비고, F열(index 5)부터 실제 클리어자 데이터 시작
-                // Acu 등 E열이 비어있는 경우를 대응하기 위해, F열부터 탐색하되 유효한 값들을 클리어자로 수집
+                // 🛑 핵심: index 4(E열 노트/비고)를 완전히 건너뛰고 index 5(F열)부터 수집!
                 const victorRawCells = cols.slice(5).filter(cell => cell && cell.length > 0);
                 
                 const victors = victorRawCells.map(item => ({
