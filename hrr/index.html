@@ -292,7 +292,7 @@
         const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json`;
 
         let mapDataList = [];
-        let videoMap = {}; // { 'shardscapes': { videoUrl: '...', victors: [...] } }
+        let videoMap = {};
 
         async function loadSheetData() {
             try {
@@ -319,7 +319,6 @@
             }
         }
 
-        // 개인 비디오 시트 파싱 (A: 맵이름, B: 대표영상, C,D,E,F... 클리어자 이름 및 링크)
         function parseVideoSheet(rawText) {
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
@@ -335,17 +334,21 @@
                     const mainVideoUrl = (row[1] && row[1].v) ? String(row[1].v).trim() : null;
 
                     const customVictors = [];
-                    // C열(인덱스 2)부터 [이름, 링크] 쌍으로 순회
-                    for (let j = 2; j < row.length; j += 2) {
-                        const nameCell = row[j];
-                        const linkCell = row[j + 1];
+                    // C열부터 한 칸씩 이동하며 이름인지 링크인지 유연하게 판별
+                    for (let j = 2; j < row.length; j++) {
+                        const cell = row[j];
+                        if (!cell || cell.v === null) continue;
+                        const val = String(cell.v).trim();
+                        if (val === '') continue;
 
-                        if (nameCell && nameCell.v !== null) {
-                            const name = String(nameCell.v).trim();
-                            const link = (linkCell && linkCell.v !== null) ? String(linkCell.v).trim() : null;
-                            if (name !== '') {
-                                customVictors.push({ name, link });
+                        // 만약 주소(http) 형태라면, 직전에 추가된 클리어자의 링크로 붙여줌
+                        if (val.startsWith('http')) {
+                            if (customVictors.length > 0) {
+                                customVictors[customVictors.length - 1].link = val;
                             }
+                        } else {
+                            // 주소가 아니라 일반 텍스트(이름)라면 새로운 클리어자로 추가
+                            customVictors.push({ name: val, link: null });
                         }
                     }
 
@@ -382,7 +385,6 @@
                 const totalVictors = (row[1] && row[1].v !== null) ? String(row[1].v) : '0';
                 const aredlPlacement = (row[2] && row[2].v !== null) ? String(row[2].v) : '';
 
-                // 메인 시트 기본 클리어자 명단 추출
                 const defaultVictors = [];
                 for (let j = 5; j < row.length; j++) {
                     if (!row[j] || row[j].v === null) continue;
@@ -392,10 +394,8 @@
                     }
                 }
 
-                // 개인 비디오 시트에서 데이터 가져오기 (없으면 메인 시트 데이터 유지)
                 const customData = videoMap[levelName.toLowerCase()];
                 const finalVideoUrl = customData ? customData.videoUrl : null;
-                // 개인 시트에 클리어자 링크 정보가 있으면 그것을 우선 사용, 없으면 기본 클리어자 명단 사용
                 const finalVictors = (customData && customData.victors.length > 0) ? customData.victors : defaultVictors;
 
                 mapDataList.push({
@@ -462,7 +462,6 @@
             document.getElementById('totalVictorsCount').innerText = map.totalVictors;
             document.getElementById('listPoints').innerText = map.listPoints;
 
-            // 영상 표시 로직
             const videoBox = document.getElementById('videoContainer');
             let targetVideo = map.videoUrl;
 
@@ -477,7 +476,6 @@
                 videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
             }
 
-            // 첫 번째 클리어자 이름 표기
             if (map.victors.length > 0) {
                 document.getElementById('firstVictorName').innerText = map.victors[0].name;
             } else {
@@ -501,7 +499,6 @@
                 item.className = 'victor-item';
                 const rankSpan = `<span class="victor-rank">${idx + 1}.</span>`;
                 
-                // 클리어자 링크가 있으면 파란색 밑줄 및 클릭 시 새 창으로 이동
                 let nameEl = (v.link && v.link.startsWith('http'))
                     ? `<a href="${v.link}" target="_blank" class="victor-name has-link">${v.name} 🔗</a>`
                     : `<span class="victor-name">${v.name}</span>`;
