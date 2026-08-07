@@ -308,7 +308,12 @@
 
                 if (!levelName) continue;
 
-                if (levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
+                // 🛑 구분선(Beginner Tier)이나 하단 업데이트 정보 문구를 만나면 파싱 자동 종료
+                if (
+                    levelName.toLowerCase().includes('beginner tier') || 
+                    levelName.startsWith('Last update') || 
+                    levelName.startsWith('Records & Information')
+                ) {
                     break;
                 }
 
@@ -321,7 +326,6 @@
                     link: item.startsWith('http') ? item : null
                 }));
 
-                // LRR 시트도 마찬가지로 행 순서대로 #1, #2, #3... 순위 부여
                 mapDataList.push({
                     rank: `#${currentRank}`,
                     title: levelName,
@@ -331,10 +335,6 @@
                 });
 
                 currentRank++;
-
-                if (levelName.trim().toLowerCase() === 'red world') {
-                    break;
-                }
             }
 
             renderSidebar(mapDataList);
