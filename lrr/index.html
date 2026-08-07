@@ -43,7 +43,14 @@
             z-index: 1000;
         }
 
-        .logo { font-family: 'Orbitron'; font-size: 20px; font-weight: 900; color: var(--accent-orange); text-decoration: none; }
+        .logo { 
+            font-family: 'Orbitron', sans-serif; 
+            font-size: 20px; 
+            font-weight: 900; 
+            color: var(--accent-orange); 
+            text-decoration: none; 
+            line-height: 1;
+        }
 
         .container {
             display: flex;
@@ -81,8 +88,11 @@
         }
 
         .map-list { flex-grow: 1; overflow-y: auto; list-style: none; }
+        
+        /* 🎯 사이드바 줄맞춤 정밀 수정 */
         .map-item {
-            padding: 14px 18px;
+            padding: 0 18px;
+            height: 52px;
             border-bottom: 1px solid var(--panel-border);
             cursor: pointer;
             transition: background 0.2s;
@@ -90,9 +100,31 @@
             align-items: center;
             gap: 12px;
         }
+
         .map-item:hover, .map-item.active { background: rgba(255, 159, 67, 0.1); }
-        .map-item .rank { font-family: 'Orbitron'; color: var(--accent-orange); font-weight: 800; font-size: 14px; flex-shrink: 0; min-width: 45px; }
-        .map-item .title { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .map-item .rank { 
+            font-family: 'Orbitron', sans-serif; 
+            color: var(--accent-orange); 
+            font-weight: 800; 
+            font-size: 14px; 
+            flex-shrink: 0; 
+            width: 50px; 
+            line-height: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        .map-item .title { 
+            font-weight: 700; 
+            font-size: 15px; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            line-height: 1;
+            display: flex;
+            align-items: center;
+        }
 
         .toggle-btn {
             position: absolute;
@@ -132,17 +164,21 @@
             font-family: 'Orbitron', sans-serif;
             font-size: 36px;
             font-weight: 900;
+            line-height: 1;
         }
 
         .map-aredl-badge {
-            font-family: 'Orbitron';
+            font-family: 'Orbitron', sans-serif;
             color: var(--accent-orange);
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 800;
             background: rgba(255, 159, 67, 0.12);
-            padding: 4px 12px;
+            padding: 6px 12px;
             border-radius: 8px;
             border: 1px solid rgba(255, 159, 67, 0.3);
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
         }
 
         .detail-grid {
@@ -217,8 +253,8 @@
         }
 
         .victor-item:last-child { border-bottom: none; }
-        .victor-rank { font-family: 'Orbitron'; color: var(--text-sub); font-size: 14px; width: 36px; }
-        .victor-name { font-size: 16px; color: var(--text-main); text-decoration: none; }
+        .victor-rank { font-family: 'Orbitron', sans-serif; color: var(--text-sub); font-size: 14px; width: 36px; line-height: 1; }
+        .victor-name { font-size: 16px; color: var(--text-main); text-decoration: none; line-height: 1; }
         .victor-name.has-link { text-decoration: underline; color: var(--accent-orange); cursor: pointer; }
     </style>
 </head>
@@ -226,7 +262,7 @@
 
     <header>
         <a href="/" class="logo">KRM FORUM</a>
-        <div style="font-family:'Orbitron'; font-weight:800; color:var(--accent-orange);">LRR LIST</div>
+        <div style="font-family:'Orbitron', sans-serif; font-weight:800; color:var(--accent-orange); line-height:1;">LRR LIST</div>
     </header>
 
     <div class="container">
@@ -303,7 +339,7 @@
             let currentRank = 1;
 
             for (let i = 2; i < lines.length; i++) {
-                const cols = lines[i].split(',').map(c => c.replace(/^"(.*)"$/, '$1').trim());
+                const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"(.*)"$/, '$1').trim());
                 const levelName = cols[0];
 
                 if (!levelName) continue;
@@ -314,6 +350,12 @@
 
                 const totalVictors = cols[1] || '0';
                 const aredlPlacement = cols[2] || '';
+                const lrrPlacement = cols[3] || '';
+
+                if (!lrrPlacement || lrrPlacement === '-') {
+                    if (levelName.trim().toLowerCase() === 'precipitance') break;
+                    continue;
+                }
 
                 const rawVictors = cols.slice(5).filter(cell => cell && cell.length > 0);
                 const victors = rawVictors.map(item => ({
@@ -331,7 +373,6 @@
 
                 currentRank++;
 
-                // 🎯 Precipitance를 추가한 뒤 그 아래 행부터는 파싱 완전 종료
                 if (levelName.trim().toLowerCase() === 'precipitance') {
                     break;
                 }
@@ -375,7 +416,7 @@
             const aredlBadge = document.getElementById('mapAredlBadge');
             if (map.aredl && map.aredl !== '-') {
                 aredlBadge.innerText = `AREDL ${map.aredl}`;
-                aredlBadge.style.display = 'inline-block';
+                aredlBadge.style.display = 'inline-flex';
             } else {
                 aredlBadge.style.display = 'none';
             }
