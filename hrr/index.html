@@ -53,6 +53,7 @@
             position: relative;
         }
 
+        /* ⬅️ 사이드바 스타일 (AREDL 관련 제거 및 순위/제목 전용 깔끔화) */
         .sidebar {
             width: 340px;
             background: var(--panel-bg);
@@ -109,6 +110,7 @@
         }
         .sidebar.collapsed + .toggle-btn { left: 0; }
 
+        /* ➡️ 메인 영역 */
         .main-content {
             flex-grow: 1;
             padding: 40px;
@@ -134,6 +136,7 @@
             font-weight: 900;
         }
 
+        /* 메인 페이지 전용 주황색 AREDL 뱃지 */
         .map-aredl-badge {
             font-family: 'Orbitron';
             color: var(--accent-orange);
@@ -308,12 +311,7 @@
 
                 if (!levelName) continue;
 
-                // 🛑 구분선(Beginner Tier)이나 하단 업데이트 정보 문구를 만나면 파싱 자동 종료
-                if (
-                    levelName.toLowerCase().includes('beginner tier') || 
-                    levelName.startsWith('Last update') || 
-                    levelName.startsWith('Records & Information')
-                ) {
+                if (levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
                     break;
                 }
 
@@ -326,6 +324,7 @@
                     link: item.startsWith('http') ? item : null
                 }));
 
+                // 구글 시트 행 순서대로 차례대로 #1, #2, #3... 지정
                 mapDataList.push({
                     rank: `#${currentRank}`,
                     title: levelName,
@@ -335,6 +334,10 @@
                 });
 
                 currentRank++;
+
+                if (levelName.trim().toLowerCase() === 'red world') {
+                    break;
+                }
             }
 
             renderSidebar(mapDataList);
@@ -344,6 +347,7 @@
             selectMap(Math.max(0, targetIndex));
         }
 
+        // 사이드바 전용 렌더링 (AREDL 완전 제외, 오직 순위 + 제목만 출력)
         function renderSidebar(data) {
             const listEl = document.getElementById('mapList');
             listEl.innerHTML = '';
@@ -372,6 +376,7 @@
 
             document.getElementById('mapTitle').innerText = `${map.rank}. ${map.title}`;
             
+            // AREDL 순위는 오른쪽 메인 제목 옆 뱃지에만 표시
             const aredlBadge = document.getElementById('mapAredlBadge');
             if (map.aredl && map.aredl !== '-') {
                 aredlBadge.innerText = `AREDL ${map.aredl}`;
