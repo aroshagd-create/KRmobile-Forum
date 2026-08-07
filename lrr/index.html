@@ -53,7 +53,6 @@
             position: relative;
         }
 
-        /* ⬅️ 접을 수 있는 사이드바 */
         .sidebar {
             width: 340px;
             background: var(--panel-bg);
@@ -92,7 +91,7 @@
             gap: 12px;
         }
         .map-item:hover, .map-item.active { background: rgba(255, 159, 67, 0.1); }
-        .map-item .rank { font-family: 'Orbitron'; color: var(--accent-orange); font-weight: 800; font-size: 14px; flex-shrink: 0; width: 45px; }
+        .map-item .rank { font-family: 'Orbitron'; color: var(--accent-orange); font-weight: 800; font-size: 14px; flex-shrink: 0; min-width: 45px; }
         .map-item .title { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .toggle-btn {
@@ -110,7 +109,6 @@
         }
         .sidebar.collapsed + .toggle-btn { left: 0; }
 
-        /* ➡️ 메인 콘텐츠 영역 */
         .main-content {
             flex-grow: 1;
             padding: 40px;
@@ -283,7 +281,6 @@
     </div>
 
     <script>
-        // LRR 전용 구글 시트 ID 설정
         const LRR_SHEET_ID = '1yP5sJXHAA_dO0iv74nhx4vaT21J2Rl0cNXdzipsB-Y8';
         const CSV_URL = `https://docs.google.com/spreadsheets/d/${LRR_SHEET_ID}/export?format=csv&gid=0`;
 
@@ -317,7 +314,6 @@
 
                 const totalVictors = cols[1] || '0';
                 const aredlPlacement = cols[2] || '';
-                const lrrPlacement = cols[3] || ''; // LRR List Placement
 
                 const rawVictors = cols.slice(5).filter(cell => cell && cell.length > 0);
                 const victors = rawVictors.map(item => ({
@@ -325,16 +321,16 @@
                     link: item.startsWith('http') ? item : null
                 }));
 
-                // 순위 표시용 (LRR 순위값이 있으면 적용, 없으면 - 순위 표시)
-                let displayRank = lrrPlacement ? (lrrPlacement.startsWith('#') ? lrrPlacement : `#${lrrPlacement}`) : '-';
-
+                // LRR 시트도 마찬가지로 행 순서대로 #1, #2, #3... 순위 부여
                 mapDataList.push({
-                    rank: displayRank,
+                    rank: `#${currentRank}`,
                     title: levelName,
                     aredl: aredlPlacement,
                     totalVictors: totalVictors,
                     victors: victors
                 });
+
+                currentRank++;
 
                 if (levelName.trim().toLowerCase() === 'red world') {
                     break;
@@ -348,7 +344,6 @@
             selectMap(Math.max(0, targetIndex));
         }
 
-        // 사이드바 목록 출력 (AREDL 순위 미포함)
         function renderSidebar(data) {
             const listEl = document.getElementById('mapList');
             listEl.innerHTML = '';
@@ -377,7 +372,6 @@
 
             document.getElementById('mapTitle').innerText = `${map.rank}. ${map.title}`;
             
-            // AREDL 순위는 오른쪽 메인 정보(제목 옆 배지)에만 표시
             const aredlBadge = document.getElementById('mapAredlBadge');
             if (map.aredl && map.aredl !== '-') {
                 aredlBadge.innerText = `AREDL ${map.aredl}`;
