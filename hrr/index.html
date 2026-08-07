@@ -376,7 +376,6 @@
 
                 const levelName = String(row[0].v).trim();
 
-                // 'Waterfall'을 만나거나 그 이후부터 진짜 레벨 데이터로 인정
                 if (!foundStart) {
                     if (levelName.toLowerCase() === 'waterfall') {
                         foundStart = true;
@@ -389,8 +388,12 @@
                     continue;
                 }
 
-                // 텍스트 그대로 안전하게 읽어오기 ('1 (Or 2)' 같은 표현도 깨지지 않음)
-                const totalVictors = (row[1] && row[1].v !== null) ? String(row[1].v).trim() : '0';
+                // [수정 완료] '1 (Or 2)'처럼 문자나 괄호가 포함된 경우에도 텍스트 그대로 완벽하게 읽어오도록 개선
+                let totalVictors = '0';
+                if (row[1] && row[1].v !== null && row[1].v !== undefined) {
+                    totalVictors = String(row[1].v).trim();
+                }
+
                 const aredlPlacement = (row[2] && row[2].v !== null) ? String(row[2].v) : '';
 
                 const defaultVictors = [];
