@@ -53,7 +53,6 @@
             position: relative;
         }
 
-        /* ⬅️ 접을 수 있는 사이드바 */
         .sidebar {
             width: 340px;
             background: var(--panel-bg);
@@ -89,13 +88,11 @@
             transition: background 0.2s;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 12px;
         }
         .map-item:hover, .map-item.active { background: rgba(0, 242, 254, 0.08); }
-        .map-info { display: flex; align-items: center; gap: 8px; overflow: hidden; }
-        .map-item .rank { font-family: 'Orbitron'; color: var(--accent-cyan); font-weight: 800; font-size: 14px; flex-shrink: 0; }
+        .map-item .rank { font-family: 'Orbitron'; color: var(--accent-cyan); font-weight: 800; font-size: 14px; flex-shrink: 0; min-width: 45px; }
         .map-item .title { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .aredl-tag { font-family: 'Orbitron'; color: var(--accent-orange); font-size: 11px; font-weight: 700; flex-shrink: 0; margin-left: 6px; }
 
         .toggle-btn {
             position: absolute;
@@ -112,7 +109,6 @@
         }
         .sidebar.collapsed + .toggle-btn { left: 0; }
 
-        /* ➡️ 메인 콘텐츠 영역 */
         .main-content {
             flex-grow: 1;
             padding: 40px;
@@ -126,7 +122,7 @@
 
         .map-header-row {
             display: flex;
-            align-items: baseline;
+            align-items: center;
             gap: 16px;
             margin-bottom: 28px;
             flex-wrap: wrap;
@@ -306,28 +302,26 @@
 
             let currentRank = 1;
 
-            // 헤더(2번 줄) 제외하고 A3(3번째 줄, 인덱스 2)부터 파싱
             for (let i = 2; i < lines.length; i++) {
                 const cols = lines[i].split(',').map(c => c.replace(/^"(.*)"$/, '$1').trim());
                 const levelName = cols[0];
 
                 if (!levelName) continue;
 
-                // 하단 보조 정보 및 날짜 행 제외
                 if (levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
                     break;
                 }
 
                 const totalVictors = cols[1] || '0';
-                const aredlPlacement = cols[2] || ''; // C열 AREDL 순위 (#101 등)
+                const aredlPlacement = cols[2] || '';
 
-                // F열 이후의 클리어 유저/링크 파싱 (빈셀 자동 스킵)
                 const rawVictors = cols.slice(5).filter(cell => cell && cell.length > 0);
                 const victors = rawVictors.map(item => ({
                     name: item,
                     link: item.startsWith('http') ? item : null
                 }));
 
+                // 시트 순서대로 #1, #2, #3... 순위 부여
                 mapDataList.push({
                     rank: `#${currentRank}`,
                     title: levelName,
@@ -338,7 +332,6 @@
 
                 currentRank++;
 
-                // 'Red World' 맵까지 읽고 이후 무관한 맵 제외
                 if (levelName.trim().toLowerCase() === 'red world') {
                     break;
                 }
@@ -359,14 +352,9 @@
                 li.className = 'map-item';
                 li.onclick = () => selectMap(index);
 
-                const aredlTag = (map.aredl && map.aredl !== '-') ? `<span class="aredl-tag">AREDL ${map.aredl}</span>` : '';
-
                 li.innerHTML = `
-                    <div class="map-info">
-                        <span class="rank">${map.rank}</span>
-                        <span class="title">${map.title}</span>
-                    </div>
-                    ${aredlTag}
+                    <span class="rank">${map.rank}</span>
+                    <span class="title">${map.title}</span>
                 `;
                 listEl.appendChild(li);
             });
@@ -384,7 +372,6 @@
 
             document.getElementById('mapTitle').innerText = `${map.rank}. ${map.title}`;
             
-            // AREDL 주황색 뱃지 표시
             const aredlBadge = document.getElementById('mapAredlBadge');
             if (map.aredl && map.aredl !== '-') {
                 aredlBadge.innerText = `AREDL ${map.aredl}`;
