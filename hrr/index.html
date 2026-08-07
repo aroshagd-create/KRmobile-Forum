@@ -18,7 +18,11 @@
             --text-sub: #94a3b8;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
 
         body {
             background-color: var(--bg-dark);
@@ -69,7 +73,9 @@
             z-index: 10;
         }
 
-        .sidebar.collapsed { margin-left: -340px; }
+        .sidebar.collapsed { 
+            margin-left: -340px; 
+        }
 
         .sidebar-header {
             padding: 16px;
@@ -102,7 +108,10 @@
             gap: 12px;
         }
 
-        .map-item:hover, .map-item.active { background: rgba(0, 242, 254, 0.08); }
+        .map-item:hover, .map-item.active { 
+            background: rgba(0, 242, 254, 0.08); 
+        }
+
         .map-item .rank { 
             font-family: 'Orbitron'; 
             color: var(--accent-cyan); 
@@ -111,6 +120,7 @@
             flex-shrink: 0; 
             min-width: 45px; 
         }
+
         .map-item .title { 
             font-weight: 700; 
             font-size: 15px; 
@@ -133,7 +143,9 @@
             transition: left 0.3s ease;
         }
 
-        .sidebar.collapsed + .toggle-btn { left: 0; }
+        .sidebar.collapsed + .toggle-btn { 
+            left: 0; 
+        }
 
         .main-content {
             flex-grow: 1;
@@ -144,7 +156,10 @@
             align-items: center;
         }
 
-        .content-box { width: 100%; max-width: 960px; }
+        .content-box { 
+            width: 100%; 
+            max-width: 960px; 
+        }
 
         .map-header-row {
             display: flex;
@@ -191,10 +206,18 @@
             color: var(--text-sub);
         }
 
-        .video-box iframe { width: 100%; height: 100%; border: none; }
+        .video-box iframe { 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+        }
 
-        .info-side { display: flex; flex-direction: column; gap: 16px; }
-
+        .info-side { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 16px; 
+        }
+        
         .stat-card {
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
@@ -202,8 +225,17 @@
             padding: 20px;
         }
 
-        .stat-label { font-size: 13px; color: var(--text-sub); margin-bottom: 6px; font-weight: 600; }
-        .stat-value { font-size: 22px; font-weight: 800; }
+        .stat-label { 
+            font-size: 13px; 
+            color: var(--text-sub); 
+            margin-bottom: 6px; 
+            font-weight: 600; 
+        }
+
+        .stat-value { 
+            font-size: 22px; 
+            font-weight: 800; 
+        }
 
         .victors-btn {
             width: 100%;
@@ -232,7 +264,9 @@
             padding: 16px 20px;
         }
 
-        .victors-list-box.active { display: block; }
+        .victors-list-box.active { 
+            display: block; 
+        }
 
         .victor-item {
             padding: 10px 0;
@@ -242,10 +276,28 @@
             align-items: center;
         }
 
-        .victor-item:last-child { border-bottom: none; }
-        .victor-rank { font-family: 'Orbitron'; color: var(--text-sub); font-size: 14px; width: 36px; }
-        .victor-name { font-size: 16px; color: var(--text-main); text-decoration: none; }
-        .victor-name.has-link { text-decoration: underline; color: var(--accent-cyan); cursor: pointer; }
+        .victor-item:last-child { 
+            border-bottom: none; 
+        }
+
+        .victor-rank { 
+            font-family: 'Orbitron'; 
+            color: var(--text-sub); 
+            font-size: 14px; 
+            width: 36px; 
+        }
+
+        .victor-name { 
+            font-size: 16px; 
+            color: var(--text-main); 
+            text-decoration: none; 
+        }
+
+        .victor-name.has-link { 
+            text-decoration: underline; 
+            color: var(--accent-cyan); 
+            cursor: pointer; 
+        }
     </style>
 </head>
 <body>
@@ -322,19 +374,6 @@
             }
         }
 
-        // CSV 한 줄을 안전하게 정규식으로 분할
-        function parseCSVLine(text) {
-            const regex = /(?:^|,)(?:"([^"]*)"|([^,]*))/g;
-            const matches = [];
-            let match;
-            while ((match = regex.exec(text)) !== null) {
-                // 따옴표 내부 값 우선, 없으면 일반 값
-                let value = match[1] !== undefined ? match[1] : match[2];
-                matches.push(value.trim());
-            }
-            return matches;
-        }
-
         function parseCSV(text) {
             const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
             mapDataList = [];
@@ -342,7 +381,7 @@
             let currentRank = 1;
 
             for (let i = 2; i < lines.length; i++) {
-                const cols = parseCSVLine(lines[i]);
+                const cols = lines[i].split(',').map(c => c.replace(/^"(.*)"$/, '$1').trim());
                 const levelName = cols[0];
 
                 if (!levelName) continue;
@@ -354,10 +393,8 @@
                 const totalVictors = cols[1] || '0';
                 const aredlPlacement = cols[2] || '';
 
-                // 🛑 핵심: index 4(E열 노트/비고)를 완전히 건너뛰고 index 5(F열)부터 수집!
-                const victorRawCells = cols.slice(5).filter(cell => cell && cell.length > 0);
-                
-                const victors = victorRawCells.map(item => ({
+                const rawVictors = cols.slice(5).filter(cell => cell && cell.length > 0);
+                const victors = rawVictors.map(item => ({
                     name: item,
                     link: item.startsWith('http') ? item : null
                 }));
@@ -372,13 +409,14 @@
 
                 currentRank++;
 
+                // 🎯 Red World를 리스트에 담은 후 그 아래 행들은 완전히 파싱 종료
                 if (levelName.trim().toLowerCase() === 'red world') {
                     break;
                 }
             }
 
             renderSidebar(mapDataList);
-
+            
             const hash = window.location.hash.replace('#', '');
             const targetIndex = hash ? parseInt(hash) - 1 : 0;
             selectMap(Math.max(0, targetIndex));
@@ -411,7 +449,7 @@
             });
 
             document.getElementById('mapTitle').innerText = `${map.rank}. ${map.title}`;
-
+            
             const aredlBadge = document.getElementById('mapAredlBadge');
             if (map.aredl && map.aredl !== '-') {
                 aredlBadge.innerText = `AREDL ${map.aredl}`;
@@ -455,7 +493,7 @@
                 const item = document.createElement('div');
                 item.className = 'victor-item';
                 const rankSpan = `<span class="victor-rank">${idx + 1}.</span>`;
-
+                
                 let nameEl = v.link 
                     ? `<a href="${v.link}" target="_blank" class="victor-name has-link">${v.name}</a>`
                     : `<span class="victor-name">${v.name}</span>`;
