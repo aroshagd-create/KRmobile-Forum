@@ -53,7 +53,6 @@
             position: relative;
         }
 
-        /* ⬅️ 사이드바 스타일 (AREDL 관련 제거 및 순위/제목 전용 깔끔화) */
         .sidebar {
             width: 340px;
             background: var(--panel-bg);
@@ -110,7 +109,6 @@
         }
         .sidebar.collapsed + .toggle-btn { left: 0; }
 
-        /* ➡️ 메인 영역 */
         .main-content {
             flex-grow: 1;
             padding: 40px;
@@ -136,7 +134,6 @@
             font-weight: 900;
         }
 
-        /* 메인 페이지 전용 주황색 AREDL 뱃지 */
         .map-aredl-badge {
             font-family: 'Orbitron';
             color: var(--accent-orange);
@@ -171,7 +168,7 @@
         .video-box iframe { width: 100%; height: 100%; border: none; }
 
         .info-side { display: flex; flex-direction: column; gap: 16px; }
-        
+
         .stat-card {
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
@@ -223,6 +220,10 @@
         .victor-rank { font-family: 'Orbitron'; color: var(--text-sub); font-size: 14px; width: 36px; }
         .victor-name { font-size: 16px; color: var(--text-main); text-decoration: none; }
         .victor-name.has-link { text-decoration: underline; color: var(--accent-cyan); cursor: pointer; }
+
+        @media (max-width: 768px) {
+            .detail-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -292,22 +293,50 @@
         async function loadSheetData() {
             try {
                 const response = await fetch(CSV_URL);
+                if (!response.ok) throw new Error('Network response was not ok');
                 const csvText = await response.text();
                 parseCSV(csvText);
             } catch (err) {
                 console.error("데이터 로드 실패:", err);
+                document.getElementById('mapTitle').innerText = "데이터 로드 실패";
             }
         }
 
+        // 따옴표와 쉼표 처리가 완전한 정식 CSV 파서
+        function parseCSVLine(line) {
+            const values = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    if (inQuotes && line[i + 1] === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    values.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            values.push(current.trim());
+            return values;
+        }
+
         function parseCSV(text) {
-            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
             mapDataList = [];
 
             let currentRank = 1;
 
             for (let i = 2; i < lines.length; i++) {
-                const cols = lines[i].split(',').map(c => c.replace(/^"(.*)"$/, '$1').trim());
-                const levelName = cols[0];
+                const cols = parseCSVLine(lines[i]);
+                const levelName = cols[0] ? cols[0].replace(/^"(.*)"$/, '$1').trim() : '';
 
                 if (!levelName) continue;
 
@@ -315,46 +344,58 @@
                     break;
                 }
 
+                /* [구글 시트 열 매핑]
+                  A열(cols[0]): Levels (맵 이름)
+                  B열(cols[1]): Total Victors (총 클리어 수)
+                  C열(cols[2]): Aredl Placements (AREDL 순위)
+                  D열(cols[3]): HRR List Placements (List Points)
+                  E열(cols[4]): Notes / 비고
+                  F열(cols[5]): Video Links (최초 클리어 영상 링크)
+                  G열~(cols[6]~): Victors (클리어자 이름 및 개별 링크)
+                */
                 const totalVictors = cols[1] || '0';
                 const aredlPlacement = cols[2] || '';
+                const listPoints = cols[3] || '-';
+                const mainVideoUrl = cols[5] || '';
 
-                const rawVictors = cols.slice(5).filter(cell => cell && cell.length > 0);
-                const victors = rawVictors.map(item => ({
-                    name: item,
-                    link: item.startsWith('http') ? item : null
-                }));
+                // G열부터 클리어자 목록 시작
+                const rawVictors = cols.slice(6).filter(cell => cell && cell.length > 0);
+                const victors = rawVictors.map(item => {
+                    const cleanItem = item.replace(/^"(.*)"$/, '$1').trim();
+                    return {
+                        name: cleanItem,
+                        link: cleanItem.startsWith('http') ? cleanItem : null
+                    };
+                });
 
-                // 구글 시트 행 순서대로 차례대로 #1, #2, #3... 지정
                 mapDataList.push({
                     rank: `#${currentRank}`,
                     title: levelName,
                     aredl: aredlPlacement,
                     totalVictors: totalVictors,
+                    listPoints: listPoints,
+                    videoUrl: mainVideoUrl,
                     victors: victors
                 });
 
                 currentRank++;
-
-                if (levelName.trim().toLowerCase() === 'red world') {
-                    break;
-                }
             }
 
             renderSidebar(mapDataList);
             
-            const hash = window.location.hash.replace('#', '');
-            const targetIndex = hash ? parseInt(hash) - 1 : 0;
-            selectMap(Math.max(0, targetIndex));
+            // 뒤로가기/URL Hash 대응
+            handleHashChange();
         }
 
-        // 사이드바 전용 렌더링 (AREDL 완전 제외, 오직 순위 + 제목만 출력)
         function renderSidebar(data) {
             const listEl = document.getElementById('mapList');
             listEl.innerHTML = '';
-            data.forEach((map, index) => {
+            data.forEach((map) => {
+                // 검색 시 인덱스 꼬임 방지를 위해 원본 인덱스 참조
+                const originalIndex = mapDataList.findIndex(m => m.rank === map.rank);
                 const li = document.createElement('li');
                 li.className = 'map-item';
-                li.onclick = () => selectMap(index);
+                li.onclick = () => selectMap(originalIndex);
 
                 li.innerHTML = `
                     <span class="rank">${map.rank}</span>
@@ -368,40 +409,53 @@
             const map = mapDataList[index];
             if (!map) return;
 
-            window.location.hash = index + 1;
+            // URL Hash 업데이트 (뒤로가기/앞으로가기 지원)
+            if (window.location.hash !== `#${index + 1}`) {
+                history.pushState(null, null, `#${index + 1}`);
+            }
 
-            document.querySelectorAll('.map-item').forEach((el, i) => {
-                el.classList.toggle('active', i === index);
+            document.querySelectorAll('.map-item').forEach((el) => {
+                const isSelected = el.querySelector('.rank')?.innerText === map.rank;
+                el.classList.toggle('active', isSelected);
             });
 
             document.getElementById('mapTitle').innerText = `${map.rank}. ${map.title}`;
             
-            // AREDL 순위는 오른쪽 메인 제목 옆 뱃지에만 표시
             const aredlBadge = document.getElementById('mapAredlBadge');
-            if (map.aredl && map.aredl !== '-') {
-                aredlBadge.innerText = `AREDL ${map.aredl}`;
+            if (map.aredl && map.aredl !== '-' && map.aredl !== '0') {
+                aredlBadge.innerText = `AREDL #${map.aredl.replace('#', '')}`;
                 aredlBadge.style.display = 'inline-block';
             } else {
                 aredlBadge.style.display = 'none';
             }
 
             document.getElementById('totalVictorsCount').innerText = map.totalVictors;
-            document.getElementById('listPoints').innerText = '-';
+            document.getElementById('listPoints').innerText = map.listPoints;
 
+            // 영상 영역 처리 (F열의 Video URL 우선, 없을 경우 첫 클리어자 링크 확인)
             const videoBox = document.getElementById('videoContainer');
-            if (map.victors.length > 0) {
-                const firstVictor = map.victors[0];
-                document.getElementById('firstVictorName').innerText = firstVictor.name;
+            let targetVideo = map.videoUrl;
 
-                if (firstVictor.link && firstVictor.link.includes('youtu')) {
-                    const videoId = extractYoutubeId(firstVictor.link);
+            if (!targetVideo && map.victors.length > 0 && map.victors[0].link) {
+                targetVideo = map.victors[0].link;
+            }
+
+            if (targetVideo && targetVideo.includes('youtu')) {
+                const videoId = extractYoutubeId(targetVideo);
+                if (videoId) {
                     videoBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>`;
                 } else {
                     videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
                 }
             } else {
-                document.getElementById('firstVictorName').innerText = '-';
                 videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
+            }
+
+            // 최초 클리어자 이름 표시 (첫 번째 Victor 이름)
+            if (map.victors.length > 0) {
+                document.getElementById('firstVictorName').innerText = map.victors[0].name;
+            } else {
+                document.getElementById('firstVictorName').innerText = '-';
             }
 
             renderVictorsList(map.victors);
@@ -411,7 +465,7 @@
             const container = document.getElementById('victorsContainer');
             container.innerHTML = '';
 
-            if (victors.length === 0) {
+            if (!victors || victors.length === 0) {
                 container.innerHTML = '<div style="color:var(--text-sub); font-size:14px;">클리어자가 없습니다.</div>';
                 return;
             }
@@ -430,6 +484,7 @@
             });
         }
 
+        // 유튜브 일반 URL, Short, embed 형태 모두 파싱 가능
         function extractYoutubeId(url) {
             const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
             const match = url.match(regExp);
@@ -446,11 +501,23 @@
             document.getElementById('arrowIcon').innerText = box.classList.contains('active') ? '▲' : '▼';
         }
 
+        // 검색 기능 (검색 시에도 원래 클릭 인덱스가 유지됨)
         function filterMaps() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const filtered = mapDataList.filter(m => m.title.toLowerCase().includes(query));
             renderSidebar(filtered);
         }
+
+        function handleHashChange() {
+            const hash = window.location.hash.replace('#', '');
+            const targetIndex = hash ? parseInt(hash) - 1 : 0;
+            if (mapDataList.length > 0) {
+                selectMap(Math.max(0, Math.min(targetIndex, mapDataList.length - 1)));
+            }
+        }
+
+        // 브라우저 뒤로가기 / 앞으로가기 이벤트 핸들링
+        window.addEventListener('hashchange', handleHashChange);
 
         loadSheetData();
     </script>
