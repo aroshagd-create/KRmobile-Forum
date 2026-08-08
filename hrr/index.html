@@ -44,8 +44,8 @@
             z-index: 1000;
         }
 
-        .logo { font-family: 'Orbitron'; font-size: 18px; font-weight: 900; color: var(--accent-orange); text-decoration: none; }
-        .header-right { font-family: 'Orbitron'; font-size: 14px; font-weight: 800; color: var(--accent-orange); text-decoration: none; }
+        .logo { font-family: 'Orbitron'; font-size: 18px; font-weight: 900; color: var(--accent-cyan); text-decoration: none; }
+        .header-right { font-family: 'Orbitron'; font-size: 14px; font-weight: 800; color: var(--accent-cyan); text-decoration: none; }
 
         .container {
             display: flex;
@@ -69,7 +69,7 @@
         .sidebar-overlay.active { display: block; }
 
         .sidebar {
-            width: 310px;
+            width: 300px;
             background: var(--panel-bg);
             border-right: 1px solid var(--panel-border);
             display: flex;
@@ -119,36 +119,18 @@
         }
 
         .map-list { flex-grow: 1; overflow-y: auto; list-style: none; }
-        
         .map-item {
-            padding: 14px 16px;
+            padding: 14px 18px;
             border-bottom: 1px solid var(--panel-border);
             cursor: pointer;
             transition: background 0.2s;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
-        .map-item:hover, .map-item.active { background: rgba(255, 159, 67, 0.1); }
-        
-        .map-item .rank { 
-            font-family: 'Orbitron'; 
-            color: var(--accent-orange); 
-            font-weight: 800; 
-            font-size: 13px; 
-            flex-shrink: 0; 
-            width: 52px; 
-            text-align: right;
-        }
-        
-        .map-item .title { 
-            font-weight: 700; 
-            font-size: 14px; 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
-            flex-grow: 1;
-        }
+        .map-item:hover, .map-item.active { background: rgba(0, 242, 254, 0.08); }
+        .map-item .rank { font-family: 'Orbitron'; color: var(--accent-cyan); font-weight: 800; font-size: 14px; flex-shrink: 0; min-width: 40px; }
+        .map-item .title { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .toggle-btn {
             background: var(--panel-bg);
@@ -295,7 +277,7 @@
         .victor-item:last-child { border-bottom: none; }
         .victor-rank { font-family: 'Orbitron'; color: var(--text-sub); font-size: 13px; width: 30px; }
         .victor-name { font-size: 15px; color: var(--text-main); text-decoration: none; }
-        .victor-name.has-link { text-decoration: underline; color: var(--accent-orange); cursor: pointer; }
+        .victor-name.has-link { text-decoration: underline; color: var(--accent-cyan); cursor: pointer; }
 
         @media (min-width: 768px) {
             header { padding: 0 32px; height: 72px; }
@@ -341,7 +323,7 @@
                 <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
                 <div class="map-header-row">
                     <h1 class="map-main-title" id="mapTitle">#1. Loading...</h1>
-                    <span class="map-aredl-badge" id="mapAredlBadge" style="display:none;">-</span>
+                    <span class="map-aredl-badge" id="mapAredlBadge" style="display:none;">AREDL -</span>
                 </div>
 
                 <div class="detail-grid">
@@ -350,7 +332,7 @@
                     </div>
 
                     <div class="info-side">
-                        <div class="stat-card" style="border-left: 4px solid var(--accent-orange);">
+                        <div class="stat-card" style="border-left: 4px solid var(--accent-cyan);">
                             <div class="stat-label">First Korean HRR Mobile Victor</div>
                             <div class="stat-value" id="firstVictorName">-</div>
                         </div>
@@ -379,11 +361,11 @@
     </div>
 
     <script>
-        const HRR_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8'; 
-        const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${HRR_SHEET_ID}/gviz/tq?tqx=out:json`;
+        const MAIN_SHEET_ID = '1f1lwB1kbOpD4IWBiTf-D3wDeqpCA5nz-fkNIhr4ZO14';
+        const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
 
         const VIDEO_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8';
-        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&gid=1240231056`;
+        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json`;
 
         let mapDataList = [];
         let videoMap = {};
@@ -462,20 +444,23 @@
             
             mapDataList = [];
             let currentRank = 1;
+            let foundStart = false;
 
             for (let i = 0; i < rows.length; i++) {
                 const row = rows[i].c;
                 if (!row || !row[0] || !row[0].v) continue;
 
                 const levelName = String(row[0].v).trim();
-                const lowerLevelName = levelName.toLowerCase();
+
+                if (!foundStart) {
+                    if (levelName.toLowerCase() === 'waterfall') {
+                        foundStart = true;
+                    } else {
+                        continue;
+                    }
+                }
                 
-                if (
-                    lowerLevelName === 'levels' || 
-                    lowerLevelName.startsWith('last update') || 
-                    lowerLevelName.startsWith('records & information') ||
-                    lowerLevelName.includes('last update:')
-                ) {
+                if (levelName.toLowerCase() === 'levels' || levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
                     continue;
                 }
 
@@ -484,27 +469,26 @@
                     totalVictors = String(row[1].v).trim();
                 }
 
+                // [수정된 열 매핑 구조 정렬 반영 구간]
+                // 구글 시트 실제 열 배치에 맞추어 인덱스 번호를 정확하게 매칭합니다.
+                // A열(0): Levels, B열(1): Total Victors, C열(2): Aredl Placements, D열(3): HRR List Placements, E열(4): Notes, F열 이후(5+): Video links / Victors
                 const rawCCol = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
+                const rawDCol = (row[3] && row[3].v !== null) ? String(row[3].v).trim() : '';
                 
                 let displayRank = '';
                 let badgeText = '';
 
-                if (rawCCol !== '') {
-                    const lowerC = rawCCol.toLowerCase();
-                    if (lowerC.includes('tier') || lowerC.includes('nlw') || isNaN(rawCCol.replace('#', ''))) {
-                        displayRank = '-';
-                        badgeText = rawCCol;
-                    } else {
-                        displayRank = `#${currentRank}`;
-                        badgeText = rawCCol;
-                        currentRank++;
-                    }
-                } else {
+                // C열 값이 '#'으로 시작하거나 숫자 형태이면 정식 순위권 맵
+                if (rawCCol.startsWith('#') || !isNaN(rawCCol)) {
                     displayRank = `#${currentRank}`;
-                    badgeText = '';
+                    badgeText = rawCCol; 
                     currentRank++;
+                } else {
+                    displayRank = `-`;
+                    badgeText = rawCCol; 
                 }
 
+                // 클리어자 데이터는 F열(인덱스 5)부터 시작하도록 정확히 정렬
                 const defaultVictors = [];
                 for (let j = 5; j < row.length; j++) {
                     const cell = row[j];
@@ -524,7 +508,7 @@
                 mapDataList.push({
                     rank: displayRank,
                     title: levelName,
-                    badge: badgeText,
+                    aredl: badgeText,
                     totalVictors: totalVictors,
                     listPoints: '-',
                     videoUrl: finalVideoUrl,
@@ -571,12 +555,12 @@
 
             document.getElementById('mapTitle').innerText = `${map.rank !== '-' ? map.rank + '.' : ''} ${map.title}`;
             
-            const badgeEl = document.getElementById('mapAredlBadge');
-            if (map.badge && map.badge !== '') {
-                badgeEl.innerText = map.badge;
-                badgeEl.style.display = 'inline-block';
+            const aredlBadge = document.getElementById('mapAredlBadge');
+            if (map.aredl && map.aredl !== '-' && map.aredl !== '0' && map.aredl !== '') {
+                aredlBadge.innerText = map.aredl.includes('Tier') ? map.aredl : `AREDL ${map.aredl}`;
+                aredlBadge.style.display = 'inline-block';
             } else {
-                badgeEl.style.display = 'none';
+                aredlBadge.style.display = 'none';
             }
 
             document.getElementById('totalVictorsCount').innerText = map.totalVictors;
