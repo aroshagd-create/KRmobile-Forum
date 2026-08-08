@@ -49,12 +49,12 @@
         .container {
             display: flex;
             flex-grow: 1;
-            height: calc(100vh - 64px);
-            overflow: hidden;
+            min-height: calc(100vh - 64px);
             position: relative;
+            justify-content: center;
         }
 
-        /* 사이드바 스타일 (모바일 반응형 대응) */
+        /* 사이드바 스타일 */
         .sidebar {
             width: 320px;
             background: var(--panel-bg);
@@ -62,21 +62,19 @@
             display: flex;
             flex-direction: column;
             transition: transform 0.3s ease;
-            position: absolute;
-            height: 100%;
+            position: fixed;
+            height: calc(100vh - 64px);
             z-index: 100;
             left: 0;
-            top: 0;
+            top: 64px;
+            transform: translateX(-100%);
         }
 
-        .sidebar.collapsed { transform: translateX(-100%); }
+        .sidebar.open { transform: translateX(0); }
 
         .sidebar-header {
             padding: 16px;
             border-bottom: 1px solid var(--panel-border);
-            display: flex;
-            gap: 8px;
-            align-items: center;
         }
 
         .search-input {
@@ -108,43 +106,52 @@
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
             color: var(--text-main);
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 20px;
             flex-shrink: 0;
         }
 
-        /* 메인 콘텐츠 영역 */
+        /* 메인 콘텐츠 영역 (중앙 정렬 최적화) */
         .main-content {
             flex-grow: 1;
-            padding: 24px 16px;
-            overflow-y: auto;
+            padding: 30px 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
             width: 100%;
         }
 
-        .content-box { width: 100%; max-width: 900px; }
+        .content-box { 
+            width: 100%; 
+            max-width: 800px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
         .map-header-row {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             flex-wrap: wrap;
+            width: 100%;
+            text-align: center;
         }
 
         .map-main-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 900;
             word-break: break-all;
+            text-align: center;
         }
 
         .map-aredl-badge {
@@ -163,6 +170,7 @@
             flex-direction: column;
             gap: 16px;
             margin-bottom: 20px;
+            width: 100%;
         }
 
         .video-box {
@@ -180,13 +188,14 @@
 
         .video-box iframe { width: 100%; height: 100%; border: none; }
 
-        .info-side { display: flex; flex-direction: column; gap: 12px; }
+        .info-side { display: flex; flex-direction: column; gap: 12px; width: 100%; }
 
         .stat-card {
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
             border-radius: 14px;
             padding: 16px;
+            width: 100%;
         }
 
         .stat-label { font-size: 12px; color: var(--text-sub); margin-bottom: 4px; font-weight: 600; }
@@ -217,6 +226,7 @@
             max-height: 240px;
             overflow-y: auto;
             padding: 14px 16px;
+            width: 100%;
         }
 
         .victors-list-box.active { display: block; }
@@ -238,11 +248,12 @@
         @media (min-width: 768px) {
             header { padding: 0 32px; height: 72px; }
             .logo { font-size: 20px; }
-            .container { height: calc(100vh - 72px); }
-            .sidebar { position: relative; transform: translateX(0) !important; width: 340px; }
+            .container { justify-content: flex-start; }
+            .sidebar { position: relative; transform: translateX(0) !important; width: 340px; height: calc(100vh - 72px); top: 0; }
             .toggle-btn { display: none; }
             .main-content { padding: 40px; }
-            .map-main-title { font-size: 36px; }
+            .map-header-row { justify-content: flex-start; text-align: left; }
+            .map-main-title { font-size: 36px; text-align: left; }
             .map-aredl-badge { font-size: 18px; padding: 4px 12px; }
             .detail-grid { display: grid; grid-template-columns: 16fr 9fr; gap: 24px; margin-bottom: 28px; }
             .stat-card { padding: 20px; border-radius: 16px; }
@@ -261,7 +272,7 @@
     </header>
 
     <div class="container">
-        <aside class="sidebar collapsed" id="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <input type="text" class="search-input" id="searchInput" placeholder="맵 이름 검색..." oninput="filterMaps()">
             </div>
@@ -515,7 +526,8 @@
             if (targetVideo && targetVideo.includes('youtu')) {
                 const videoId = extractYoutubeId(targetVideo);
                 if (videoId) {
-                    videoBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>`;
+                    // 고화질 출력을 위해 토글 파라미터(vq=hd1080 등) 추가
+                    videoBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?vq=hd1080&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
                 } else {
                     videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
                 }
@@ -562,7 +574,7 @@
         }
 
         function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
+            document.getElementById('sidebar').classList.toggle('open');
         }
 
         function toggleVictorsBox() {
