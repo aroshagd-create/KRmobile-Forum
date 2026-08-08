@@ -460,7 +460,7 @@
                     totalVictors = String(row[1].v).trim();
                 }
 
-                // C열(인덱스 2): NLW 티어 또는 AREDL 순위/기타 정보 처리 (HRR 방식과 동일하게 반영)
+                // C열(인덱스 2): 순위 또는 NLW Tier 처리 로직
                 const rawCCol = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
                 
                 let displayRank = '';
@@ -468,14 +468,17 @@
 
                 if (rawCCol !== '') {
                     const lowerC = rawCCol.toLowerCase();
-                    if (lowerC.includes('tier') || lowerC.includes('nlw') || isNaN(rawCCol)) {
-                        displayRank = '-';
+                    // NLW Tier 등의 텍스트 데이터인 경우
+                    if (lowerC.includes('tier') || lowerC.includes('nlw') || isNaN(rawCCol.replace('#', ''))) {
+                        displayRank = `-`;
                         badgeText = rawCCol;
                     } else {
-                        displayRank = `#${currentRank}`;
+                        // 숫자 순위인 경우
+                        const cleanNum = rawCCol.replace('#', '');
+                        displayRank = `#${cleanNum}`;
                         badgeText = rawCCol;
-                        currentRank++;
                     }
+                    currentRank++;
                 } else {
                     displayRank = `#${currentRank}`;
                     badgeText = '';
@@ -508,10 +511,6 @@
                     videoUrl: finalVideoUrl,
                     victors: finalVictors
                 });
-
-                if (levelName.toLowerCase() === 'precipitance') {
-                    break;
-                }
             }
 
             renderSidebar(mapDataList);
