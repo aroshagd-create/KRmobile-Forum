@@ -121,13 +121,13 @@
         .map-list { flex-grow: 1; overflow-y: auto; list-style: none; }
         
         .map-item {
-            padding: 12px 18px; /* HRR과 동일한 패딩 값 적용 */
+            padding: 12px 18px;
             border-bottom: 1px solid var(--panel-border);
             cursor: pointer;
             transition: background 0.2s;
             display: flex;
             align-items: center;
-            gap: 10px; /* HRR과 동일한 간격 적용 */
+            gap: 10px;
         }
         .map-item:hover, .map-item.active { background: rgba(255, 159, 67, 0.1); }
         
@@ -203,6 +203,7 @@
             width: 100%;
         }
 
+        /* HRR과 동일한 뱃지 스타일 적용 (주황색 테마) */
         .map-aredl-badge {
             font-family: 'Orbitron';
             color: var(--accent-orange);
@@ -488,15 +489,10 @@
                 let badgeText = '';
 
                 if (rawCCol !== '') {
-                    const lowerC = rawCCol.toLowerCase();
-                    if (lowerC.includes('tier') || lowerC.includes('nlw') || isNaN(rawCCol.replace('#', ''))) {
-                        displayRank = '-';
-                        badgeText = rawCCol;
-                    } else {
-                        displayRank = `#${currentRank}`;
-                        badgeText = rawCCol;
-                        currentRank++;
-                    }
+                    displayRank = `#${currentRank}`;
+                    // HRR처럼 시트의 3번째 열(C열) 값에 '#'이 포함되어 있지 않다면 붙여서 뱃지 형태로 출력
+                    badgeText = rawCCol.startsWith('#') ? rawCCol : `#${rawCCol}`;
+                    currentRank++;
                 } else {
                     displayRank = `#${currentRank}`;
                     badgeText = '';
