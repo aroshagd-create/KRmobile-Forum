@@ -80,7 +80,7 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .info-desc { font-size: 21px; color: var(--text-sub); line-height: 1.6; }
+        .info-desc { font-size: 21px; color: var(--text-sub); line-height: 1.6; word-break: keep-all; }
 
         .cards-container { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; }
         .card {
@@ -104,12 +104,29 @@
         .btn {
             display: block; width: 100%; padding: 18px 0; border-radius: 14px; font-size: 17px; font-weight: 700;
             text-align: center; text-decoration: none; cursor: pointer; border: none; margin-top: 24px;
+            transition: opacity 0.2s;
         }
+        .btn:active { opacity: 0.85; }
         .btn-hrr { background: var(--accent-cyan); color: #000; }
         .btn-lrr { background: var(--accent-orange); color: #000; }
 
         .page-section { display: none; width: 100%; }
         .page-section.active { display: block; }
+
+        /* 모바일 반응형 스타일 최적화 */
+        @media (max-width: 768px) {
+            header { padding: 0 20px; height: 64px; }
+            .logo { font-size: 18px; }
+            .pc-menu a { font-size: 14px; }
+            .main-wrapper { padding: 30px 16px 60px; gap: 32px; }
+            .info-title { font-size: 38px; margin-bottom: 16px; }
+            .info-desc { font-size: 16px; }
+            .cards-container { grid-template-columns: 1fr; gap: 20px; }
+            .card { padding: 28px 22px; min-height: auto; border-radius: 18px; }
+            .card-header h2 { font-size: 22px !important; }
+            .card p { font-size: 15px !important; }
+            .btn { padding: 14px 0; font-size: 15px; margin-top: 20px; border-radius: 12px; }
+        }
     </style>
 </head>
 <body>
@@ -157,9 +174,9 @@
 
     <div id="rankingView" class="page-section">
         <div class="main-wrapper" style="text-align: center;">
-            <h2 style="font-family: 'Orbitron'; color: var(--accent-cyan); font-size: 56px;">Soon...</h2>
-            <p style="color: var(--text-sub); margin-top: 16px; font-size: 20px;">포인트 랭킹 기능은 현재 준비 중입니다.</p>
-            <button class="btn btn-hrr" style="margin: 40px auto 0; max-width: 320px;" onclick="showSection('home')">← 메인으로 돌아가기</button>
+            <h2 style="font-family: 'Orbitron'; color: var(--accent-cyan); font-size: 48px;">Soon...</h2>
+            <p style="color: var(--text-sub); margin-top: 16px; font-size: 18px;">포인트 랭킹 기능은 현재 준비 중입니다.</p>
+            <button class="btn btn-hrr" style="margin: 30px auto 0; max-width: 280px;" onclick="showSection('home')">← 메인으로 돌아가기</button>
         </div>
     </div>
 
