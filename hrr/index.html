@@ -377,13 +377,11 @@
                     fetch(VIDEO_SHEET_URL)
                 ]);
 
-                // 1. 유저 링크 및 비디오가 포함된 사용자의 커스텀 시트 먼저 파싱
                 if (videoRes.status === 'fulfilled' && videoRes.value.ok) {
                     const videoRaw = await videoRes.value.text();
                     parseVideoSheet(videoRaw);
                 }
 
-                // 2. 메인 순위 시트 파싱
                 if (mainRes.status === 'fulfilled' && mainRes.value.ok) {
                     const mainRaw = await mainRes.value.text();
                     parseMainSheet(mainRaw);
@@ -397,7 +395,6 @@
             }
         }
 
-        // 사용자님이 만드신 비디오/링크 시트 파싱 로직
         function parseVideoSheet(rawText) {
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
@@ -413,7 +410,6 @@
                     const mainVideoUrl = (row[1] && row[1].v) ? String(row[1].v).trim() : null;
 
                     const customVictors = [];
-                    // 사용자님이 만드신 시트의 클리어자 목록 및 링크 파싱
                     for (let j = 2; j < row.length; j++) {
                         const cell = row[j];
                         if (!cell || cell.v === null) continue;
@@ -441,7 +437,6 @@
             }
         }
 
-        // 메인 시트 파싱 로직 (F열 = 인덱스 5부터 클리어자 이름 추출)
         function parseMainSheet(rawText) {
             const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
             const data = JSON.parse(jsonText);
@@ -474,9 +469,20 @@
                     totalVictors = String(row[1].v).trim();
                 }
 
-                const aredlPlacement = (row[2] && row[2].v !== null) ? String(row[2].v) : '';
+                const rawCCol = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
+                
+                let displayRank = '';
+                let badgeText = '';
 
-                // 메인 시트 F열(인덱스 5)부터 클리어자 이름 추출
+                if (rawCCol.startsWith('#') || !isNaN(rawCCol)) {
+                    displayRank = `#${currentRank}`;
+                    badgeText = (row[3] && row[3].v !== null) ? String(row[3].v) : '';
+                    currentRank++;
+                } else {
+                    displayRank = `-`;
+                    badgeText = rawCCol;
+                }
+
                 const defaultVictors = [];
                 for (let j = 5; j < row.length; j++) {
                     const cell = row[j];
@@ -487,29 +493,21 @@
                     defaultVictors.push({ name: val, link: null });
                 }
 
-                // 💡 핵심: 사용자님이 만드신 링크/비디오 시트의 데이터가 존재하면 우선적으로 결합합니다!
                 const matchedKey = Object.keys(videoMap).find(k => k.toLowerCase() === levelName.toLowerCase());
                 const customData = matchedKey ? videoMap[matchedKey] : null;
 
                 const finalVideoUrl = customData ? customData.videoUrl : null;
-                // 사용자 시트에 클리어자/링크 정보가 있으면 그걸 쓰고, 없으면 메인 시트 이름 목록 사용
                 const finalVictors = (customData && customData.victors.length > 0) ? customData.victors : defaultVictors;
 
                 mapDataList.push({
-                    rank: `#${currentRank}`,
+                    rank: displayRank,
                     title: levelName,
-                    aredl: aredlPlacement,
+                    aredl: badgeText,
                     totalVictors: totalVictors,
                     listPoints: '-',
                     videoUrl: finalVideoUrl,
                     victors: finalVictors
                 });
-
-                if (levelName.toLowerCase() === 'red world') {
-                    break;
-                }
-
-                currentRank++;
             }
 
             renderSidebar(mapDataList);
@@ -520,7 +518,7 @@
             const listEl = document.getElementById('mapList');
             listEl.innerHTML = '';
             data.forEach((map) => {
-                const originalIndex = mapDataList.findIndex(m => m.rank === map.rank);
+                const originalIndex = mapDataList.findIndex(m => m.title === map.title);
                 const li = document.createElement('li');
                 li.className = 'map-item';
                 li.onclick = () => {
@@ -544,16 +542,16 @@
                 history.replaceState(null, null, `#${index + 1}`);
             }
 
-            document.querySelectorAll('.map-item').forEach((el) => {
-                const isSelected = el.querySelector('.rank')?.innerText === map.rank;
+            document.querySelectorAll('.map-item').forEach((el, idx) => {
+                const isSelected = idx === index;
                 el.classList.toggle('active', isSelected);
             });
 
-            document.getElementById('mapTitle').innerText = `${map.rank}. ${map.title}`;
+            document.getElementById('mapTitle').innerText = `${map.rank !== '-' ? map.rank + '.' : ''} ${map.title}`;
             
             const aredlBadge = document.getElementById('mapAredlBadge');
             if (map.aredl && map.aredl !== '-' && map.aredl !== '0' && map.aredl !== '') {
-                aredlBadge.innerText = `AREDL #${map.aredl.replace('#', '')}`;
+                aredlBadge.innerText = map.aredl.includes('Tier') ? map.aredl : `AREDL #${map.aredl.replace('#', '')}`;
                 aredlBadge.style.display = 'inline-block';
             } else {
                 aredlBadge.style.display = 'none';
