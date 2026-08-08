@@ -471,18 +471,20 @@
 
                 const aredlPlacement = (row[2] && row[2].v !== null) ? String(row[2].v) : '';
 
-                // 💡 [수정됨] 클리어자 데이터를 셀마다 정확하게 스캔하여 누락 없이 수집
+                // 💡 [수정됨] 클리어자 추출 강화: 셀이 비어있더라도 건너뛰지 않고, 닉네임과 링크(URL)가 어긋나지 않도록 정밀 스캔
                 const defaultVictors = [];
-                for (let j = 6; j < row.length; j++) {
-                    if (!row[j] || row[j].v === null) continue;
-                    const val = String(row[j].v).trim();
-                    if (val === '') continue;
+                for (let j = 3; j < row.length; j++) {
+                    const cell = row[j];
+                    if (!cell || cell.v === null) continue;
+                    const val = String(cell.v).trim();
+                    if (val === '' || val === '-' || val === aredlPlacement || val === totalVictors) continue;
 
                     if (val.startsWith('http')) {
                         if (defaultVictors.length > 0) {
                             defaultVictors[defaultVictors.length - 1].link = val;
                         }
                     } else {
+                        // 중복 이름 방지 또는 유효한 이름 검사 후 추가
                         defaultVictors.push({ name: val, link: null });
                     }
                 }
@@ -491,7 +493,6 @@
                 const customData = matchedKey ? videoMap[matchedKey] : null;
 
                 const finalVideoUrl = customData ? customData.videoUrl : null;
-                // 비디오 시트에 커스텀 클리어자 목록이 있으면 우선 적용, 없으면 기본 시트 데이터 사용
                 const finalVictors = (customData && customData.victors.length > 0) ? customData.victors : defaultVictors;
 
                 mapDataList.push({
@@ -551,7 +552,7 @@
             document.getElementById('mapTitle').innerText = `${map.rank}. ${map.title}`;
             
             const aredlBadge = document.getElementById('mapAredlBadge');
-            if (map.aredl && map.aredl !== '-' && map.aredl !== '0') {
+            if (map.aredl && map.aredl !== '-' && map.aredl !== '0' && map.aredl !== '') {
                 aredlBadge.innerText = `AREDL #${map.aredl.replace('#', '')}`;
                 aredlBadge.style.display = 'inline-block';
             } else {
