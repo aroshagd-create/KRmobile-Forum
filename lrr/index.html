@@ -69,7 +69,7 @@
         .sidebar-overlay.active { display: block; }
 
         .sidebar {
-            width: 300px;
+            width: 310px;
             background: var(--panel-bg);
             border-right: 1px solid var(--panel-border);
             display: flex;
@@ -119,18 +119,37 @@
         }
 
         .map-list { flex-grow: 1; overflow-y: auto; list-style: none; }
+        
+        /* 삐뚤함 방지를 위한 깔끔한 정렬 구조 */
         .map-item {
-            padding: 14px 18px;
+            padding: 14px 16px;
             border-bottom: 1px solid var(--panel-border);
             cursor: pointer;
             transition: background 0.2s;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
         .map-item:hover, .map-item.active { background: rgba(255, 159, 67, 0.1); }
-        .map-item .rank { font-family: 'Orbitron'; color: var(--accent-orange); font-weight: 800; font-size: 14px; flex-shrink: 0; min-width: 40px; }
-        .map-item .title { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .map-item .rank { 
+            font-family: 'Orbitron'; 
+            color: var(--accent-orange); 
+            font-weight: 800; 
+            font-size: 13px; 
+            flex-shrink: 0; 
+            width: 52px; 
+            text-align: right;
+        }
+        
+        .map-item .title { 
+            font-weight: 700; 
+            font-size: 14px; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            flex-grow: 1;
+        }
 
         .toggle-btn {
             background: var(--panel-bg);
@@ -452,7 +471,7 @@
                 const levelName = String(row[0].v).trim();
                 const lowerLevelName = levelName.toLowerCase();
                 
-                // 불필요한 하단 문구(Last update, Records & Information 등) 및 헤더 행 제외
+                // 하단 문구 및 헤더 행 제거
                 if (
                     lowerLevelName === 'levels' || 
                     lowerLevelName.startsWith('last update') || 
@@ -467,7 +486,6 @@
                     totalVictors = String(row[1].v).trim();
                 }
 
-                // C열(인덱스 2): 티어나 텍스트로 되어 있으면 순위를 '-'로 처리하고, 숫자인 경우만 정상 순위 부여
                 const rawCCol = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
                 
                 let displayRank = '';
@@ -475,7 +493,6 @@
 
                 if (rawCCol !== '') {
                     const lowerC = rawCCol.toLowerCase();
-                    // 'Tier'나 'NLW' 등 텍스트가 포함되어 있거나 숫자가 아닌 경우 순위를 '-'로 처리
                     if (lowerC.includes('tier') || lowerC.includes('nlw') || isNaN(rawCCol.replace('#', ''))) {
                         displayRank = '-';
                         badgeText = rawCCol;
@@ -490,7 +507,6 @@
                     currentRank++;
                 }
 
-                // F열(인덱스 5)부터 클리어자 데이터 파싱
                 const defaultVictors = [];
                 for (let j = 5; j < row.length; j++) {
                     const cell = row[j];
