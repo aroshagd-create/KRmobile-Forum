@@ -471,20 +471,26 @@
 
                 const aredlPlacement = (row[2] && row[2].v !== null) ? String(row[2].v) : '';
 
-                // 💡 [수정됨] F열(인덱스 5)부터 시작해 이름이 차례대로 나오도록 순차 추출
+                // 💡 [수정됨] F열(인덱스 5)부터 시작해 값이 있는 항목들을 순서대로 추출
                 const defaultVictors = [];
                 for (let j = 5; j < row.length; j++) {
                     const cell = row[j];
                     if (!cell || cell.v === null) continue;
-                    const val = String(cell.v).trim();
+                    let val = String(cell.v).trim();
                     if (val === '' || val === '-') continue;
+
+                    // 구글 시트 링크 객체에서 직접 URL을 뽑아낼 수 있는 경우 대비
+                    let linkVal = null;
+                    if (cell.p && cell.p.link) {
+                        linkVal = cell.p.link;
+                    }
 
                     if (val.startsWith('http')) {
                         if (defaultVictors.length > 0) {
                             defaultVictors[defaultVictors.length - 1].link = val;
                         }
                     } else {
-                        defaultVictors.push({ name: val, link: null });
+                        defaultVictors.push({ name: val, link: linkVal });
                     }
                 }
 
