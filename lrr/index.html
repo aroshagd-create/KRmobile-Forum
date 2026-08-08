@@ -323,7 +323,7 @@
                 <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
                 <div class="map-header-row">
                     <h1 class="map-main-title" id="mapTitle">#1. Loading...</h1>
-                    <span class="map-aredl-badge" id="mapAredlBadge" style="display:none;">AREDL -</span>
+                    <span class="map-aredl-badge" id="mapAredlBadge" style="display:none;">-</span>
                 </div>
 
                 <div class="detail-grid">
@@ -364,7 +364,6 @@
         const LRR_SHEET_ID = '1yP5sJXHAA_dO0iv74nhx4vaT21J2Rl0cNXdzipsB-Y8';
         const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${LRR_SHEET_ID}/gviz/tq?tqx=out:json`;
 
-        // 변경된 비디오 시트 ID 적용 및 gid 파라미터 추가
         const VIDEO_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8';
         const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&gid=1240231056`;
 
@@ -461,22 +460,29 @@
                     totalVictors = String(row[1].v).trim();
                 }
 
+                // C열(인덱스 2): NLW 티어 또는 AREDL 순위/기타 정보 처리 (HRR 방식과 동일하게 반영)
                 const rawCCol = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
                 
                 let displayRank = '';
                 let badgeText = '';
 
-                if (rawCCol.toLowerCase().includes('tier') || rawCCol.startsWith('#') || (!isNaN(rawCCol) && rawCCol !== '')) {
-                    displayRank = rawCCol.toLowerCase().includes('tier') ? `-` : `#${currentRank}`;
-                    badgeText = rawCCol;
-                    if (!rawCCol.toLowerCase().includes('tier')) {
+                if (rawCCol !== '') {
+                    const lowerC = rawCCol.toLowerCase();
+                    if (lowerC.includes('tier') || lowerC.includes('nlw') || isNaN(rawCCol)) {
+                        displayRank = '-';
+                        badgeText = rawCCol;
+                    } else {
+                        displayRank = `#${currentRank}`;
+                        badgeText = rawCCol;
                         currentRank++;
                     }
                 } else {
-                    displayRank = `-`;
-                    badgeText = rawCCol;
+                    displayRank = `#${currentRank}`;
+                    badgeText = '';
+                    currentRank++;
                 }
 
+                // F열(인덱스 5)부터 클리어자 데이터 파싱
                 const defaultVictors = [];
                 for (let j = 5; j < row.length; j++) {
                     const cell = row[j];
@@ -496,7 +502,7 @@
                 mapDataList.push({
                     rank: displayRank,
                     title: levelName,
-                    aredl: badgeText,
+                    badge: badgeText,
                     totalVictors: totalVictors,
                     listPoints: '-',
                     videoUrl: finalVideoUrl,
@@ -547,12 +553,12 @@
 
             document.getElementById('mapTitle').innerText = `${map.rank !== '-' ? map.rank + '.' : ''} ${map.title}`;
             
-            const aredlBadge = document.getElementById('mapAredlBadge');
-            if (map.aredl && map.aredl !== '-' && map.aredl !== '0' && map.aredl !== '') {
-                aredlBadge.innerText = map.aredl.toLowerCase().includes('tier') ? map.aredl : `AREDL ${map.aredl}`;
-                aredlBadge.style.display = 'inline-block';
+            const badgeEl = document.getElementById('mapAredlBadge');
+            if (map.badge && map.badge !== '') {
+                badgeEl.innerText = map.badge;
+                badgeEl.style.display = 'inline-block';
             } else {
-                aredlBadge.style.display = 'none';
+                badgeEl.style.display = 'none';
             }
 
             document.getElementById('totalVictorsCount').innerText = map.totalVictors;
