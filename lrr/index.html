@@ -450,8 +450,15 @@
                 if (!row || !row[0] || !row[0].v) continue;
 
                 const levelName = String(row[0].v).trim();
+                const lowerLevelName = levelName.toLowerCase();
                 
-                if (levelName.toLowerCase() === 'levels' || levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
+                // 불필요한 하단 문구(Last update, Records & Information 등) 및 헤더 행 제외
+                if (
+                    lowerLevelName === 'levels' || 
+                    lowerLevelName.startsWith('last update') || 
+                    lowerLevelName.startsWith('records & information') ||
+                    lowerLevelName.includes('last update:')
+                ) {
                     continue;
                 }
 
@@ -460,12 +467,28 @@
                     totalVictors = String(row[1].v).trim();
                 }
 
-                // HRR 방식 적용: 자체 순위는 무조건 1부터 순차적으로 부여
-                const displayRank = `#${currentRank}`;
-                currentRank++;
+                // C열(인덱스 2): 티어나 텍스트로 되어 있으면 순위를 '-'로 처리하고, 숫자인 경우만 정상 순위 부여
+                const rawCCol = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
+                
+                let displayRank = '';
+                let badgeText = '';
 
-                // C열(인덱스 2): AREDL 순위 또는 NLW 티어 등 부가 정보는 뱃지로 표시
-                const badgeText = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
+                if (rawCCol !== '') {
+                    const lowerC = rawCCol.toLowerCase();
+                    // 'Tier'나 'NLW' 등 텍스트가 포함되어 있거나 숫자가 아닌 경우 순위를 '-'로 처리
+                    if (lowerC.includes('tier') || lowerC.includes('nlw') || isNaN(rawCCol.replace('#', ''))) {
+                        displayRank = '-';
+                        badgeText = rawCCol;
+                    } else {
+                        displayRank = `#${currentRank}`;
+                        badgeText = rawCCol;
+                        currentRank++;
+                    }
+                } else {
+                    displayRank = `#${currentRank}`;
+                    badgeText = '';
+                    currentRank++;
+                }
 
                 // F열(인덱스 5)부터 클리어자 데이터 파싱
                 const defaultVictors = [];
@@ -532,7 +555,7 @@
                 el.classList.toggle('active', isSelected);
             });
 
-            document.getElementById('mapTitle').innerText = `${map.rank}. ${map.title}`;
+            document.getElementById('mapTitle').innerText = `${map.rank !== '-' ? map.rank + '.' : ''} ${map.title}`;
             
             const badgeEl = document.getElementById('mapAredlBadge');
             if (map.badge && map.badge !== '') {
