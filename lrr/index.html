@@ -27,6 +27,7 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
         }
 
         header {
@@ -34,7 +35,7 @@
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--panel-border);
             height: 64px;
-            padding: 0 24px;
+            padding: 0 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -43,37 +44,53 @@
             z-index: 1000;
         }
 
-        .logo { 
-            font-family: 'Orbitron'; 
-            font-size: 20px; 
-            font-weight: 900; 
-            color: var(--accent-orange); 
-            text-decoration: none; 
-        }
+        .logo { font-family: 'Orbitron'; font-size: 18px; font-weight: 900; color: var(--accent-orange); text-decoration: none; }
+        .header-right { font-family: 'Orbitron'; font-size: 14px; font-weight: 800; color: var(--accent-orange); text-decoration: none; }
 
         .container {
             display: flex;
             flex-grow: 1;
-            height: calc(100vh - 64px);
-            overflow: hidden;
+            min-height: calc(100vh - 64px);
             position: relative;
+            justify-content: center;
+            width: 100%;
         }
 
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 64px;
+            left: 0;
+            width: 100%;
+            height: calc(100vh - 64px);
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 99;
+        }
+        .sidebar-overlay.active { display: block; }
+
         .sidebar {
-            width: 340px;
+            width: 300px;
             background: var(--panel-bg);
             border-right: 1px solid var(--panel-border);
             display: flex;
             flex-direction: column;
-            transition: margin-left 0.3s ease;
-            z-index: 10;
+            transition: transform 0.3s ease;
+            position: fixed;
+            height: calc(100vh - 64px);
+            z-index: 100;
+            left: 0;
+            top: 64px;
+            transform: translateX(-100%);
         }
 
-        .sidebar.collapsed { margin-left: -340px; }
+        .sidebar.open { transform: translateX(0); }
 
         .sidebar-header {
             padding: 16px;
             border-bottom: 1px solid var(--panel-border);
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
 
         .search-input {
@@ -86,12 +103,22 @@
             font-size: 14px;
         }
 
-        .map-list { 
-            flex-grow: 1; 
-            overflow-y: auto; 
-            list-style: none; 
+        .close-sidebar-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
         }
 
+        .map-list { flex-grow: 1; overflow-y: auto; list-style: none; }
         .map-item {
             padding: 14px 18px;
             border-bottom: 1px solid var(--panel-border);
@@ -101,88 +128,91 @@
             align-items: center;
             gap: 12px;
         }
-
         .map-item:hover, .map-item.active { background: rgba(255, 159, 67, 0.1); }
-        .map-item .rank { 
-            font-family: 'Orbitron'; 
-            color: var(--accent-orange); 
-            font-weight: 800; 
-            font-size: 14px; 
-            flex-shrink: 0; 
-            min-width: 45px; 
-        }
-        .map-item .title { 
-            font-weight: 700; 
-            font-size: 15px; 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
-        }
+        .map-item .rank { font-family: 'Orbitron'; color: var(--accent-orange); font-weight: 800; font-size: 14px; flex-shrink: 0; min-width: 40px; }
+        .map-item .title { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .toggle-btn {
-            position: absolute;
-            left: 340px;
-            top: 16px;
-            z-index: 20;
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
             color: var(--text-main);
-            padding: 8px 12px;
-            border-radius: 0 8px 8px 0;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
             cursor: pointer;
-            transition: left 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            margin: 0 auto 12px auto;
         }
-
-        .sidebar.collapsed + .toggle-btn { left: 0; }
 
         .main-content {
             flex-grow: 1;
-            padding: 40px;
-            overflow-y: auto;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .content-box { 
+            width: 100%; 
+            max-width: 800px; 
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        .content-box { width: 100%; max-width: 960px; }
-
         .map-header-row {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 16px;
-            margin-bottom: 28px;
-            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 24px;
+            width: 100%;
+            text-align: center;
         }
 
         .map-main-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 36px;
+            font-size: clamp(20px, 6vw, 32px);
             font-weight: 900;
+            word-break: keep-all;
+            overflow-wrap: break-word;
+            text-align: center;
+            line-height: 1.3;
+            margin-bottom: 10px;
+            width: 100%;
         }
 
         .map-aredl-badge {
             font-family: 'Orbitron';
             color: var(--accent-orange);
-            font-size: 18px;
+            font-size: 14px;
             font-weight: 800;
             background: rgba(255, 159, 67, 0.12);
             padding: 4px 12px;
-            border-radius: 8px;
+            border-radius: 6px;
             border: 1px solid rgba(255, 159, 67, 0.3);
+            display: inline-block;
         }
 
         .detail-grid {
-            display: grid;
-            grid-template-columns: 16fr 9fr;
-            gap: 24px;
-            margin-bottom: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 20px;
+            width: 100%;
+            align-items: center;
         }
 
         .video-box {
             width: 100%;
             aspect-ratio: 16 / 9;
             background: #000;
-            border-radius: 16px;
+            border-radius: 14px;
             overflow: hidden;
             border: 1px solid var(--panel-border);
             display: flex;
@@ -193,26 +223,27 @@
 
         .video-box iframe { width: 100%; height: 100%; border: none; }
 
-        .info-side { display: flex; flex-direction: column; gap: 16px; }
+        .info-side { display: flex; flex-direction: column; gap: 12px; width: 100%; }
 
         .stat-card {
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
-            border-radius: 16px;
-            padding: 20px;
+            border-radius: 14px;
+            padding: 16px;
+            width: 100%;
         }
 
-        .stat-label { font-size: 13px; color: var(--text-sub); margin-bottom: 6px; font-weight: 600; }
-        .stat-value { font-size: 22px; font-weight: 800; }
+        .stat-label { font-size: 12px; color: var(--text-sub); margin-bottom: 4px; font-weight: 600; }
+        .stat-value { font-size: 18px; font-weight: 800; word-break: break-all; }
 
         .victors-btn {
             width: 100%;
-            padding: 16px;
+            padding: 14px 16px;
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
             color: var(--text-main);
-            border-radius: 14px;
-            font-size: 16px;
+            border-radius: 12px;
+            font-size: 15px;
             font-weight: 700;
             cursor: pointer;
             text-align: left;
@@ -223,50 +254,73 @@
 
         .victors-list-box {
             display: none;
-            margin-top: 12px;
+            margin-top: 10px;
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
-            border-radius: 14px;
-            max-height: 280px;
+            border-radius: 12px;
+            max-height: 240px;
             overflow-y: auto;
-            padding: 16px 20px;
+            padding: 14px 16px;
+            width: 100%;
         }
 
         .victors-list-box.active { display: block; }
 
         .victor-item {
-            padding: 10px 0;
+            padding: 8px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
             display: flex;
-            gap: 12px;
+            gap: 10px;
             align-items: center;
         }
 
         .victor-item:last-child { border-bottom: none; }
-        .victor-rank { font-family: 'Orbitron'; color: var(--text-sub); font-size: 14px; width: 36px; }
-        .victor-name { font-size: 16px; color: var(--text-main); text-decoration: none; }
+        .victor-rank { font-family: 'Orbitron'; color: var(--text-sub); font-size: 13px; width: 30px; }
+        .victor-name { font-size: 15px; color: var(--text-main); text-decoration: none; }
         .victor-name.has-link { text-decoration: underline; color: var(--accent-orange); cursor: pointer; }
+
+        @media (min-width: 768px) {
+            header { padding: 0 32px; height: 72px; }
+            .logo { font-size: 20px; }
+            .container { justify-content: flex-start; }
+            .sidebar-overlay { display: none !important; }
+            .sidebar { position: relative; transform: translateX(0) !important; width: 340px; height: calc(100vh - 72px); top: 0; }
+            .close-sidebar-btn { display: none; }
+            .toggle-btn { display: none; }
+            .main-content { padding: 40px; }
+            .map-header-row { align-items: flex-start; text-align: left; }
+            .map-main-title { font-size: 36px; text-align: left; }
+            .map-aredl-badge { font-size: 18px; padding: 4px 12px; }
+            .detail-grid { display: grid; grid-template-columns: 16fr 9fr; gap: 24px; margin-bottom: 28px; }
+            .stat-card { padding: 20px; border-radius: 16px; }
+            .stat-label { font-size: 13px; margin-bottom: 6px; }
+            .stat-value { font-size: 22px; }
+            .victors-btn { padding: 16px; border-radius: 14px; font-size: 16px; }
+            .victors-list-box { padding: 16px 20px; border-radius: 14px; max-height: 280px; }
+        }
     </style>
 </head>
 <body>
 
     <header>
         <a href="/" class="logo">KRM FORUM</a>
-        <div style="font-family:'Orbitron'; font-weight:800; color:var(--accent-orange);">LRR LIST</div>
+        <a href="/" class="header-right">LRR LIST</a>
     </header>
 
     <div class="container">
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <input type="text" class="search-input" id="searchInput" placeholder="맵 이름 검색..." oninput="filterMaps()">
+                <button class="close-sidebar-btn" onclick="toggleSidebar()">✕</button>
             </div>
             <ul class="map-list" id="mapList"></ul>
         </aside>
 
-        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-
         <main class="main-content">
             <div class="content-box">
+                <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
                 <div class="map-header-row">
                     <h1 class="map-main-title" id="mapTitle">#1. Loading...</h1>
                     <span class="map-aredl-badge" id="mapAredlBadge" style="display:none;">AREDL -</span>
@@ -308,75 +362,167 @@
 
     <script>
         const LRR_SHEET_ID = '1yP5sJXHAA_dO0iv74nhx4vaT21J2Rl0cNXdzipsB-Y8';
-        const CSV_URL = `https://docs.google.com/spreadsheets/d/${LRR_SHEET_ID}/export?format=csv&gid=0`;
+        const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${LRR_SHEET_ID}/gviz/tq?tqx=out:json`;
+
+        const VIDEO_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8';
+        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json`;
 
         let mapDataList = [];
+        let videoMap = {};
 
         async function loadSheetData() {
             try {
-                const response = await fetch(CSV_URL);
-                const csvText = await response.text();
-                parseCSV(csvText);
+                const [mainRes, videoRes] = await Promise.allSettled([
+                    fetch(MAIN_SHEET_URL),
+                    fetch(VIDEO_SHEET_URL)
+                ]);
+
+                if (videoRes.status === 'fulfilled' && videoRes.value.ok) {
+                    const videoRaw = await videoRes.value.text();
+                    parseVideoSheet(videoRaw);
+                }
+
+                if (mainRes.status === 'fulfilled' && mainRes.value.ok) {
+                    const mainRaw = await mainRes.value.text();
+                    parseMainSheet(mainRaw);
+                } else {
+                    throw new Error('Main sheet load failed');
+                }
+
             } catch (err) {
                 console.error("데이터 로드 실패:", err);
+                document.getElementById('mapTitle').innerText = "데이터 로드 실패";
             }
         }
 
-        function parseCSV(text) {
-            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-            mapDataList = [];
+        function parseVideoSheet(rawText) {
+            try {
+                const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
+                const data = JSON.parse(jsonText);
+                const rows = data.table.rows;
 
+                videoMap = {};
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i].c;
+                    if (!row || !row[0] || !row[0].v) continue;
+
+                    const mapName = String(row[0].v).trim().toLowerCase();
+                    const mainVideoUrl = (row[1] && row[1].v) ? String(row[1].v).trim() : null;
+
+                    const customVictors = [];
+                    for (let j = 2; j < row.length; j++) {
+                        const cell = row[j];
+                        if (!cell || cell.v === null) continue;
+                        const val = String(cell.v).trim();
+                        if (val === '') continue;
+
+                        if (val.startsWith('http')) {
+                            if (customVictors.length > 0) {
+                                customVictors[customVictors.length - 1].link = val;
+                            }
+                        } else {
+                            customVictors.push({ name: val, link: null });
+                        }
+                    }
+
+                    if (mapName) {
+                        videoMap[mapName] = {
+                            videoUrl: mainVideoUrl,
+                            victors: customVictors
+                        };
+                    }
+                }
+            } catch(e) {
+                console.warn("비디오 시트 파싱 중 오류:", e);
+            }
+        }
+
+        function parseMainSheet(rawText) {
+            const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
+            const data = JSON.parse(jsonText);
+            const rows = data.table.rows;
+            
+            mapDataList = [];
             let currentRank = 1;
 
-            for (let i = 2; i < lines.length; i++) {
-                const cols = lines[i].split(',').map(c => c.replace(/^"(.*)"$/, '$1').trim());
-                const levelName = cols[0];
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i].c;
+                if (!row || !row[0] || !row[0].v) continue;
 
-                if (!levelName) continue;
-
-                if (levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
-                    break;
+                const levelName = String(row[0].v).trim();
+                
+                if (levelName.toLowerCase() === 'levels' || levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
+                    continue;
                 }
 
-                const totalVictors = cols[1] || '0';
-                const aredlPlacement = cols[2] || '';
+                let totalVictors = '0';
+                if (row[1] && row[1].v !== null && row[1].v !== undefined) {
+                    totalVictors = String(row[1].v).trim();
+                }
 
-                const rawVictors = cols.slice(5).filter(cell => cell && cell.length > 0);
-                const victors = rawVictors.map(item => ({
-                    name: item,
-                    link: item.startsWith('http') ? item : null
-                }));
+                // C열(인덱스 2): Aredl 순위 혹은 티어 이름
+                const rawCCol = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
+                
+                let displayRank = '';
+                let badgeText = '';
+
+                if (rawCCol.startsWith('#') || !isNaN(rawCCol)) {
+                    displayRank = `#${currentRank}`;
+                    badgeText = rawCCol;
+                    currentRank++;
+                } else {
+                    displayRank = `-`;
+                    badgeText = rawCCol;
+                }
+
+                // F열(인덱스 5)부터 클리어자 데이터 파싱
+                const defaultVictors = [];
+                for (let j = 5; j < row.length; j++) {
+                    const cell = row[j];
+                    if (!cell || cell.v === null) continue;
+                    let val = String(cell.v).trim();
+                    if (val === '' || val === '-') continue;
+
+                    defaultVictors.push({ name: val, link: null });
+                }
+
+                const matchedKey = Object.keys(videoMap).find(k => k.toLowerCase() === levelName.toLowerCase());
+                const customData = matchedKey ? videoMap[matchedKey] : null;
+
+                const finalVideoUrl = customData ? customData.videoUrl : null;
+                const finalVictors = (customData && customData.victors.length > 0) ? customData.victors : defaultVictors;
 
                 mapDataList.push({
-                    rank: `#${currentRank}`,
+                    rank: displayRank,
                     title: levelName,
-                    aredl: aredlPlacement,
+                    aredl: badgeText,
                     totalVictors: totalVictors,
-                    victors: victors
+                    listPoints: '-',
+                    videoUrl: finalVideoUrl,
+                    victors: finalVictors
                 });
 
-                currentRank++;
-
-                // 🎯 Precipitance를 리스트에 담은 후 그 아래 행들은 완전히 파싱 종료
-                if (levelName.trim().toLowerCase() === 'precipitance') {
+                // Precipitance 행에서 파싱 종료
+                if (levelName.toLowerCase() === 'precipitance') {
                     break;
                 }
             }
 
             renderSidebar(mapDataList);
-
-            const hash = window.location.hash.replace('#', '');
-            const targetIndex = hash ? parseInt(hash) - 1 : 0;
-            selectMap(Math.max(0, targetIndex));
+            handleHashChange();
         }
 
         function renderSidebar(data) {
             const listEl = document.getElementById('mapList');
             listEl.innerHTML = '';
-            data.forEach((map, index) => {
+            data.forEach((map) => {
+                const originalIndex = mapDataList.findIndex(m => m.title === map.title);
                 const li = document.createElement('li');
                 li.className = 'map-item';
-                li.onclick = () => selectMap(index);
+                li.onclick = () => {
+                    selectMap(originalIndex);
+                    if (window.innerWidth < 768) toggleSidebar();
+                };
 
                 li.innerHTML = `
                     <span class="rank">${map.rank}</span>
@@ -390,39 +536,46 @@
             const map = mapDataList[index];
             if (!map) return;
 
-            window.location.hash = index + 1;
+            if (window.location.hash !== `#${index + 1}`) {
+                history.replaceState(null, null, `#${index + 1}`);
+            }
 
-            document.querySelectorAll('.map-item').forEach((el, i) => {
-                el.classList.toggle('active', i === index);
+            document.querySelectorAll('.map-item').forEach((el, idx) => {
+                const isSelected = idx === index;
+                el.classList.toggle('active', isSelected);
             });
 
-            document.getElementById('mapTitle').innerText = `${map.rank}. ${map.title}`;
-
+            document.getElementById('mapTitle').innerText = `${map.rank !== '-' ? map.rank + '.' : ''} ${map.title}`;
+            
             const aredlBadge = document.getElementById('mapAredlBadge');
-            if (map.aredl && map.aredl !== '-') {
-                aredlBadge.innerText = `AREDL ${map.aredl}`;
+            if (map.aredl && map.aredl !== '-' && map.aredl !== '0' && map.aredl !== '') {
+                aredlBadge.innerText = map.aredl.includes('Tier') ? map.aredl : `AREDL ${map.aredl}`;
                 aredlBadge.style.display = 'inline-block';
             } else {
                 aredlBadge.style.display = 'none';
             }
 
             document.getElementById('totalVictorsCount').innerText = map.totalVictors;
-            document.getElementById('listPoints').innerText = '-';
+            document.getElementById('listPoints').innerText = map.listPoints;
 
             const videoBox = document.getElementById('videoContainer');
-            if (map.victors.length > 0) {
-                const firstVictor = map.victors[0];
-                document.getElementById('firstVictorName').innerText = firstVictor.name;
+            let targetVideo = map.videoUrl;
 
-                if (firstVictor.link && firstVictor.link.includes('youtu')) {
-                    const videoId = extractYoutubeId(firstVictor.link);
-                    videoBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>`;
+            if (targetVideo && targetVideo.includes('youtu')) {
+                const videoId = extractYoutubeId(targetVideo);
+                if (videoId) {
+                    videoBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?vq=hd1080&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
                 } else {
                     videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
                 }
             } else {
-                document.getElementById('firstVictorName').innerText = '-';
                 videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
+            }
+
+            if (map.victors.length > 0) {
+                document.getElementById('firstVictorName').innerText = map.victors[0].name;
+            } else {
+                document.getElementById('firstVictorName').innerText = '-';
             }
 
             renderVictorsList(map.victors);
@@ -432,7 +585,7 @@
             const container = document.getElementById('victorsContainer');
             container.innerHTML = '';
 
-            if (victors.length === 0) {
+            if (!victors || victors.length === 0) {
                 container.innerHTML = '<div style="color:var(--text-sub); font-size:14px;">클리어자가 없습니다.</div>';
                 return;
             }
@@ -441,9 +594,9 @@
                 const item = document.createElement('div');
                 item.className = 'victor-item';
                 const rankSpan = `<span class="victor-rank">${idx + 1}.</span>`;
-
-                let nameEl = v.link 
-                    ? `<a href="${v.link}" target="_blank" class="victor-name has-link">${v.name}</a>`
+                
+                let nameEl = (v.link && v.link.startsWith('http'))
+                    ? `<a href="${v.link}" target="_blank" class="victor-name has-link">${v.name} 🔗</a>`
                     : `<span class="victor-name">${v.name}</span>`;
 
                 item.innerHTML = rankSpan + nameEl;
@@ -458,7 +611,10 @@
         }
 
         function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
         }
 
         function toggleVictorsBox() {
@@ -472,6 +628,16 @@
             const filtered = mapDataList.filter(m => m.title.toLowerCase().includes(query));
             renderSidebar(filtered);
         }
+
+        function handleHashChange() {
+            const hash = window.location.hash.replace('#', '');
+            const targetIndex = hash ? parseInt(hash) - 1 : 0;
+            if (mapDataList.length > 0) {
+                selectMap(Math.max(0, Math.min(targetIndex, mapDataList.length - 1)));
+            }
+        }
+
+        window.addEventListener('hashchange', handleHashChange);
 
         loadSheetData();
     </script>
