@@ -469,20 +469,24 @@
                     totalVictors = String(row[1].v).trim();
                 }
 
+                // C열(인덱스 2): Aredl 순위 혹은 NLW 티어 이름이 들어있는 곳
                 const rawCCol = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
                 
                 let displayRank = '';
                 let badgeText = '';
 
+                // C열 값이 '#'으로 시작하거나 숫자 형태이면 정식 순위권 맵
                 if (rawCCol.startsWith('#') || !isNaN(rawCCol)) {
                     displayRank = `#${currentRank}`;
-                    badgeText = (row[3] && row[3].v !== null) ? String(row[3].v) : '';
+                    badgeText = rawCCol; // C열의 AREDL 값(#299 등)을 뱃지 텍스트로 사용
                     currentRank++;
                 } else {
+                    // C열에 'NLW Beginner Tier' 같은 티어 이름이 적혀있는 미배치 맵 구간
                     displayRank = `-`;
-                    badgeText = rawCCol;
+                    badgeText = rawCCol; // C열의 티어 이름(NLW Beginner Tier 등)을 뱃지 텍스트로 사용
                 }
 
+                // 클리어자 데이터는 F열(인덱스 5)부터 시작
                 const defaultVictors = [];
                 for (let j = 5; j < row.length; j++) {
                     const cell = row[j];
@@ -551,7 +555,8 @@
             
             const aredlBadge = document.getElementById('mapAredlBadge');
             if (map.aredl && map.aredl !== '-' && map.aredl !== '0' && map.aredl !== '') {
-                aredlBadge.innerText = map.aredl.includes('Tier') ? map.aredl : `AREDL #${map.aredl.replace('#', '')}`;
+                // 'Tier' 글자가 포함되어 있으면 티어 이름 그대로 출력, 아니면 AREDL # 번호 형태로 출력
+                aredlBadge.innerText = map.aredl.includes('Tier') ? map.aredl : `AREDL ${map.aredl}`;
                 aredlBadge.style.display = 'inline-block';
             } else {
                 aredlBadge.style.display = 'none';
