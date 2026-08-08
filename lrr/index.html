@@ -460,16 +460,18 @@
                     totalVictors = String(row[1].v).trim();
                 }
 
-                // C열(인덱스 2): Aredl 순위 혹은 티어 이름
+                // C열(인덱스 2): Aredl 순위 혹은 NLW 티어 이름 처리
                 const rawCCol = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
                 
                 let displayRank = '';
                 let badgeText = '';
 
-                if (rawCCol.startsWith('#') || !isNaN(rawCCol)) {
-                    displayRank = `#${currentRank}`;
+                if (rawCCol.toLowerCase().includes('tier') || rawCCol.startsWith('#') || (!isNaN(rawCCol) && rawCCol !== '')) {
+                    displayRank = rawCCol.toLowerCase().includes('tier') ? `-` : `#${currentRank}`;
                     badgeText = rawCCol;
-                    currentRank++;
+                    if (!rawCCol.toLowerCase().includes('tier')) {
+                        currentRank++;
+                    }
                 } else {
                     displayRank = `-`;
                     badgeText = rawCCol;
@@ -502,7 +504,6 @@
                     victors: finalVictors
                 });
 
-                // Precipitance 행에서 파싱 종료
                 if (levelName.toLowerCase() === 'precipitance') {
                     break;
                 }
@@ -549,7 +550,7 @@
             
             const aredlBadge = document.getElementById('mapAredlBadge');
             if (map.aredl && map.aredl !== '-' && map.aredl !== '0' && map.aredl !== '') {
-                aredlBadge.innerText = map.aredl.includes('Tier') ? map.aredl : `AREDL ${map.aredl}`;
+                aredlBadge.innerText = map.aredl.toLowerCase().includes('tier') ? map.aredl : `AREDL ${map.aredl}`;
                 aredlBadge.style.display = 'inline-block';
             } else {
                 aredlBadge.style.display = 'none';
