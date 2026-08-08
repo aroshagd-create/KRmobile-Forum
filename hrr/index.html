@@ -379,7 +379,6 @@
     </div>
 
     <script>
-        // HRR 시트 ID (필요시 기존 HRR 시트 ID로 유지)
         const HRR_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8'; 
         const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${HRR_SHEET_ID}/gviz/tq?tqx=out:json`;
 
@@ -471,7 +470,6 @@
                 const levelName = String(row[0].v).trim();
                 const lowerLevelName = levelName.toLowerCase();
                 
-                // 하단 업데이트 문구 및 불필요한 헤더 행 제거
                 if (
                     lowerLevelName === 'levels' || 
                     lowerLevelName.startsWith('last update') || 
