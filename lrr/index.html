@@ -460,30 +460,12 @@
                     totalVictors = String(row[1].v).trim();
                 }
 
-                // C열(인덱스 2): 순위 또는 NLW Tier 처리 로직
-                const rawCCol = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
-                
-                let displayRank = '';
-                let badgeText = '';
+                // HRR 방식 적용: 자체 순위는 무조건 1부터 순차적으로 부여
+                const displayRank = `#${currentRank}`;
+                currentRank++;
 
-                if (rawCCol !== '') {
-                    const lowerC = rawCCol.toLowerCase();
-                    // NLW Tier 등의 텍스트 데이터인 경우
-                    if (lowerC.includes('tier') || lowerC.includes('nlw') || isNaN(rawCCol.replace('#', ''))) {
-                        displayRank = `-`;
-                        badgeText = rawCCol;
-                    } else {
-                        // 숫자 순위인 경우
-                        const cleanNum = rawCCol.replace('#', '');
-                        displayRank = `#${cleanNum}`;
-                        badgeText = rawCCol;
-                    }
-                    currentRank++;
-                } else {
-                    displayRank = `#${currentRank}`;
-                    badgeText = '';
-                    currentRank++;
-                }
+                // C열(인덱스 2): AREDL 순위 또는 NLW 티어 등 부가 정보는 뱃지로 표시
+                const badgeText = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
 
                 // F열(인덱스 5)부터 클리어자 데이터 파싱
                 const defaultVictors = [];
@@ -550,7 +532,7 @@
                 el.classList.toggle('active', isSelected);
             });
 
-            document.getElementById('mapTitle').innerText = `${map.rank !== '-' ? map.rank + '.' : ''} ${map.title}`;
+            document.getElementById('mapTitle').innerText = `${map.rank}. ${map.title}`;
             
             const badgeEl = document.getElementById('mapAredlBadge');
             if (map.badge && map.badge !== '') {
