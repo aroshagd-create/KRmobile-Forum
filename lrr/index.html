@@ -69,7 +69,7 @@
         .sidebar-overlay.active { display: block; }
 
         .sidebar {
-            width: 310px;
+            width: 330px;
             background: var(--panel-bg);
             border-right: 1px solid var(--panel-border);
             display: flex;
@@ -120,15 +120,16 @@
 
         .map-list { flex-grow: 1; overflow-y: auto; list-style: none; }
         
-        /* 삐뚤함 방지를 위한 깔끔한 정렬 구조 */
+        /* HRR 스타일 테이블 형식 정렬 구조 적용 */
         .map-item {
-            padding: 14px 16px;
+            padding: 12px 16px;
             border-bottom: 1px solid var(--panel-border);
             cursor: pointer;
             transition: background 0.2s;
-            display: flex;
+            display: grid;
+            grid-template-columns: 60px 1fr;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
         .map-item:hover, .map-item.active { background: rgba(255, 159, 67, 0.1); }
         
@@ -137,8 +138,6 @@
             color: var(--accent-orange); 
             font-weight: 800; 
             font-size: 13px; 
-            flex-shrink: 0; 
-            width: 52px; 
             text-align: right;
         }
         
@@ -148,7 +147,6 @@
             white-space: nowrap; 
             overflow: hidden; 
             text-overflow: ellipsis; 
-            flex-grow: 1;
         }
 
         .toggle-btn {
@@ -471,7 +469,6 @@
                 const levelName = String(row[0].v).trim();
                 const lowerLevelName = levelName.toLowerCase();
                 
-                // 하단 문구 및 헤더 행 제거
                 if (
                     lowerLevelName === 'levels' || 
                     lowerLevelName.startsWith('last update') || 
