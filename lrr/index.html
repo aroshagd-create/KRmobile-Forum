@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -388,12 +389,13 @@
 
         let mapDataList = [];
         let videoMap = {};
+        let currentSelectedIndex = 0;
 
         async function loadSheetData() {
             try {
                 const [mainRes, videoRes] = await Promise.allSettled([
                     fetch(MAIN_SHEET_URL),
-                    fetch(VIDEO_SHEET_URL)
+                    fetch(VIDEO_SHEET_URL),
                 ]);
 
                 if (videoRes.status === 'fulfilled' && videoRes.value.ok) {
@@ -407,16 +409,19 @@
                 } else {
                     throw new Error('Main sheet load failed');
                 }
-
             } catch (err) {
-                console.error("데이터 로드 실패:", err);
-                document.getElementById('mapTitle').innerText = "데이터 로드 실패";
+                console.error('데이터 로드 실패:', err);
+                document.getElementById('mapTitle').innerText =
+                    '데이터 로드 실패';
             }
         }
 
         function parseVideoSheet(rawText) {
             try {
-                const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
+                const jsonText = rawText.substring(
+                    rawText.indexOf('{'),
+                    rawText.lastIndexOf('}') + 1,
+                );
                 const data = JSON.parse(jsonText);
                 const rows = data.table.rows;
 
@@ -426,18 +431,22 @@
                     if (!row || !row[0] || !row[0].v) continue;
 
                     const mapName = String(row[0].v).trim().toLowerCase();
-                    const mainVideoUrl = (row[1] && row[1].v) ? String(row[1].v).trim() : null;
+                    const mainVideoUrl = (row[1] && row[1].v)
+                        ? String(row[1].v).trim()
+                        : null;
 
                     const customVictors = [];
                     for (let j = 2; j < row.length; j++) {
                         const cell = row[j];
                         if (!cell || cell.v === null) continue;
+
                         const val = String(cell.v).trim();
                         if (val === '') continue;
 
                         if (val.startsWith('http')) {
                             if (customVictors.length > 0) {
-                                customVictors[customVictors.length - 1].link = val;
+                                customVictors[customVictors.length - 1].link =
+                                    val;
                             }
                         } else {
                             customVictors.push({ name: val, link: null });
@@ -447,17 +456,20 @@
                     if (mapName) {
                         videoMap[mapName] = {
                             videoUrl: mainVideoUrl,
-                            victors: customVictors
+                            victors: customVictors,
                         };
                     }
                 }
-            } catch(e) {
-                console.warn("비디오 시트 파싱 중 오류:", e);
+            } catch (e) {
+                console.warn('비디오 시트 파싱 중 오류:', e);
             }
         }
 
         function parseMainSheet(rawText) {
-            const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
+            const jsonText = rawText.substring(
+                rawText.indexOf('{'),
+                rawText.lastIndexOf('}') + 1,
+            );
             const data = JSON.parse(jsonText);
             const rows = data.table.rows;
 
@@ -472,8 +484,8 @@
                 const lowerLevelName = levelName.toLowerCase();
 
                 if (
-                    lowerLevelName === 'levels' || 
-                    lowerLevelName.startsWith('last update') || 
+                    lowerLevelName === 'levels' ||
+                    lowerLevelName.startsWith('last update') ||
                     lowerLevelName.startsWith('records & information') ||
                     lowerLevelName.includes('last update:')
                 ) {
@@ -485,14 +497,20 @@
                     totalVictors = String(row[1].v).trim();
                 }
 
-                const rawCCol = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
+                const rawCCol = (row[2] && row[2].v !== null)
+                    ? String(row[2].v).trim()
+                    : '';
 
                 let displayRank = '';
                 let badgeText = '';
 
                 if (rawCCol !== '') {
                     const lowerC = rawCCol.toLowerCase();
-                    if (lowerC.includes('tier') || lowerC.includes('nlw') || isNaN(rawCCol.replace('#', ''))) {
+                    if (
+                        lowerC.includes('tier') ||
+                        lowerC.includes('nlw') ||
+                        isNaN(rawCCol.replace('#', ''))
+                    ) {
                         displayRank = '-';
                         badgeText = rawCCol;
                     } else {
@@ -510,17 +528,22 @@
                 for (let j = 5; j < row.length; j++) {
                     const cell = row[j];
                     if (!cell || cell.v === null) continue;
-                    let val = String(cell.v).trim();
+
+                    const val = String(cell.v).trim();
                     if (val === '' || val === '-') continue;
 
                     defaultVictors.push({ name: val, link: null });
                 }
 
-                const matchedKey = Object.keys(videoMap).find(k => k.toLowerCase() === levelName.toLowerCase());
+                const matchedKey = Object.keys(videoMap).find(
+                    (k) => k.toLowerCase() === levelName.toLowerCase(),
+                );
                 const customData = matchedKey ? videoMap[matchedKey] : null;
 
                 const finalVideoUrl = customData ? customData.videoUrl : null;
-                const finalVictors = (customData && customData.victors.length > 0) ? customData.victors : defaultVictors;
+                const finalVictors = (customData && customData.victors.length > 0)
+                    ? customData.victors
+                    : defaultVictors;
 
                 mapDataList.push({
                     rank: displayRank,
@@ -529,21 +552,23 @@
                     totalVictors: totalVictors,
                     listPoints: '-',
                     videoUrl: finalVideoUrl,
-                    victors: finalVictors
+                    victors: finalVictors,
                 });
             }
 
-            renderSidebar(mapDataList);
+            renderSidebarWithIndex(mapDataList);
             handleHashChange();
         }
 
-        function renderSidebar(data) {
+        function renderSidebarWithIndex(maps) {
             const listEl = document.getElementById('mapList');
             listEl.innerHTML = '';
-            data.forEach((map) => {
-                const originalIndex = mapDataList.findIndex(m => m.title === map.title);
+
+            maps.forEach((map, originalIndex) => {
                 const li = document.createElement('li');
                 li.className = 'map-item';
+                li.dataset.index = String(originalIndex);
+
                 li.onclick = () => {
                     selectMap(originalIndex);
                     if (window.innerWidth < 768) toggleSidebar();
@@ -555,22 +580,57 @@
                 `;
                 listEl.appendChild(li);
             });
+
+            // 렌더 후에도 현재 선택 유지(검색 필터 포함)
+            syncActiveFromIndex(currentSelectedIndex);
+        }
+
+        function renderSidebar(filteredItemsWithIndex) {
+            const listEl = document.getElementById('mapList');
+            listEl.innerHTML = '';
+
+            filteredItemsWithIndex.forEach(({ map, originalIndex }) => {
+                const li = document.createElement('li');
+                li.className = 'map-item';
+                li.dataset.index = String(originalIndex);
+
+                li.onclick = () => {
+                    selectMap(originalIndex);
+                    if (window.innerWidth < 768) toggleSidebar();
+                };
+
+                li.innerHTML = `
+                    <span class="rank">${map.rank}</span>
+                    <span class="title">${map.title}</span>
+                `;
+                listEl.appendChild(li);
+            });
+
+            syncActiveFromIndex(currentSelectedIndex);
+        }
+
+        function syncActiveFromIndex(index) {
+            document.querySelectorAll('.map-item').forEach((el) => {
+                const elIndex = parseInt(el.dataset.index, 10);
+                const isSelected = elIndex === index;
+                el.classList.toggle('active', isSelected);
+            });
         }
 
         function selectMap(index) {
             const map = mapDataList[index];
             if (!map) return;
 
+            currentSelectedIndex = index;
+
             if (window.location.hash !== `#${index + 1}`) {
                 history.replaceState(null, null, `#${index + 1}`);
             }
 
-            document.querySelectorAll('.map-item').forEach((el, idx) => {
-                const isSelected = idx === index;
-                el.classList.toggle('active', isSelected);
-            });
+            syncActiveFromIndex(index);
 
-            document.getElementById('mapTitle').innerText = `${map.rank !== '-' ? map.rank + '.' : ''} ${map.title}`;
+            document.getElementById('mapTitle').innerText =
+                `${map.rank !== '-' ? map.rank + '.' : ''} ${map.title}`;
 
             const badgeEl = document.getElementById('mapAredlBadge');
             if (map.badge && map.badge !== '') {
@@ -580,7 +640,8 @@
                 badgeEl.style.display = 'none';
             }
 
-            document.getElementById('totalVictorsCount').innerText = map.totalVictors;
+            document.getElementById('totalVictorsCount').innerText =
+                map.totalVictors;
             document.getElementById('listPoints').innerText = map.listPoints;
 
             const videoBox = document.getElementById('videoContainer');
@@ -589,16 +650,25 @@
             if (targetVideo && targetVideo.includes('youtu')) {
                 const videoId = extractYoutubeId(targetVideo);
                 if (videoId) {
-                    videoBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?vq=hd1080&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+                    videoBox.innerHTML = `
+                        <iframe
+                            src="https://www.youtube.com/embed/${videoId}?vq=hd1080&enablejsapi=1"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen>
+                        </iframe>
+                    `;
                 } else {
-                    videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
+                    videoBox.innerHTML =
+                        '<span style="color:#64748b;">등록된 영상이 없습니다.</span>';
                 }
             } else {
-                videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
+                videoBox.innerHTML =
+                    '<span style="color:#64748b;">등록된 영상이 없습니다.</span>';
             }
 
             if (map.victors.length > 0) {
-                document.getElementById('firstVictorName').innerText = map.victors[0].name;
+                document.getElementById('firstVictorName').innerText =
+                    map.victors[0].name;
             } else {
                 document.getElementById('firstVictorName').innerText = '-';
             }
@@ -611,13 +681,15 @@
             container.innerHTML = '';
 
             if (!victors || victors.length === 0) {
-                container.innerHTML = '<div style="color:var(--text-sub); font-size:14px;">클리어자가 없습니다.</div>';
+                container.innerHTML =
+                    '<div style="color:var(--text-sub); font-size:14px;">클리어자가 없습니다.</div>';
                 return;
             }
 
             victors.forEach((v, idx) => {
                 const item = document.createElement('div');
                 item.className = 'victor-item';
+
                 const rankSpan = `<span class="victor-rank">${idx + 1}.</span>`;
 
                 let nameEl = (v.link && v.link.startsWith('http'))
@@ -630,7 +702,8 @@
         }
 
         function extractYoutubeId(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const regExp =
+                /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
             const match = url.match(regExp);
             return (match && match[2].length === 11) ? match[2] : null;
         }
@@ -645,20 +718,30 @@
         function toggleVictorsBox() {
             const box = document.getElementById('victorsBox');
             box.classList.toggle('active');
-            document.getElementById('arrowIcon').innerText = box.classList.contains('active') ? '▲' : '▼';
+            document.getElementById('arrowIcon').innerText =
+                box.classList.contains('active') ? '▲' : '▼';
         }
 
         function filterMaps() {
             const query = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = mapDataList.filter(m => m.title.toLowerCase().includes(query));
-            renderSidebar(filtered);
+
+            const filteredItemsWithIndex = mapDataList
+                .map((map, originalIndex) => ({ map, originalIndex }))
+                .filter(({ map }) => map.title.toLowerCase().includes(query));
+
+            renderSidebar(filteredItemsWithIndex);
         }
 
         function handleHashChange() {
             const hash = window.location.hash.replace('#', '');
             const targetIndex = hash ? parseInt(hash) - 1 : 0;
+
             if (mapDataList.length > 0) {
-                selectMap(Math.max(0, Math.min(targetIndex, mapDataList.length - 1)));
+                const clamped = Math.max(
+                    0,
+                    Math.min(targetIndex, mapDataList.length - 1),
+                );
+                selectMap(clamped);
             }
         }
 
