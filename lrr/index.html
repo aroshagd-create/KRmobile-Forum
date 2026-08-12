@@ -84,8 +84,7 @@
     .sidebar-overlay.active { display: block; }
 
     .sidebar {
-      width: 320px;
-      max-width: 80vw;
+      width: 300px; /* HRR과 동일한 300px로 수정됨 */
       background: var(--panel-bg);
       border-right: 1px solid var(--panel-border);
       display: flex;
@@ -321,8 +320,7 @@
       .sidebar {
         position: relative;
         transform: translateX(0) !important;
-        width: 380px;
-        max-width: none;
+        width: 300px; /* PC 화면에서의 HRR과 동일한 300px로 수정됨 */
         height: calc(100vh - 72px);
         top: 0;
       }
@@ -581,7 +579,6 @@
       handleHashChange();
     }
 
-    // ========= 수정 핵심: renderSidebar가 원본 index를 확실히 유지 =========
     function renderSidebar() {
       const listEl = document.getElementById('mapList');
       listEl.innerHTML = '';
@@ -608,7 +605,6 @@
         listEl.appendChild(li);
       });
 
-      // 현재 해시 선택 상태가 있으면 active도 동기화
       syncActiveByCurrentHash();
     }
 
@@ -634,7 +630,6 @@
         history.replaceState(null, null, `#${index + 1}`);
       }
 
-      // ========= 수정 핵심: DOM idx가 아니라 data-index로 active =========
       document.querySelectorAll('.map-item').forEach((el) => {
         const elIndex = parseInt(el.dataset.index, 10);
         el.classList.toggle('active', elIndex === index);
@@ -730,7 +725,6 @@
         box.classList.contains('active') ? '▲' : '▼';
     }
 
-    // ========= 수정 핵심: filterMaps도 원본 index를 유지 =========
     function filterMaps() {
       const query = document.getElementById('searchInput').value.toLowerCase();
 
@@ -763,7 +757,6 @@
         listEl.appendChild(li);
       });
 
-      // 필터 상태에서도 현재 해시에 해당하는 것만 active
       syncActiveByCurrentHash();
     }
 
