@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -197,7 +198,6 @@
       align-items: center;
     }
 
-    /* 상단 타이틀 및 배지 영역 레이아웃 강제 고정 */
     .map-header-row {
       display: flex;
       flex-direction: column;
@@ -534,11 +534,15 @@
           displayRank = '-';
           badgeText = rawCCol === '-' ? '' : rawCCol;
         } else if (rawCCol !== '') {
+          // C열에 값이 있으면 숫자가 그대로 들어오더라도 AREDL 형식을 맞추기 위해 정돈
+          let cleanNum = rawCCol.replace(/[^0-9]/g, '');
+          badgeText = cleanNum ? `aredl #${cleanNum}` : rawCCol;
+          
           displayRank = `#${currentRank}`;
-          badgeText = rawCCol;
           currentRank++;
         } else {
           displayRank = `#${currentRank}`;
+          badgeText = `aredl #${currentRank}`;
           currentRank++;
         }
 
@@ -635,21 +639,13 @@
         el.classList.toggle('active', elIndex === index);
       });
 
-      // 1. 메인 타이틀에는 오직 맵 이름만 지정
+      // 메인 타이틀에는 순수 맵 이름만 표시
       document.getElementById('mapTitle').innerText = map.title;
 
-      // 2. 배지 영역 처리 (C열 데이터가 있으면 해당 내용을 배지로 표출, 없으면 기존 rank 표시)
+      // HRR처럼 타이틀 바로 아래에 aredl #379 형태로 배지 출력
       const badgeEl = document.getElementById('mapAredlBadge');
-      let targetBadgeText = '';
-
       if (map.badge && map.badge !== '') {
-        targetBadgeText = map.badge;
-      } else if (map.rank && map.rank !== '-') {
-        targetBadgeText = map.rank;
-      }
-
-      if (targetBadgeText !== '') {
-        badgeEl.innerText = targetBadgeText;
+        badgeEl.innerText = map.badge;
         badgeEl.style.display = 'inline-block';
       } else {
         badgeEl.style.display = 'none';
