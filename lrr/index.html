@@ -366,7 +366,7 @@
         <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
 
         <div class="map-header-row">
-          <h1 class="map-main-title" id="mapTitle">#1. Loading...</h1>
+          <h1 class="map-main-title" id="mapTitle">Loading...</h1>
           <span class="map-aredl-badge" id="mapAredlBadge" style="display:none;">-</span>
         </div>
 
@@ -633,16 +633,16 @@
         el.classList.toggle('active', elIndex === index);
       });
 
-      // 랭크가 '-'이거나 배지(티어)가 존재할 경우 메인 타이틀에 번호를 붙이지 않고 맵 이름만 표시
-      if (map.rank === '-' || (map.badge && map.badge !== '')) {
-        document.getElementById('mapTitle').innerText = map.title;
-      } else {
-        document.getElementById('mapTitle').innerText = `${map.rank}. ${map.title}`;
-      }
+      // 메인 타이틀에는 순수 맵 이름만 출력
+      document.getElementById('mapTitle').innerText = map.title;
 
+      // C열 데이터(배지 또는 순위 문자열)를 타이틀 아래에 작게 출력 (HRR 방식 동일 적용)
       const badgeEl = document.getElementById('mapAredlBadge');
       if (map.badge && map.badge !== '') {
         badgeEl.innerText = map.badge;
+        badgeEl.style.display = 'inline-block';
+      } else if (map.rank && map.rank !== '-') {
+        badgeEl.innerText = map.rank;
         badgeEl.style.display = 'inline-block';
       } else {
         badgeEl.style.display = 'none';
