@@ -528,7 +528,6 @@
         let displayRank = '';
         let badgeText = '';
 
-        // HRR 방식과 동일하게 C열이 '-'이거나 티어 문자열인 경우 처리
         if (rawCCol === '-' || rawCCol.toLowerCase().includes('tier') || rawCCol.toLowerCase().includes('nlw')) {
           displayRank = '-';
           badgeText = rawCCol === '-' ? '' : rawCCol;
@@ -634,8 +633,12 @@
         el.classList.toggle('active', elIndex === index);
       });
 
-      const displayTitlePrefix = map.rank === '-' ? '-' : map.rank;
-      document.getElementById('mapTitle').innerText = `${displayTitlePrefix}. ${map.title}`;
+      // 랭크가 '-'이거나 배지(티어)가 존재할 경우 메인 타이틀에 번호를 붙이지 않고 맵 이름만 표시
+      if (map.rank === '-' || (map.badge && map.badge !== '')) {
+        document.getElementById('mapTitle').innerText = map.title;
+      } else {
+        document.getElementById('mapTitle').innerText = `${map.rank}. ${map.title}`;
+      }
 
       const badgeEl = document.getElementById('mapAredlBadge');
       if (map.badge && map.badge !== '') {
