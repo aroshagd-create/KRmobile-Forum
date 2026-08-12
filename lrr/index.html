@@ -84,7 +84,7 @@
     .sidebar-overlay.active { display: block; }
 
     .sidebar {
-      width: 300px; /* HRR과 동일한 300px로 수정됨 */
+      width: 300px; /* HRR과 동일한 너비 */
       background: var(--panel-bg);
       border-right: 1px solid var(--panel-border);
       display: flex;
@@ -136,7 +136,7 @@
     .map-list { flex-grow: 1; overflow-y: auto; list-style: none; }
 
     .map-item {
-      padding: 12px 16px;
+      padding: 14px 18px; /* HRR과 동일한 내부 여백 */
       border-bottom: 1px solid var(--panel-border);
       cursor: pointer;
       transition: background 0.2s;
@@ -151,14 +151,13 @@
       color: var(--accent-orange);
       font-weight: 800;
       font-size: 14px;
-      min-width: 48px;
+      min-width: 40px; /* HRR과 동일한 랭크 영역 너비 */
       flex-shrink: 0;
-      text-align: left;
     }
 
     .map-item .title {
       font-weight: 700;
-      font-size: 14px;
+      font-size: 15px; /* HRR과 동일한 글꼴 크기 */
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -320,7 +319,7 @@
       .sidebar {
         position: relative;
         transform: translateX(0) !important;
-        width: 300px; /* PC 화면에서의 HRR과 동일한 300px로 수정됨 */
+        width: 300px; /* PC 화면에서의 HRR과 동일한 300px */
         height: calc(100vh - 72px);
         top: 0;
       }
