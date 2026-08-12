@@ -84,7 +84,7 @@
     .sidebar-overlay.active { display: block; }
 
     .sidebar {
-      width: 300px; /* HRR과 동일한 너비 */
+      width: 300px;
       background: var(--panel-bg);
       border-right: 1px solid var(--panel-border);
       display: flex;
@@ -136,7 +136,7 @@
     .map-list { flex-grow: 1; overflow-y: auto; list-style: none; }
 
     .map-item {
-      padding: 14px 18px; /* HRR과 동일한 내부 여백 */
+      padding: 14px 18px;
       border-bottom: 1px solid var(--panel-border);
       cursor: pointer;
       transition: background 0.2s;
@@ -151,13 +151,13 @@
       color: var(--accent-orange);
       font-weight: 800;
       font-size: 14px;
-      min-width: 40px; /* HRR과 동일한 랭크 영역 너비 */
+      min-width: 40px;
       flex-shrink: 0;
     }
 
     .map-item .title {
       font-weight: 700;
-      font-size: 15px; /* HRR과 동일한 글꼴 크기 */
+      font-size: 15px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -319,7 +319,7 @@
       .sidebar {
         position: relative;
         transform: translateX(0) !important;
-        width: 300px; /* PC 화면에서의 HRR과 동일한 300px */
+        width: 300px;
         height: calc(100vh - 72px);
         top: 0;
       }
@@ -520,26 +520,13 @@
 
         const rawCCol = row[2] && row[2].v !== null ? String(row[2].v).trim() : '';
 
-        let displayRank = '';
+        let displayRank = `#${currentRank}`;
         let badgeText = '';
 
         if (rawCCol !== '') {
-          const lowerC = rawCCol.toLowerCase();
-          const cWithoutHash = rawCCol.replace('#', '');
-
-          if (lowerC.includes('tier') || lowerC.includes('nlw') || isNaN(cWithoutHash)) {
-            displayRank = '-';
-            badgeText = rawCCol;
-          } else {
-            displayRank = `#${currentRank}`;
-            badgeText = rawCCol;
-            currentRank++;
-          }
-        } else {
-          displayRank = `#${currentRank}`;
-          badgeText = '';
-          currentRank++;
+          badgeText = rawCCol;
         }
+        currentRank++;
 
         const defaultVictors = [];
         for (let j = 5; j < row.length; j++) {
@@ -634,9 +621,7 @@
         el.classList.toggle('active', elIndex === index);
       });
 
-      document.getElementById('mapTitle').innerText = `${
-        map.rank !== '-' ? map.rank + '.' : ''
-      } ${map.title}`;
+      document.getElementById('mapTitle').innerText = `${map.rank}. ${map.title}`;
 
       const badgeEl = document.getElementById('mapAredlBadge');
       if (map.badge && map.badge !== '') {
