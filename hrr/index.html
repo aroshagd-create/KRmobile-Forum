@@ -364,7 +364,6 @@
         const MAIN_SHEET_ID = '1f1lwB1kbOpD4IWBiTf-D3wDeqpCA5nz-fkNIhr4ZO14';
         const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
 
-        // 변경된 비디오 시트 ID 적용
         const VIDEO_SHEET_ID = '1yH8JmWO3izJd78c-5MEyJZt5uOxpsLe8rYkOZm5Ccx4';
         const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json`;
 
@@ -396,6 +395,7 @@
             }
         }
 
+        // 가로 방향으로 확장되는 비디오 및 클리어자 데이터를 완벽하게 스캔하도록 개선된 파서
         function parseVideoSheet(rawText) {
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
@@ -411,11 +411,12 @@
                     const mainVideoUrl = (row[1] && row[1].v) ? String(row[1].v).trim() : null;
 
                     const customVictors = [];
+                    // 열 길이 제한 오류를 막기 위해 row 전체 크기까지 확실하게 순회
                     for (let j = 2; j < row.length; j++) {
                         const cell = row[j];
-                        if (!cell || cell.v === null) continue;
+                        if (!cell || cell.v === null || cell.v === undefined) continue;
                         const val = String(cell.v).trim();
-                        if (val === '') continue;
+                        if (val === '' || val === '-') continue;
 
                         if (val.startsWith('http')) {
                             if (customVictors.length > 0) {
@@ -438,6 +439,7 @@
             }
         }
 
+        // 메인 시트 파서 (가로 확장 데이터 대응 보완)
         function parseMainSheet(rawText) {
             const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
             const data = JSON.parse(jsonText);
@@ -471,7 +473,6 @@
                 }
 
                 const rawCCol = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
-                const rawDCol = (row[3] && row[3].v !== null) ? String(row[3].v).trim() : '';
 
                 let displayRank = '';
                 let badgeText = '';
@@ -486,13 +487,20 @@
                 }
 
                 const defaultVictors = [];
+                // F열(인덱스 5)부터 시작하여 가로 끝까지 누락 없이 동적으로 수집
                 for (let j = 5; j < row.length; j++) {
                     const cell = row[j];
-                    if (!cell || cell.v === null) continue;
+                    if (!cell || cell.v === null || cell.v === undefined) continue;
                     let val = String(cell.v).trim();
                     if (val === '' || val === '-') continue;
 
-                    defaultVictors.push({ name: val, link: null });
+                    if (val.startsWith('http')) {
+                        if (defaultVictors.length > 0) {
+                            defaultVictors[defaultVictors.length - 1].link = val;
+                        }
+                    } else {
+                        defaultVictors.push({ name: val, link: null });
+                    }
                 }
 
                 const matchedKey = Object.keys(videoMap).find(k => k.toLowerCase() === levelName.toLowerCase());
