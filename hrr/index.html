@@ -395,7 +395,7 @@
             }
         }
 
-        // 가로 방향으로 길게 늘어나는 비디오 및 클리어자 데이터를 완벽하게 스캔하도록 개선된 파서
+        // 비디오 시트 파서 (우측 끝까지 가로 확장 데이터 완벽 스캔)
         function parseVideoSheet(rawText) {
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
@@ -411,7 +411,6 @@
                     const mainVideoUrl = (row[1] && row[1].v) ? String(row[1].v).trim() : null;
 
                     const customVictors = [];
-                    // 열이 아무리 우측 끝(BU, BW 등)으로 길어져도 누락 없이 전체 순회
                     for (let j = 2; j < row.length; j++) {
                         const cell = row[j];
                         if (!cell || cell.v === null || cell.v === undefined) continue;
@@ -440,7 +439,7 @@
             }
         }
 
-        // 메인 시트 파서 (가로 확장 데이터 대응 보완)
+        // 메인 시트 파서 (안정적으로 모든 맵을 읽어오도록 개선)
         function parseMainSheet(rawText) {
             const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
             const data = JSON.parse(jsonText);
@@ -455,16 +454,23 @@
                 if (!row || !row[0] || !row[0].v) continue;
 
                 const levelName = String(row[0].v).trim();
+                const levelNameLower = levelName.toLowerCase();
 
+                // 'waterfall'을 찾거나, 이미 리스트 영역 내부로 진입했다고 판단되면 파싱 시작
                 if (!foundStart) {
-                    if (levelName.toLowerCase() === 'waterfall') {
+                    if (levelNameLower === 'waterfall' || levelNameLower.includes('waterfall') || currentRank > 1) {
                         foundStart = true;
                     } else {
-                        continue;
+                        // 만약 waterfall을 찾지 못하더라도 첫 번째 행부터 데이터처럼 보이면 강제 시작
+                        if (row[1] && row[1].v !== null) {
+                            foundStart = true;
+                        } else {
+                            continue;
+                        }
                     }
                 }
 
-                if (levelName.toLowerCase() === 'levels' || levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
+                if (levelNameLower === 'levels' || levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
                     continue;
                 }
 
@@ -488,7 +494,6 @@
                 }
 
                 const defaultVictors = [];
-                // F열(인덱스 5)부터 시작하여 가로 끝까지 누락 없이 동적으로 수집
                 for (let j = 5; j < row.length; j++) {
                     const cell = row[j];
                     if (!cell || cell.v === null || cell.v === undefined) continue;
@@ -504,7 +509,7 @@
                     }
                 }
 
-                const matchedKey = Object.keys(videoMap).find(k => k.toLowerCase() === levelName.toLowerCase());
+                const matchedKey = Object.keys(videoMap).find(k => k.toLowerCase() === levelNameLower);
                 const customData = matchedKey ? videoMap[matchedKey] : null;
 
                 const finalVideoUrl = customData ? customData.videoUrl : null;
