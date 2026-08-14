@@ -395,7 +395,7 @@
             }
         }
 
-        // 가로 방향으로 확장되는 비디오 및 클리어자 데이터를 완벽하게 스캔하도록 개선된 파서
+        // 가로 방향으로 길게 늘어나는 비디오 및 클리어자 데이터를 완벽하게 스캔하도록 개선된 파서
         function parseVideoSheet(rawText) {
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
@@ -411,10 +411,11 @@
                     const mainVideoUrl = (row[1] && row[1].v) ? String(row[1].v).trim() : null;
 
                     const customVictors = [];
-                    // 열 길이 제한 오류를 막기 위해 row 전체 크기까지 확실하게 순회
+                    // 열이 아무리 우측 끝(BU, BW 등)으로 길어져도 누락 없이 전체 순회
                     for (let j = 2; j < row.length; j++) {
                         const cell = row[j];
                         if (!cell || cell.v === null || cell.v === undefined) continue;
+                        
                         const val = String(cell.v).trim();
                         if (val === '' || val === '-') continue;
 
