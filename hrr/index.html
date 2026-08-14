@@ -364,7 +364,8 @@
         const MAIN_SHEET_ID = '1f1lwB1kbOpD4IWBiTf-D3wDeqpCA5nz-fkNIhr4ZO14';
         const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
 
-        const VIDEO_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8';
+        // 변경된 비디오 시트 ID 적용
+        const VIDEO_SHEET_ID = '1yH8JmWO3izJd78c-5MEyJZt5uOxpsLe8rYkOZm5Ccx4';
         const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json`;
 
         let mapDataList = [];
@@ -441,7 +442,7 @@
             const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
             const data = JSON.parse(jsonText);
             const rows = data.table.rows;
-            
+
             mapDataList = [];
             let currentRank = 1;
             let foundStart = false;
@@ -459,7 +460,7 @@
                         continue;
                     }
                 }
-                
+
                 if (levelName.toLowerCase() === 'levels' || levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
                     continue;
                 }
@@ -469,16 +470,12 @@
                     totalVictors = String(row[1].v).trim();
                 }
 
-                // [수정된 열 매핑 구조 정렬 반영 구간]
-                // 구글 시트 실제 열 배치에 맞추어 인덱스 번호를 정확하게 매칭합니다.
-                // A열(0): Levels, B열(1): Total Victors, C열(2): Aredl Placements, D열(3): HRR List Placements, E열(4): Notes, F열 이후(5+): Video links / Victors
                 const rawCCol = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
                 const rawDCol = (row[3] && row[3].v !== null) ? String(row[3].v).trim() : '';
-                
+
                 let displayRank = '';
                 let badgeText = '';
 
-                // C열 값이 '#'으로 시작하거나 숫자 형태이면 정식 순위권 맵
                 if (rawCCol.startsWith('#') || !isNaN(rawCCol)) {
                     displayRank = `#${currentRank}`;
                     badgeText = rawCCol; 
@@ -488,7 +485,6 @@
                     badgeText = rawCCol; 
                 }
 
-                // 클리어자 데이터는 F열(인덱스 5)부터 시작하도록 정확히 정렬
                 const defaultVictors = [];
                 for (let j = 5; j < row.length; j++) {
                     const cell = row[j];
@@ -554,7 +550,7 @@
             });
 
             document.getElementById('mapTitle').innerText = `${map.rank !== '-' ? map.rank + '.' : ''} ${map.title}`;
-            
+
             const aredlBadge = document.getElementById('mapAredlBadge');
             if (map.aredl && map.aredl !== '-' && map.aredl !== '0' && map.aredl !== '') {
                 aredlBadge.innerText = map.aredl.includes('Tier') ? map.aredl : `AREDL ${map.aredl}`;
@@ -602,7 +598,7 @@
                 const item = document.createElement('div');
                 item.className = 'victor-item';
                 const rankSpan = `<span class="victor-rank">${idx + 1}.</span>`;
-                
+
                 let nameEl = (v.link && v.link.startsWith('http'))
                     ? `<a href="${v.link}" target="_blank" class="victor-name has-link">${v.name} 🔗</a>`
                     : `<span class="victor-name">${v.name}</span>`;
