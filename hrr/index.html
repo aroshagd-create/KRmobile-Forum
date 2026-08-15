@@ -395,7 +395,7 @@
             }
         }
 
-        // 비디오 시트 파서 (A열: 맵이름, B열: 유저이름, C열: 링크)
+        // 비디오 시트 파서 (클리어자 목록 분석 및 첫 번째 클리어자 링크를 메인 영상으로 지정)
         function parseVideoSheet(rawText) {
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
@@ -429,7 +429,7 @@
                                 link: linkVal
                             });
 
-                            // 첫 번째 클리어자의 링크가 존재하면 메인 영상으로도 자동 지정
+                            // 첫 번째 클리어자의 링크가 존재하면 메인 영상으로 자동 지정
                             if (linkVal) {
                                 videoMap[currentMap].videoUrl = linkVal;
                             }
@@ -457,7 +457,7 @@
             }
         }
 
-        // 메인 시트 파서
+        // 메인 시트 파서 (순위와 맵 이름만 가져옴)
         function parseMainSheet(rawText) {
             const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
             const data = JSON.parse(jsonText);
@@ -490,11 +490,6 @@
                     continue;
                 }
 
-                let totalVictors = '0';
-                if (row[1] && row[1].v !== null && row[1].v !== undefined) {
-                    totalVictors = String(row[1].v).trim();
-                }
-
                 const rawCCol = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
 
                 let displayRank = '';
@@ -514,12 +509,15 @@
 
                 const finalVideoUrl = customData ? customData.videoUrl : null;
                 const finalVictors = customData ? customData.victors : [];
+                
+                // Total Victors를 비디오 시트의 클리어자 목록 개수로 계산
+                const calculatedTotalVictors = finalVictors.length.toString();
 
                 mapDataList.push({
                     rank: displayRank,
                     title: levelName,
                     aredl: badgeText,
-                    totalVictors: totalVictors,
+                    totalVictors: calculatedTotalVictors,
                     listPoints: '-',
                     videoUrl: finalVideoUrl,
                     victors: finalVictors
