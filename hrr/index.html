@@ -395,7 +395,7 @@
             }
         }
 
-        // 비디오 시트 파서 (우측 끝까지 가로 확장 데이터 완벽 스캔)
+        // 세로형 비디오 시트 파서 (A열: 맵이름, 첫줄 B열: 영상, 이후 B열: 유저이름, C열: 링크)
         function parseVideoSheet(rawText) {
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
@@ -403,35 +403,44 @@
                 const rows = data.table.rows;
 
                 videoMap = {};
+                let currentMap = null;
+
                 for (let i = 0; i < rows.length; i++) {
                     const row = rows[i].c;
-                    if (!row || !row[0] || !row[0].v) continue;
+                    if (!row) continue;
 
-                    const mapName = String(row[0].v).trim().toLowerCase();
-                    const mainVideoUrl = (row[1] && row[1].v) ? String(row[1].v).trim() : null;
+                    const colA = (row[0] && row[0].v !== null) ? String(row[0].v).trim() : '';
+                    const colB = (row[1] && row[1].v !== null) ? String(row[1].v).trim() : '';
+                    const colC = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
 
-                    const customVictors = [];
-                    for (let j = 2; j < row.length; j++) {
-                        const cell = row[j];
-                        if (!cell || cell.v === null || cell.v === undefined) continue;
-                        
-                        const val = String(cell.v).trim();
-                        if (val === '' || val === '-') continue;
-
-                        if (val.startsWith('http')) {
-                            if (customVictors.length > 0) {
-                                customVictors[customVictors.length - 1].link = val;
-                            }
-                        } else {
-                            customVictors.push({ name: val, link: null });
-                        }
-                    }
-
-                    if (mapName) {
-                        videoMap[mapName] = {
-                            videoUrl: mainVideoUrl,
-                            victors: customVictors
+                    // 1. A열에 맵 이름이 있는 경우 (새로운 맵 블록 시작)
+                    if (colA !== '' && colA !== '.') {
+                        currentMap = colA.toLowerCase();
+                        videoMap[currentMap] = {
+                            videoUrl: null,
+                            victors: []
                         };
+
+                        // 첫 번째 줄의 B열이 대표 영상 링크인 경우
+                        if (colB.startsWith('http')) {
+                            videoMap[currentMap].videoUrl = colB;
+                        } else if (colB !== '' && colB !== '링크' && !colB.includes('유저이름') && !colB.includes('이름')) {
+                            // 만약 첫 줄부터 클리어자인 경우
+                            videoMap[currentMap].victors.push({
+                                name: colB,
+                                link: colC.startsWith('http') ? colC : null
+                            });
+                        }
+                    } 
+                    // 2. A열이 비어있거나 '.'이고, 현재 맵이 지정되어 있는 경우 (클리어자 목록)
+                    else if (currentMap && colB !== '' && colB !== '.' && colB !== '링크') {
+                        // 안내 문구인 경우는 무시
+                        if (colB.includes('이름') || colB.includes('유저이름')) continue;
+
+                        videoMap[currentMap].victors.push({
+                            name: colB,
+                            link: colC.startsWith('http') ? colC : null
+                        });
                     }
                 }
             } catch(e) {
@@ -439,7 +448,7 @@
             }
         }
 
-        // 메인 시트 파서 (안정적으로 모든 맵을 읽어오도록 개선)
+        // 메인 시트 파서
         function parseMainSheet(rawText) {
             const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
             const data = JSON.parse(jsonText);
@@ -456,12 +465,10 @@
                 const levelName = String(row[0].v).trim();
                 const levelNameLower = levelName.toLowerCase();
 
-                // 'waterfall'을 찾거나, 이미 리스트 영역 내부로 진입했다고 판단되면 파싱 시작
                 if (!foundStart) {
                     if (levelNameLower === 'waterfall' || levelNameLower.includes('waterfall') || currentRank > 1) {
                         foundStart = true;
                     } else {
-                        // 만약 waterfall을 찾지 못하더라도 첫 번째 행부터 데이터처럼 보이면 강제 시작
                         if (row[1] && row[1].v !== null) {
                             foundStart = true;
                         } else {
@@ -493,27 +500,11 @@
                     badgeText = rawCCol; 
                 }
 
-                const defaultVictors = [];
-                for (let j = 5; j < row.length; j++) {
-                    const cell = row[j];
-                    if (!cell || cell.v === null || cell.v === undefined) continue;
-                    let val = String(cell.v).trim();
-                    if (val === '' || val === '-') continue;
-
-                    if (val.startsWith('http')) {
-                        if (defaultVictors.length > 0) {
-                            defaultVictors[defaultVictors.length - 1].link = val;
-                        }
-                    } else {
-                        defaultVictors.push({ name: val, link: null });
-                    }
-                }
-
                 const matchedKey = Object.keys(videoMap).find(k => k.toLowerCase() === levelNameLower);
                 const customData = matchedKey ? videoMap[matchedKey] : null;
 
                 const finalVideoUrl = customData ? customData.videoUrl : null;
-                const finalVictors = (customData && customData.victors.length > 0) ? customData.victors : defaultVictors;
+                const finalVictors = customData ? customData.victors : [];
 
                 mapDataList.push({
                     rank: displayRank,
