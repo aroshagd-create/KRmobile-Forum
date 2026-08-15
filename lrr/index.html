@@ -441,7 +441,7 @@
       }
     }
 
-    // 세로형 스캔 및 데이터 누적 파싱
+    // HRR과 동일한 세로 파싱 로직 적용
     function parseVideoSheet(rawText) {
       try {
         const jsonText = rawText.substring(
@@ -452,7 +452,7 @@
         const rows = data.table.rows;
 
         videoMap = {};
-        let currentMap = null;
+        let currentMap = null; // HRR처럼 루프 바깥에 변수 유지
 
         for (let i = 0; i < rows.length; i++) {
           const row = rows[i].c;
@@ -569,7 +569,6 @@
           currentRank++;
         }
 
-        // 메인 시트에 작성된 기본 클리어자들 가져오기
         const defaultVictors = [];
         for (let j = 5; j < row.length; j++) {
           const cell = row[j];
@@ -588,13 +587,11 @@
 
         const finalVideoUrl = customData ? customData.videoUrl : null;
         
-        // 비디오 시트에 입력된 클리어자가 있다면 그것을 쓰고, 없으면 메인 시트 클리어자 사용
         const finalVictors =
           customData && customData.victors.length > 0
             ? customData.victors
             : defaultVictors;
 
-        // 전체 클리어자 수 자동 연동
         const finalTotalVictors =
           customData && customData.victors.length > 0
             ? String(customData.victors.length)
@@ -704,7 +701,6 @@
         videoBox.innerHTML = '<span style="color:#64748b;">등록된 영상이 없습니다.</span>';
       }
 
-      // 첫 번째 클리어자 이름 표기
       if (map.victors.length > 0) {
         document.getElementById('firstVictorName').innerText = map.victors[0].name;
       } else {
