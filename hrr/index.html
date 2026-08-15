@@ -364,7 +364,8 @@
         const MAIN_SHEET_ID = '1f1lwB1kbOpD4IWBiTf-D3wDeqpCA5nz-fkNIhr4ZO14';
         const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
 
-        const VIDEO_SHEET_ID = '1yH8JmWO3izJd78c-5MEyJZt5uOxpsLe8rYkOZm5Ccx4';
+        // 변경된 새로운 비디오 시트 ID 적용
+        const VIDEO_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8';
         const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json`;
 
         let mapDataList = [];
@@ -509,7 +510,7 @@
 
                 const finalVideoUrl = customData ? customData.videoUrl : null;
                 const finalVictors = customData ? customData.victors : [];
-                
+
                 // Total Victors를 비디오 시트의 클리어자 목록 개수로 계산
                 const calculatedTotalVictors = finalVictors.length.toString();
 
