@@ -161,7 +161,6 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      flex-grow: 1;
     }
 
     .toggle-btn {
@@ -209,7 +208,7 @@
 
     .map-main-title {
       font-family: 'Orbitron', sans-serif;
-      font-size: clamp(22px, 6vw, 34px);
+      font-size: clamp(20px, 6vw, 32px);
       font-weight: 900;
       word-break: keep-all;
       overflow-wrap: break-word;
@@ -217,7 +216,6 @@
       line-height: 1.3;
       margin-bottom: 10px;
       width: 100%;
-      color: var(--text-main);
     }
 
     .map-aredl-badge {
@@ -226,11 +224,10 @@
       font-size: 14px;
       font-weight: 800;
       background: rgba(255, 159, 67, 0.12);
-      padding: 4px 14px;
+      padding: 4px 12px;
       border-radius: 6px;
       border: 1px solid rgba(255, 159, 67, 0.3);
       display: inline-block;
-      text-transform: capitalize;
     }
 
     .detail-grid {
@@ -321,7 +318,7 @@
       .sidebar {
         position: relative;
         transform: translateX(0) !important;
-        width: 300px;
+        width: 340px;
         height: calc(100vh - 72px);
         top: 0;
       }
@@ -330,7 +327,7 @@
       .main-content { padding: 40px; }
       .map-header-row { align-items: flex-start; text-align: left; }
       .map-main-title { font-size: 36px; text-align: left; }
-      .map-aredl-badge { font-size: 16px; padding: 4px 12px; }
+      .map-aredl-badge { font-size: 18px; padding: 4px 12px; }
       .detail-grid { display: grid; grid-template-columns: 16fr 9fr; gap: 24px; margin-bottom: 28px; }
       .stat-card { padding: 20px; border-radius: 16px; }
       .stat-label { font-size: 13px; margin-bottom: 6px; }
@@ -341,6 +338,7 @@
   </style>
 </head>
 <body>
+
   <header>
     <a href="/" class="logo">KRM FORUM</a>
     <a href="/" class="header-right">LRR LIST</a>
@@ -351,13 +349,7 @@
 
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
-        <input
-          type="text"
-          class="search-input"
-          id="searchInput"
-          placeholder="맵 이름 검색..."
-          oninput="filterMaps()"
-        />
+        <input type="text" class="search-input" id="searchInput" placeholder="맵 이름 검색..." oninput="filterMaps()">
         <button class="close-sidebar-btn" onclick="toggleSidebar()">✕</button>
       </div>
       <ul class="map-list" id="mapList"></ul>
@@ -366,10 +358,9 @@
     <main class="main-content">
       <div class="content-box">
         <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-
         <div class="map-header-row">
-          <h1 class="map-main-title" id="mapTitle">Loading...</h1>
-          <div class="map-aredl-badge" id="mapAredlBadge" style="display:none;"></div>
+          <h1 class="map-main-title" id="mapTitle">#1. Loading...</h1>
+          <span class="map-aredl-badge" id="mapAredlBadge" style="display:none;">AREDL -</span>
         </div>
 
         <div class="detail-grid">
@@ -399,7 +390,6 @@
           <span>전체 클리어자 목록 (Victors)</span>
           <span id="arrowIcon">▼</span>
         </button>
-
         <div class="victors-list-box" id="victorsBox">
           <div id="victorsContainer"></div>
         </div>
@@ -408,10 +398,11 @@
   </div>
 
   <script>
-    // 기존 LRR 시트 ID 유지
-    const LRR_SHEET_ID = '1yP5sJXHAA_dO0iv74nhx4vaT21J2Rl0cNXdzipsB-Y8';
-    const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${LRR_SHEET_ID}/gviz/tq?tqx=out:json`;
+    // LRR 메인 시트 ID
+    const MAIN_SHEET_ID = '1yP5sJXHAA_dO0iv74nhx4vaT21J2Rl0cNXdzipsB-Y8';
+    const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
 
+    // 비디오 시트 ID
     const VIDEO_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8';
     const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json`;
 
@@ -422,7 +413,7 @@
       try {
         const [mainRes, videoRes] = await Promise.allSettled([
           fetch(MAIN_SHEET_URL),
-          fetch(VIDEO_SHEET_URL),
+          fetch(VIDEO_SHEET_URL)
         ]);
 
         if (videoRes.status === 'fulfilled' && videoRes.value.ok) {
@@ -436,19 +427,17 @@
         } else {
           throw new Error('Main sheet load failed');
         }
+
       } catch (err) {
-        console.error('데이터 로드 실패:', err);
-        document.getElementById('mapTitle').innerText = '데이터 로드 실패';
+        console.error("데이터 로드 실패:", err);
+        document.getElementById('mapTitle').innerText = "데이터 로드 실패";
       }
     }
 
-    // HRR 100% 동일 로직: 비디오 시트 처리
+    // 비디오 시트 파서 (HRR와 100% 동일 로직)
     function parseVideoSheet(rawText) {
       try {
-        const jsonText = rawText.substring(
-          rawText.indexOf('{'),
-          rawText.lastIndexOf('}') + 1
-        );
+        const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
         const data = JSON.parse(jsonText);
         const rows = data.table.rows;
 
@@ -463,167 +452,128 @@
           const colB = (row[1] && row[1].v !== null) ? String(row[1].v).trim() : '';
           const colC = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
 
-          const linkVal = colC.startsWith('http') ? colC : null;
-
+          // 1. A열에 맵 이름이 있는 경우 (새로운 맵 블록 시작)
           if (colA !== '' && colA !== '.') {
             currentMap = colA.toLowerCase();
-            videoMap[currentMap] = { videoUrl: null, victors: [] };
-          }
+            videoMap[currentMap] = {
+              videoUrl: null,
+              victors: []
+            };
 
-          if (currentMap && colB !== '' && colB !== '.' && colB !== '링크' && !colB.includes('이름')) {
+            // 첫 줄의 B열에 유저 이름이 있는 경우 처리
+            if (colB !== '' && colB !== '링크' && !colB.includes('유저이름') && !colB.includes('이름')) {
+              const linkVal = colC.startsWith('http') ? colC : null;
+              videoMap[currentMap].victors.push({
+                name: colB,
+                link: linkVal
+              });
+
+              // 첫 번째 클리어자의 링크가 존재하면 메인 영상으로 자동 지정
+              if (linkVal) {
+                videoMap[currentMap].videoUrl = linkVal;
+              }
+            }
+          } 
+          // 2. A열이 비어있거나 '.'이고, 현재 맵이 지정되어 있는 경우 (클리어자 목록)
+          else if (currentMap && colB !== '' && colB !== '.' && colB !== '링크') {
+            // 안내 문구인 경우는 무시
+            if (colB.includes('이름') || colB.includes('유저이름')) continue;
+
+            const linkVal = colC.startsWith('http') ? colC : null;
             videoMap[currentMap].victors.push({
               name: colB,
               link: linkVal
             });
 
+            // 아직 메인 영상이 없고, 이후 클리어자 중 첫 번째로 링크가 있는 사람이 있다면 메인 영상으로 지정
             if (!videoMap[currentMap].videoUrl && linkVal) {
               videoMap[currentMap].videoUrl = linkVal;
             }
           }
         }
-      } catch (e) {
-        console.warn('비디오 시트 파싱 에러:', e);
+      } catch(e) {
+        console.warn("비디오 시트 파싱 중 오류:", e);
       }
     }
 
-    function normalizeDash(value) {
-      if (value === null || value === undefined) return '';
-      return String(value).trim();
-    }
-
-    function formatNiceText(text) {
-      if (!text) return '';
-      if (text.startsWith('#')) return text;
-
-      return text
-        .toLowerCase()
-        .replace(/(^\w{1}|[\s_]+\w{1})/g, match => match.toUpperCase());
-    }
-
-    // HRR 100% 동일 로직: 메인 시트 파싱 및 데이터 병합
+    // 메인 시트 파서 (HRR와 100% 동일 로직)
     function parseMainSheet(rawText) {
-      const jsonText = rawText.substring(
-        rawText.indexOf('{'),
-        rawText.lastIndexOf('}') + 1
-      );
+      const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
       const data = JSON.parse(jsonText);
       const rows = data.table.rows;
 
       mapDataList = [];
       let currentRank = 1;
+      let foundStart = false;
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i].c;
         if (!row || !row[0] || !row[0].v) continue;
 
         const levelName = String(row[0].v).trim();
-        const lowerLevelName = levelName.toLowerCase();
+        const levelNameLower = levelName.toLowerCase();
 
-        if (
-          lowerLevelName === 'levels' ||
-          lowerLevelName.startsWith('last update') ||
-          lowerLevelName.startsWith('records & information') ||
-          lowerLevelName.includes('last update:')
-        ) {
+        if (!foundStart) {
+          if (levelNameLower === 'waterfall' || levelNameLower.includes('waterfall') || currentRank > 1) {
+            foundStart = true;
+          } else {
+            if (row[1] && row[1].v !== null) {
+              foundStart = true;
+            } else {
+              continue;
+            }
+          }
+        }
+
+        if (levelNameLower === 'levels' || levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
           continue;
         }
 
-        // B열: 퍼스트 빅터 (기본값)
-        const defaultFirstVictor = (row[1] && row[1].v !== null) ? String(row[1].v).trim() : '-';
-
-        // C열: Total Victors (기본값)
-        let defaultTotalVictors = '0';
-        if (row[2] && row[2].v !== null && row[2].v !== undefined) {
-          defaultTotalVictors = String(row[2].v).trim();
-        }
-
-        // D열: AREDL / Rank 관련 컬럼
-        const rawDCol = normalizeDash(row[3] && row[3].v !== null ? row[3].v : '');
+        const rawCCol = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
 
         let displayRank = '';
         let badgeText = '';
 
-        if (rawDCol === '-' || rawDCol.toLowerCase().includes('tier') || rawDCol.toLowerCase().includes('nlw')) {
-          displayRank = '-';
-          badgeText = rawDCol === '-' ? '' : formatNiceText(rawDCol);
-        } else if (rawDCol !== '') {
-          let cleanNum = rawDCol.replace(/[^0-9]/g, '');
-          badgeText = cleanNum ? `AREDL #${cleanNum}` : formatNiceText(rawDCol);
-
+        if (rawCCol.startsWith('#') || !isNaN(rawCCol)) {
           displayRank = `#${currentRank}`;
+          badgeText = rawCCol; 
           currentRank++;
         } else {
-          displayRank = `#${currentRank}`;
-          badgeText = `AREDL #${currentRank}`;
-          currentRank++;
+          displayRank = `-`;
+          badgeText = rawCCol; 
         }
 
-        // E열(Index 4) 이후: 메인 시트 기본 클리어자 목록
-        const defaultVictors = [];
-        for (let j = 4; j < row.length; j++) {
-          const cell = row[j];
-          if (!cell || cell.v === null) continue;
-
-          const val = String(cell.v).trim();
-          if (val === '' || val === '-') continue;
-
-          defaultVictors.push({ name: val, link: null });
-        }
-
-        // 비디오 시트 맵 검색
-        const matchedKey = Object.keys(videoMap).find(
-          (k) => k.trim().toLowerCase() === levelName.toLowerCase()
-        );
+        const matchedKey = Object.keys(videoMap).find(k => k.toLowerCase() === levelNameLower);
         const customData = matchedKey ? videoMap[matchedKey] : null;
 
-        // HRR 파싱 규칙 우선순위 적용
-        const finalVictors =
-          (customData && customData.victors && customData.victors.length > 0)
-            ? customData.victors
-            : defaultVictors;
-
-        const finalTotalVictors =
-          (customData && customData.victors && customData.victors.length > 0)
-            ? String(customData.victors.length)
-            : defaultTotalVictors;
-
-        const finalFirstVictor =
-          (finalVictors.length > 0)
-            ? finalVictors[0].name
-            : defaultFirstVictor;
-
         const finalVideoUrl = customData ? customData.videoUrl : null;
+        const finalVictors = customData ? customData.victors : [];
+
+        // Total Victors를 비디오 시트의 클리어자 목록 개수로 계산
+        const calculatedTotalVictors = finalVictors.length.toString();
 
         mapDataList.push({
           rank: displayRank,
           title: levelName,
-          badge: badgeText,
-          firstVictor: finalFirstVictor,
-          totalVictors: finalTotalVictors,
+          aredl: badgeText,
+          totalVictors: calculatedTotalVictors,
           listPoints: '-',
           videoUrl: finalVideoUrl,
-          victors: finalVictors,
+          victors: finalVictors
         });
       }
 
-      renderSidebar();
+      renderSidebar(mapDataList);
       handleHashChange();
     }
 
-    function renderSidebar() {
+    function renderSidebar(data) {
       const listEl = document.getElementById('mapList');
       listEl.innerHTML = '';
-
-      const indexed = mapDataList.map((map, originalIndex) => ({
-        map,
-        originalIndex,
-      }));
-
-      indexed.forEach(({ map, originalIndex }) => {
+      data.forEach((map) => {
+        const originalIndex = mapDataList.findIndex(m => m.title === map.title);
         const li = document.createElement('li');
         li.className = 'map-item';
-        li.dataset.index = String(originalIndex);
-
         li.onclick = () => {
           selectMap(originalIndex);
           if (window.innerWidth < 768) toggleSidebar();
@@ -635,22 +585,6 @@
         `;
         listEl.appendChild(li);
       });
-
-      syncActiveByCurrentHash();
-    }
-
-    function syncActiveByCurrentHash() {
-      const hash = window.location.hash.replace('#', '');
-      const targetIndex = hash ? parseInt(hash, 10) - 1 : 0;
-
-      const clamped = mapDataList.length
-        ? Math.max(0, Math.min(targetIndex, mapDataList.length - 1))
-        : 0;
-
-      document.querySelectorAll('.map-item').forEach((el) => {
-        const elIndex = parseInt(el.dataset.index, 10);
-        el.classList.toggle('active', elIndex === clamped);
-      });
     }
 
     function selectMap(index) {
@@ -661,22 +595,21 @@
         history.replaceState(null, null, `#${index + 1}`);
       }
 
-      document.querySelectorAll('.map-item').forEach((el) => {
-        const elIndex = parseInt(el.dataset.index, 10);
-        el.classList.toggle('active', elIndex === index);
+      document.querySelectorAll('.map-item').forEach((el, idx) => {
+        const isSelected = idx === index;
+        el.classList.toggle('active', isSelected);
       });
 
-      document.getElementById('mapTitle').innerText = map.title;
+      document.getElementById('mapTitle').innerText = `${map.rank !== '-' ? map.rank + '.' : ''} ${map.title}`;
 
-      const badgeEl = document.getElementById('mapAredlBadge');
-      if (map.badge && map.badge !== '') {
-        badgeEl.innerText = map.badge;
-        badgeEl.style.display = 'inline-block';
+      const aredlBadge = document.getElementById('mapAredlBadge');
+      if (map.aredl && map.aredl !== '-' && map.aredl !== '0' && map.aredl !== '') {
+        aredlBadge.innerText = map.aredl.includes('Tier') ? map.aredl : `AREDL ${map.aredl}`;
+        aredlBadge.style.display = 'inline-block';
       } else {
-        badgeEl.style.display = 'none';
+        aredlBadge.style.display = 'none';
       }
 
-      document.getElementById('firstVictorName').innerText = map.firstVictor;
       document.getElementById('totalVictorsCount').innerText = map.totalVictors;
       document.getElementById('listPoints').innerText = map.listPoints;
 
@@ -686,18 +619,18 @@
       if (targetVideo && targetVideo.includes('youtu')) {
         const videoId = extractYoutubeId(targetVideo);
         if (videoId) {
-          videoBox.innerHTML = `
-            <iframe
-              src="https://www.youtube.com/embed/${videoId}?vq=hd1080&enablejsapi=1"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen
-            ></iframe>
-          `;
+          videoBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?vq=hd1080&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
         } else {
-          videoBox.innerHTML = '<span style="color:#64748b;">등록된 영상이 없습니다.</span>';
+          videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
         }
       } else {
-        videoBox.innerHTML = '<span style="color:#64748b;">등록된 영상이 없습니다.</span>';
+        videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
+      }
+
+      if (map.victors.length > 0) {
+        document.getElementById('firstVictorName').innerText = map.victors[0].name;
+      } else {
+        document.getElementById('firstVictorName').innerText = '-';
       }
 
       renderVictorsList(map.victors);
@@ -708,15 +641,13 @@
       container.innerHTML = '';
 
       if (!victors || victors.length === 0) {
-        container.innerHTML =
-          '<div style="color:var(--text-sub); font-size:14px;">클리어자가 없습니다.</div>';
+        container.innerHTML = '<div style="color:var(--text-sub); font-size:14px;">클리어자가 없습니다.</div>';
         return;
       }
 
       victors.forEach((v, idx) => {
         const item = document.createElement('div');
         item.className = 'victor-item';
-
         const rankSpan = `<span class="victor-rank">${idx + 1}.</span>`;
 
         let nameEl = (v.link && v.link.startsWith('http'))
@@ -731,7 +662,7 @@
     function extractYoutubeId(url) {
       const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
       const match = url.match(regExp);
-      return match && match[2].length === 11 ? match[2] : null;
+      return (match && match[2].length === 11) ? match[2] : null;
     }
 
     function toggleSidebar() {
@@ -744,55 +675,20 @@
     function toggleVictorsBox() {
       const box = document.getElementById('victorsBox');
       box.classList.toggle('active');
-      document.getElementById('arrowIcon').innerText =
-        box.classList.contains('active') ? '▲' : '▼';
+      document.getElementById('arrowIcon').innerText = box.classList.contains('active') ? '▲' : '▼';
     }
 
     function filterMaps() {
       const query = document.getElementById('searchInput').value.toLowerCase();
-
-      const indexed = mapDataList.map((map, originalIndex) => ({
-        map,
-        originalIndex,
-      }));
-
-      const filtered = indexed.filter(({ map }) =>
-        map.title.toLowerCase().includes(query)
-      );
-
-      const listEl = document.getElementById('mapList');
-      listEl.innerHTML = ``;
-
-      filtered.forEach(({ map, originalIndex }) => {
-        const li = document.createElement('li');
-        li.className = 'map-item';
-        li.dataset.index = String(originalIndex);
-
-        li.onclick = () => {
-          selectMap(originalIndex);
-          if (window.innerWidth < 768) toggleSidebar();
-        };
-
-        li.innerHTML = `
-          <span class="rank">${map.rank}</span>
-          <span class="title">${map.title}</span>
-        `;
-        listEl.appendChild(li);
-      });
-
-      syncActiveByCurrentHash();
+      const filtered = mapDataList.filter(m => m.title.toLowerCase().includes(query));
+      renderSidebar(filtered);
     }
 
     function handleHashChange() {
       const hash = window.location.hash.replace('#', '');
-      const targetIndex = hash ? parseInt(hash, 10) - 1 : 0;
-
+      const targetIndex = hash ? parseInt(hash) - 1 : 0;
       if (mapDataList.length > 0) {
-        const clamped = Math.max(
-          0,
-          Math.min(targetIndex, mapDataList.length - 1)
-        );
-        selectMap(clamped);
+        selectMap(Math.max(0, Math.min(targetIndex, mapDataList.length - 1)));
       }
     }
 
