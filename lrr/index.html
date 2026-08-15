@@ -408,11 +408,12 @@
   </div>
 
   <script>
+    // 기존 LRR 시트 ID 유지
     const LRR_SHEET_ID = '1yP5sJXHAA_dO0iv74nhx4vaT21J2Rl0cNXdzipsB-Y8';
     const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${LRR_SHEET_ID}/gviz/tq?tqx=out:json`;
 
     const VIDEO_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8';
-    const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&gid=1240231056`;
+    const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json`;
 
     let mapDataList = [];
     let videoMap = {};
@@ -441,7 +442,7 @@
       }
     }
 
-    // C열(row[2])에서만 링크를 추출하도록 변경된 비디오 시트 파서
+    // HRR 100% 동일 로직: 비디오 시트 처리
     function parseVideoSheet(rawText) {
       try {
         const jsonText = rawText.substring(
@@ -462,35 +463,14 @@
           const colB = (row[1] && row[1].v !== null) ? String(row[1].v).trim() : '';
           const colC = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
 
-          // C열(colC)의 값이 http로 시작하는 경우에만 유효한 URL로 인정
           const linkVal = colC.startsWith('http') ? colC : null;
 
-          // 1. A열에 맵 이름이 있는 행인 경우
           if (colA !== '' && colA !== '.') {
             currentMap = colA.toLowerCase();
+            videoMap[currentMap] = { videoUrl: null, victors: [] };
+          }
 
-            if (!videoMap[currentMap]) {
-              videoMap[currentMap] = {
-                videoUrl: null,
-                victors: []
-              };
-            }
-
-            if (colB !== '' && colB !== '링크' && !colB.includes('유저이름') && !colB.includes('이름')) {
-              videoMap[currentMap].victors.push({
-                name: colB,
-                link: linkVal
-              });
-
-              if (!videoMap[currentMap].videoUrl && linkVal) {
-                videoMap[currentMap].videoUrl = linkVal;
-              }
-            }
-          } 
-          // 2. A열이 비어 있고 이전 맵 이름에 종속된 클리어자 행인 경우
-          else if (currentMap && colB !== '' && colB !== '.' && colB !== '링크') {
-            if (colB.includes('이름') || colB.includes('유저이름')) continue;
-
+          if (currentMap && colB !== '' && colB !== '.' && colB !== '링크' && !colB.includes('이름')) {
             videoMap[currentMap].victors.push({
               name: colB,
               link: linkVal
@@ -502,7 +482,7 @@
           }
         }
       } catch (e) {
-        console.warn('비디오 시트 파싱 중 오류:', e);
+        console.warn('비디오 시트 파싱 에러:', e);
       }
     }
 
@@ -520,6 +500,7 @@
         .replace(/(^\w{1}|[\s_]+\w{1})/g, match => match.toUpperCase());
     }
 
+    // HRR 100% 동일 로직: 메인 시트 파싱 및 데이터 병합
     function parseMainSheet(rawText) {
       const jsonText = rawText.substring(
         rawText.indexOf('{'),
@@ -547,22 +528,27 @@
           continue;
         }
 
+        // B열: 퍼스트 빅터 (기본값)
+        const defaultFirstVictor = (row[1] && row[1].v !== null) ? String(row[1].v).trim() : '-';
+
+        // C열: Total Victors (기본값)
         let defaultTotalVictors = '0';
-        if (row[1] && row[1].v !== null && row[1].v !== undefined) {
-          defaultTotalVictors = String(row[1].v).trim();
+        if (row[2] && row[2].v !== null && row[2].v !== undefined) {
+          defaultTotalVictors = String(row[2].v).trim();
         }
 
-        const rawCCol = normalizeDash(row[2] && row[2].v !== null ? row[2].v : '');
+        // D열: AREDL / Rank 관련 컬럼
+        const rawDCol = normalizeDash(row[3] && row[3].v !== null ? row[3].v : '');
 
         let displayRank = '';
         let badgeText = '';
 
-        if (rawCCol === '-' || rawCCol.toLowerCase().includes('tier') || rawCCol.toLowerCase().includes('nlw')) {
+        if (rawDCol === '-' || rawDCol.toLowerCase().includes('tier') || rawDCol.toLowerCase().includes('nlw')) {
           displayRank = '-';
-          badgeText = rawCCol === '-' ? '' : formatNiceText(rawCCol);
-        } else if (rawCCol !== '') {
-          let cleanNum = rawCCol.replace(/[^0-9]/g, '');
-          badgeText = cleanNum ? `AREDL #${cleanNum}` : formatNiceText(rawCCol);
+          badgeText = rawDCol === '-' ? '' : formatNiceText(rawDCol);
+        } else if (rawDCol !== '') {
+          let cleanNum = rawDCol.replace(/[^0-9]/g, '');
+          badgeText = cleanNum ? `AREDL #${cleanNum}` : formatNiceText(rawDCol);
 
           displayRank = `#${currentRank}`;
           currentRank++;
@@ -572,8 +558,9 @@
           currentRank++;
         }
 
+        // E열(Index 4) 이후: 메인 시트 기본 클리어자 목록
         const defaultVictors = [];
-        for (let j = 5; j < row.length; j++) {
+        for (let j = 4; j < row.length; j++) {
           const cell = row[j];
           if (!cell || cell.v === null) continue;
 
@@ -583,27 +570,35 @@
           defaultVictors.push({ name: val, link: null });
         }
 
+        // 비디오 시트 맵 검색
         const matchedKey = Object.keys(videoMap).find(
-          (k) => k.toLowerCase() === levelName.toLowerCase()
+          (k) => k.trim().toLowerCase() === levelName.toLowerCase()
         );
         const customData = matchedKey ? videoMap[matchedKey] : null;
 
-        const finalVideoUrl = customData ? customData.videoUrl : null;
-
+        // HRR 파싱 규칙 우선순위 적용
         const finalVictors =
-          customData && customData.victors.length > 0
+          (customData && customData.victors && customData.victors.length > 0)
             ? customData.victors
             : defaultVictors;
 
         const finalTotalVictors =
-          customData && customData.victors.length > 0
+          (customData && customData.victors && customData.victors.length > 0)
             ? String(customData.victors.length)
             : defaultTotalVictors;
+
+        const finalFirstVictor =
+          (finalVictors.length > 0)
+            ? finalVictors[0].name
+            : defaultFirstVictor;
+
+        const finalVideoUrl = customData ? customData.videoUrl : null;
 
         mapDataList.push({
           rank: displayRank,
           title: levelName,
           badge: badgeText,
+          firstVictor: finalFirstVictor,
           totalVictors: finalTotalVictors,
           listPoints: '-',
           videoUrl: finalVideoUrl,
@@ -681,6 +676,7 @@
         badgeEl.style.display = 'none';
       }
 
+      document.getElementById('firstVictorName').innerText = map.firstVictor;
       document.getElementById('totalVictorsCount').innerText = map.totalVictors;
       document.getElementById('listPoints').innerText = map.listPoints;
 
@@ -702,12 +698,6 @@
         }
       } else {
         videoBox.innerHTML = '<span style="color:#64748b;">등록된 영상이 없습니다.</span>';
-      }
-
-      if (map.victors.length > 0) {
-        document.getElementById('firstVictorName').innerText = map.victors[0].name;
-      } else {
-        document.getElementById('firstVictorName').innerText = '-';
       }
 
       renderVictorsList(map.victors);
