@@ -441,7 +441,7 @@
       }
     }
 
-    // HRR과 동일한 세로 파싱 로직 적용
+    // C열에서만 링크를 읽어오도록 수정한 비디오 시트 파서
     function parseVideoSheet(rawText) {
       try {
         const jsonText = rawText.substring(
@@ -452,7 +452,7 @@
         const rows = data.table.rows;
 
         videoMap = {};
-        let currentMap = null; // HRR처럼 루프 바깥에 변수 유지
+        let currentMap = null;
 
         for (let i = 0; i < rows.length; i++) {
           const row = rows[i].c;
@@ -462,6 +462,10 @@
           const colB = (row[1] && row[1].v !== null) ? String(row[1].v).trim() : '';
           const colC = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
 
+          // 링크는 무조건 C열(colC)에서만 확인
+          const linkVal = colC.startsWith('http') ? colC : null;
+
+          // 1. A열에 맵 이름이 있는 경우
           if (colA !== '' && colA !== '.') {
             currentMap = colA.toLowerCase();
 
@@ -473,7 +477,6 @@
             }
 
             if (colB !== '' && colB !== '링크' && !colB.includes('유저이름') && !colB.includes('이름')) {
-              const linkVal = colC.startsWith('http') ? colC : null;
               videoMap[currentMap].victors.push({
                 name: colB,
                 link: linkVal
@@ -484,10 +487,10 @@
               }
             }
           } 
+          // 2. A열이 비어있고 이전 맵 이름이 남아있는 경우
           else if (currentMap && colB !== '' && colB !== '.' && colB !== '링크') {
             if (colB.includes('이름') || colB.includes('유저이름')) continue;
 
-            const linkVal = colC.startsWith('http') ? colC : null;
             videoMap[currentMap].victors.push({
               name: colB,
               link: linkVal
