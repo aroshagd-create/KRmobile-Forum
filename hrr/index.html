@@ -395,7 +395,7 @@
             }
         }
 
-        // 세로형 비디오 시트 파서 (A열: 맵이름, 첫줄 B열: 영상, 이후 B열: 유저이름, C열: 링크)
+        // 비디오 시트 파서 (A열: 맵이름, 첫줄 D열: 메인영상, B열: 유저이름, C열: 링크)
         function parseVideoSheet(rawText) {
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
@@ -412,6 +412,7 @@
                     const colA = (row[0] && row[0].v !== null) ? String(row[0].v).trim() : '';
                     const colB = (row[1] && row[1].v !== null) ? String(row[1].v).trim() : '';
                     const colC = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
+                    const colD = (row[3] && row[3].v !== null) ? String(row[3].v).trim() : '';
 
                     // 1. A열에 맵 이름이 있는 경우 (새로운 맵 블록 시작)
                     if (colA !== '' && colA !== '.') {
@@ -421,11 +422,13 @@
                             victors: []
                         };
 
-                        // 첫 번째 줄의 B열이 대표 영상 링크인 경우
-                        if (colB.startsWith('http')) {
-                            videoMap[currentMap].videoUrl = colB;
-                        } else if (colB !== '' && colB !== '링크' && !colB.includes('유저이름') && !colB.includes('이름')) {
-                            // 만약 첫 줄부터 클리어자인 경우
+                        // 첫 번째 줄의 D열이 메인 영상 링크인 경우
+                        if (colD.startsWith('http')) {
+                            videoMap[currentMap].videoUrl = colD;
+                        }
+
+                        // 첫 줄의 B열에 유저 이름이 있는 경우 처리
+                        if (colB !== '' && colB !== '링크' && !colB.includes('유저이름') && !colB.includes('이름')) {
                             videoMap[currentMap].victors.push({
                                 name: colB,
                                 link: colC.startsWith('http') ? colC : null
