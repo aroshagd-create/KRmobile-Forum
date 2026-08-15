@@ -441,7 +441,7 @@
       }
     }
 
-    // HRR 방식으로 세로 스캔 및 중복 맵 누적 병합 처리
+    // 세로형 스캔 및 데이터 누적 파싱
     function parseVideoSheet(rawText) {
       try {
         const jsonText = rawText.substring(
@@ -462,7 +462,6 @@
           const colB = (row[1] && row[1].v !== null) ? String(row[1].v).trim() : '';
           const colC = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
 
-          // A열에 맵 이름이 존재하는 경우 (새로운 맵 영역 시작)
           if (colA !== '' && colA !== '.') {
             currentMap = colA.toLowerCase();
 
@@ -485,7 +484,6 @@
               }
             }
           } 
-          // A열이 비어있거나 '.'이고, 현재 지정된 맵이 있는 경우
           else if (currentMap && colB !== '' && colB !== '.' && colB !== '링크') {
             if (colB.includes('이름') || colB.includes('유저이름')) continue;
 
@@ -546,9 +544,9 @@
           continue;
         }
 
-        let totalVictors = '0';
+        let defaultTotalVictors = '0';
         if (row[1] && row[1].v !== null && row[1].v !== undefined) {
-          totalVictors = String(row[1].v).trim();
+          defaultTotalVictors = String(row[1].v).trim();
         }
 
         const rawCCol = normalizeDash(row[2] && row[2].v !== null ? row[2].v : '');
@@ -571,6 +569,7 @@
           currentRank++;
         }
 
+        // 메인 시트에 작성된 기본 클리어자들 가져오기
         const defaultVictors = [];
         for (let j = 5; j < row.length; j++) {
           const cell = row[j];
@@ -588,16 +587,24 @@
         const customData = matchedKey ? videoMap[matchedKey] : null;
 
         const finalVideoUrl = customData ? customData.videoUrl : null;
+        
+        // 비디오 시트에 입력된 클리어자가 있다면 그것을 쓰고, 없으면 메인 시트 클리어자 사용
         const finalVictors =
           customData && customData.victors.length > 0
             ? customData.victors
             : defaultVictors;
 
+        // 전체 클리어자 수 자동 연동
+        const finalTotalVictors =
+          customData && customData.victors.length > 0
+            ? String(customData.victors.length)
+            : defaultTotalVictors;
+
         mapDataList.push({
           rank: displayRank,
           title: levelName,
           badge: badgeText,
-          totalVictors: totalVictors,
+          totalVictors: finalTotalVictors,
           listPoints: '-',
           videoUrl: finalVideoUrl,
           victors: finalVictors,
@@ -697,9 +704,9 @@
         videoBox.innerHTML = '<span style="color:#64748b;">등록된 영상이 없습니다.</span>';
       }
 
+      // 첫 번째 클리어자 이름 표기
       if (map.victors.length > 0) {
-        document.getElementById('firstVictorName').innerText =
-          map.victors[0].name;
+        document.getElementById('firstVictorName').innerText = map.victors[0].name;
       } else {
         document.getElementById('firstVictorName').innerText = '-';
       }
