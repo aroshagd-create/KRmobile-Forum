@@ -441,7 +441,7 @@
       }
     }
 
-    // 비디오 시트 파서 (중복 맵 데이터 누적 병합 보완 버전)
+    // HRR 방식으로 세로 스캔 및 중복 맵 누적 병합 처리
     function parseVideoSheet(rawText) {
       try {
         const jsonText = rawText.substring(
@@ -452,45 +452,51 @@
         const rows = data.table.rows;
 
         videoMap = {};
+        let currentMap = null;
+
         for (let i = 0; i < rows.length; i++) {
           const row = rows[i].c;
-          if (!row || !row[0] || !row[0].v) continue;
+          if (!row) continue;
 
-          const mapName = String(row[0].v).trim().toLowerCase();
-          const mainVideoUrl =
-            row[1] && row[1].v ? String(row[1].v).trim() : null;
+          const colA = (row[0] && row[0].v !== null) ? String(row[0].v).trim() : '';
+          const colB = (row[1] && row[1].v !== null) ? String(row[1].v).trim() : '';
+          const colC = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
 
-          const customVictors = [];
-          for (let j = 2; j < row.length; j++) {
-            const cell = row[j];
-            if (!cell || cell.v === null) continue;
+          // A열에 맵 이름이 존재하는 경우 (새로운 맵 영역 시작)
+          if (colA !== '' && colA !== '.') {
+            currentMap = colA.toLowerCase();
 
-            const val = String(cell.v).trim();
-            if (val === '') continue;
-
-            if (val.startsWith('http')) {
-              if (customVictors.length > 0) {
-                customVictors[customVictors.length - 1].link = val;
-              }
-            } else {
-              customVictors.push({ name: val, link: null });
-            }
-          }
-
-          if (mapName) {
-            // 이미 존재하는 맵 데이터라면 덮어쓰지 않고 클리어자 목록을 누적(병합)함
-            if (!videoMap[mapName]) {
-              videoMap[mapName] = {
-                videoUrl: mainVideoUrl,
-                victors: customVictors,
+            if (!videoMap[currentMap]) {
+              videoMap[currentMap] = {
+                videoUrl: null,
+                victors: []
               };
-            } else {
-              // 메인 영상 URL이 비어있었다면 새로 발견된 URL 추가
-              if (!videoMap[mapName].videoUrl && mainVideoUrl) {
-                videoMap[mapName].videoUrl = mainVideoUrl;
+            }
+
+            if (colB !== '' && colB !== '링크' && !colB.includes('유저이름') && !colB.includes('이름')) {
+              const linkVal = colC.startsWith('http') ? colC : null;
+              videoMap[currentMap].victors.push({
+                name: colB,
+                link: linkVal
+              });
+
+              if (!videoMap[currentMap].videoUrl && linkVal) {
+                videoMap[currentMap].videoUrl = linkVal;
               }
-              // 클리어자 목록 누적 합치기
-              videoMap[mapName].victors = videoMap[mapName].victors.concat(customVictors);
+            }
+          } 
+          // A열이 비어있거나 '.'이고, 현재 지정된 맵이 있는 경우
+          else if (currentMap && colB !== '' && colB !== '.' && colB !== '링크') {
+            if (colB.includes('이름') || colB.includes('유저이름')) continue;
+
+            const linkVal = colC.startsWith('http') ? colC : null;
+            videoMap[currentMap].victors.push({
+              name: colB,
+              link: linkVal
+            });
+
+            if (!videoMap[currentMap].videoUrl && linkVal) {
+              videoMap[currentMap].videoUrl = linkVal;
             }
           }
         }
