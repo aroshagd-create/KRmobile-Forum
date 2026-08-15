@@ -395,7 +395,7 @@
             }
         }
 
-        // 비디오 시트 파서 (A열: 맵이름, 첫줄 D열: 메인영상, B열: 유저이름, C열: 링크)
+        // 비디오 시트 파서 (A열: 맵이름, B열: 유저이름, C열: 링크)
         function parseVideoSheet(rawText) {
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
@@ -412,7 +412,6 @@
                     const colA = (row[0] && row[0].v !== null) ? String(row[0].v).trim() : '';
                     const colB = (row[1] && row[1].v !== null) ? String(row[1].v).trim() : '';
                     const colC = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
-                    const colD = (row[3] && row[3].v !== null) ? String(row[3].v).trim() : '';
 
                     // 1. A열에 맵 이름이 있는 경우 (새로운 맵 블록 시작)
                     if (colA !== '' && colA !== '.') {
@@ -422,17 +421,18 @@
                             victors: []
                         };
 
-                        // 첫 번째 줄의 D열이 메인 영상 링크인 경우
-                        if (colD.startsWith('http')) {
-                            videoMap[currentMap].videoUrl = colD;
-                        }
-
                         // 첫 줄의 B열에 유저 이름이 있는 경우 처리
                         if (colB !== '' && colB !== '링크' && !colB.includes('유저이름') && !colB.includes('이름')) {
+                            const linkVal = colC.startsWith('http') ? colC : null;
                             videoMap[currentMap].victors.push({
                                 name: colB,
-                                link: colC.startsWith('http') ? colC : null
+                                link: linkVal
                             });
+
+                            // 첫 번째 클리어자의 링크가 존재하면 메인 영상으로도 자동 지정
+                            if (linkVal) {
+                                videoMap[currentMap].videoUrl = linkVal;
+                            }
                         }
                     } 
                     // 2. A열이 비어있거나 '.'이고, 현재 맵이 지정되어 있는 경우 (클리어자 목록)
@@ -440,10 +440,16 @@
                         // 안내 문구인 경우는 무시
                         if (colB.includes('이름') || colB.includes('유저이름')) continue;
 
+                        const linkVal = colC.startsWith('http') ? colC : null;
                         videoMap[currentMap].victors.push({
                             name: colB,
-                            link: colC.startsWith('http') ? colC : null
+                            link: linkVal
                         });
+
+                        // 아직 메인 영상이 없고, 이후 클리어자 중 첫 번째로 링크가 있는 사람이 있다면 메인 영상으로 지정
+                        if (!videoMap[currentMap].videoUrl && linkVal) {
+                            videoMap[currentMap].videoUrl = linkVal;
+                        }
                     }
                 }
             } catch(e) {
