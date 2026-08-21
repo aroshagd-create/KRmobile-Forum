@@ -1,630 +1,659 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LRR List - KRM FORUM</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Pretendard:wght@400;600;800&display=swap"
-    rel="stylesheet"
-  />
-  <style>
-    :root {
-      --bg-dark: #0a0d14;
-      --panel-bg: #121824;
-      --panel-border: rgba(255, 255, 255, 0.08);
-      --accent-cyan: #00f2fe;
-      --accent-orange: #ff9f43;
-      --text-main: #f8fafc;
-      --text-sub: #94a3b8;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRR List - KRM FORUM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0d14;
+            --panel-bg: #121824;
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --accent-cyan: #00f2fe;
+            --accent-orange: #ff9f43;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+        }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-      font-family: 'Pretendard', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow-x: hidden;
-    }
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Pretendard', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
 
-    header {
-      background: rgba(18, 24, 36, 0.85);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--panel-border);
-      height: 64px;
-      padding: 0 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
+        header {
+            background: rgba(18, 24, 36, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--panel-border);
+            height: 64px;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
 
-    .logo {
-      font-family: 'Orbitron';
-      font-size: 18px;
-      font-weight: 900;
-      color: var(--accent-orange);
-      text-decoration: none;
-    }
-    .header-right {
-      font-family: 'Orbitron';
-      font-size: 14px;
-      font-weight: 800;
-      color: var(--accent-orange);
-      text-decoration: none;
-    }
+        .logo { font-family: 'Orbitron'; font-size: 18px; font-weight: 900; color: var(--accent-cyan); text-decoration: none; }
+        .header-right { font-family: 'Orbitron'; font-size: 14px; font-weight: 800; color: var(--accent-cyan); text-decoration: none; }
 
-    .container {
-      display: flex;
-      flex-grow: 1;
-      min-height: calc(100vh - 64px);
-      position: relative;
-      justify-content: center;
-      width: 100%;
-    }
+        .container {
+            display: flex;
+            flex-grow: 1;
+            min-height: calc(100vh - 64px);
+            position: relative;
+            justify-content: center;
+            width: 100%;
+        }
 
-    .sidebar-overlay {
-      display: none;
-      position: fixed;
-      top: 64px;
-      left: 0;
-      width: 100%;
-      height: calc(100vh - 64px);
-      background: rgba(0, 0, 0, 0.6);
-      z-index: 99;
-    }
-    .sidebar-overlay.active { display: block; }
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 64px;
+            left: 0;
+            width: 100%;
+            height: calc(100vh - 64px);
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 99;
+        }
+        .sidebar-overlay.active { display: block; }
 
-    .sidebar {
-      width: 300px;
-      background: var(--panel-bg);
-      border-right: 1px solid var(--panel-border);
-      display: flex;
-      flex-direction: column;
-      transition: transform 0.3s ease;
-      position: fixed;
-      height: calc(100vh - 64px);
-      z-index: 100;
-      left: 0;
-      top: 64px;
-      transform: translateX(-100%);
-    }
+        .sidebar {
+            width: 300px;
+            background: var(--panel-bg);
+            border-right: 1px solid var(--panel-border);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+            position: fixed;
+            height: calc(100vh - 64px);
+            z-index: 100;
+            left: 0;
+            top: 64px;
+            transform: translateX(-100%);
+        }
 
-    .sidebar.open { transform: translateX(0); }
+        .sidebar.open { transform: translateX(0); }
 
-    .sidebar-header {
-      padding: 16px;
-      border-bottom: 1px solid var(--panel-border);
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--panel-border);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
 
-    .search-input {
-      width: 100%;
-      padding: 10px 14px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--panel-border);
-      border-radius: 8px;
-      color: #fff;
-      font-size: 14px;
-    }
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+        }
 
-    .close-sidebar-btn {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid var(--panel-border);
-      color: var(--text-main);
-      width: 40px;
-      height: 40px;
-      border-radius: 8px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      flex-shrink: 0;
-    }
+        .close-sidebar-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
 
-    .map-list { flex-grow: 1; overflow-y: auto; list-style: none; }
+        .map-list { flex-grow: 1; overflow-y: auto; list-style: none; }
+        .map-item {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--panel-border);
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .map-item:hover, .map-item.active { background: rgba(0, 242, 254, 0.08); }
+        .map-item .rank { font-family: 'Orbitron'; color: var(--accent-cyan); font-weight: 800; font-size: 14px; flex-shrink: 0; min-width: 40px; }
+        .map-item .title { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .map-item {
-      padding: 14px 18px;
-      border-bottom: 1px solid var(--panel-border);
-      cursor: pointer;
-      transition: background 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .map-item:hover, .map-item.active { background: rgba(255, 159, 67, 0.1); }
+        .toggle-btn {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            margin: 0 auto 12px auto;
+        }
 
-    .map-item .rank {
-      font-family: 'Orbitron';
-      color: var(--accent-orange);
-      font-weight: 800;
-      font-size: 14px;
-      min-width: 40px;
-      flex-shrink: 0;
-    }
+        .main-content {
+            flex-grow: 1;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
 
-    .map-item .title {
-      font-weight: 700;
-      font-size: 15px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+        .content-box { 
+            width: 100%; 
+            max-width: 800px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-    .toggle-btn {
-      background: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      color: var(--text-main);
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      flex-shrink: 0;
-      margin: 0 auto 12px auto;
-    }
+        .map-header-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            width: 100%;
+            text-align: center;
+        }
 
-    .main-content {
-      flex-grow: 1;
-      padding: 24px 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
-    }
+        .map-main-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(20px, 6vw, 32px);
+            font-weight: 900;
+            word-break: keep-all;
+            overflow-wrap: break-word;
+            text-align: center;
+            line-height: 1.3;
+            margin-bottom: 10px;
+            width: 100%;
+        }
 
-    .content-box {
-      width: 100%;
-      max-width: 800px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+        .map-aredl-badge {
+            font-family: 'Orbitron';
+            color: var(--accent-orange);
+            font-size: 14px;
+            font-weight: 800;
+            background: rgba(255, 159, 67, 0.12);
+            padding: 4px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 159, 67, 0.3);
+            display: inline-block;
+        }
 
-    .map-header-row {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 24px;
-      width: 100%;
-      text-align: center;
-    }
+        .detail-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 20px;
+            width: 100%;
+            align-items: center;
+        }
 
-    .map-main-title {
-      font-family: 'Orbitron', sans-serif;
-      font-size: clamp(20px, 6vw, 32px);
-      font-weight: 900;
-      word-break: keep-all;
-      overflow-wrap: break-word;
-      text-align: center;
-      line-height: 1.3;
-      margin-bottom: 10px;
-      width: 100%;
-    }
+        .video-box {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid var(--panel-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-sub);
+        }
 
-    .map-aredl-badge {
-      font-family: 'Orbitron';
-      color: var(--accent-orange);
-      font-size: 14px;
-      font-weight: 800;
-      background: rgba(255, 159, 67, 0.12);
-      padding: 4px 12px;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 159, 67, 0.3);
-      display: inline-block;
-    }
+        .video-box iframe { width: 100%; height: 100%; border: none; }
 
-    .detail-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      margin-bottom: 20px;
-      width: 100%;
-      align-items: center;
-    }
+        .info-side { display: flex; flex-direction: column; gap: 12px; width: 100%; }
 
-    .video-box {
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      background: #000;
-      border-radius: 14px;
-      overflow: hidden;
-      border: 1px solid var(--panel-border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-sub);
-    }
+        .stat-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            padding: 16px;
+            width: 100%;
+        }
 
-    .video-box iframe { width: 100%; height: 100%; border: none; }
+        .stat-label { font-size: 12px; color: var(--text-sub); margin-bottom: 4px; font-weight: 600; }
+        .stat-value { font-size: 18px; font-weight: 800; word-break: break-all; }
 
-    .info-side { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+        .victors-btn {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-    .stat-card {
-      background: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      border-radius: 14px;
-      padding: 16px;
-      width: 100%;
-    }
+        .victors-list-box {
+            display: none;
+            margin-top: 10px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            max-height: 240px;
+            overflow-y: auto;
+            padding: 14px 16px;
+            width: 100%;
+        }
 
-    .stat-label { font-size: 12px; color: var(--text-sub); margin-bottom: 4px; font-weight: 600; }
-    .stat-value { font-size: 18px; font-weight: 800; word-break: break-all; }
+        .victors-list-box.active { display: block; }
 
-    .victors-btn {
-      width: 100%;
-      padding: 14px 16px;
-      background: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      color: var(--text-main);
-      border-radius: 12px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      text-align: left;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+        .victor-item {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
 
-    .victors-list-box {
-      display: none;
-      margin-top: 10px;
-      background: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      border-radius: 12px;
-      max-height: 240px;
-      overflow-y: auto;
-      padding: 14px 16px;
-      width: 100%;
-    }
+        .victor-item:last-child { border-bottom: none; }
+        .victor-rank { font-family: 'Orbitron'; color: var(--text-sub); font-size: 13px; width: 30px; }
+        .victor-name { font-size: 15px; color: var(--text-main); text-decoration: none; }
+        .victor-name.has-link { text-decoration: underline; color: var(--accent-cyan); cursor: pointer; }
 
-    .victors-list-box.active { display: block; }
-
-    .victor-item {
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .victor-item:last-child { border-bottom: none; }
-    .victor-rank { font-family: 'Orbitron'; color: var(--text-sub); font-size: 13px; width: 30px; }
-    .victor-name { font-size: 15px; color: var(--text-main); text-decoration: none; }
-    .victor-name.has-link { text-decoration: underline; color: var(--accent-orange); cursor: pointer; }
-
-    @media (min-width: 768px) {
-      header { padding: 0 32px; height: 72px; }
-      .logo { font-size: 20px; }
-      .container { justify-content: flex-start; }
-      .sidebar-overlay { display: none !important; }
-      .sidebar {
-        position: relative;
-        transform: translateX(0) !important;
-        width: 340px;
-        height: calc(100vh - 72px);
-        top: 0;
-      }
-      .close-sidebar-btn { display: none; }
-      .toggle-btn { display: none; }
-      .main-content { padding: 40px; }
-      .map-header-row { align-items: flex-start; text-align: left; }
-      .map-main-title { font-size: 36px; text-align: left; }
-      .map-aredl-badge { font-size: 18px; padding: 4px 12px; }
-      .detail-grid { display: grid; grid-template-columns: 16fr 9fr; gap: 24px; margin-bottom: 28px; }
-      .stat-card { padding: 20px; border-radius: 16px; }
-      .stat-label { font-size: 13px; margin-bottom: 6px; }
-      .stat-value { font-size: 22px; }
-      .victors-btn { padding: 16px; border-radius: 14px; font-size: 16px; }
-      .victors-list-box { padding: 16px 20px; border-radius: 14px; max-height: 280px; }
-    }
-  </style>
+        @media (min-width: 768px) {
+            header { padding: 0 32px; height: 72px; }
+            .logo { font-size: 20px; }
+            .container { justify-content: flex-start; }
+            .sidebar-overlay { display: none !important; }
+            .sidebar { position: relative; transform: translateX(0) !important; width: 340px; height: calc(100vh - 72px); top: 0; }
+            .close-sidebar-btn { display: none; }
+            .toggle-btn { display: none; }
+            .main-content { padding: 40px; }
+            .map-header-row { align-items: flex-start; text-align: left; }
+            .map-main-title { font-size: 36px; text-align: left; }
+            .map-aredl-badge { font-size: 18px; padding: 4px 12px; }
+            .detail-grid { display: grid; grid-template-columns: 16fr 9fr; gap: 24px; margin-bottom: 28px; }
+            .stat-card { padding: 20px; border-radius: 16px; }
+            .stat-label { font-size: 13px; margin-bottom: 6px; }
+            .stat-value { font-size: 22px; }
+            .victors-btn { padding: 16px; border-radius: 14px; font-size: 16px; }
+            .victors-list-box { padding: 16px 20px; border-radius: 14px; max-height: 280px; }
+        }
+    </style>
 </head>
 <body>
 
-  <header>
-    <a href="/" class="logo">KRM FORUM</a>
-    <a href="/" class="header-right">LRR LIST</a>
-  </header>
+    <header>
+        <a href="/" class="logo">KRM FORUM</a>
+        <a href="/" class="header-right">LRR LIST</a>
+    </header>
 
-  <div class="container">
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div class="container">
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <input type="text" class="search-input" id="searchInput" placeholder="맵 이름 검색..." oninput="filterMaps()">
-        <button class="close-sidebar-btn" onclick="toggleSidebar()">✕</button>
-      </div>
-      <ul class="map-list" id="mapList"></ul>
-    </aside>
-
-    <main class="main-content">
-      <div class="content-box">
-        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-        <div class="map-header-row">
-          <h1 class="map-main-title" id="mapTitle">#1. Loading...</h1>
-          <span class="map-aredl-badge" id="mapAredlBadge" style="display:none;">AREDL -</span>
-        </div>
-
-        <div class="detail-grid">
-          <div class="video-box" id="videoContainer">
-            <span>영상을 불러오는 중...</span>
-          </div>
-
-          <div class="info-side">
-            <div class="stat-card" style="border-left: 4px solid var(--accent-orange);">
-              <div class="stat-label">First Korean LRR Mobile Victor</div>
-              <div class="stat-value" id="firstVictorName">-</div>
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <input type="text" class="search-input" id="searchInput" placeholder="맵 이름 검색..." oninput="filterMaps()">
+                <button class="close-sidebar-btn" onclick="toggleSidebar()">✕</button>
             </div>
+            <ul class="map-list" id="mapList"></ul>
+        </aside>
 
-            <div class="stat-card">
-              <div class="stat-label">Total Victors</div>
-              <div class="stat-value" id="totalVictorsCount">-</div>
+        <main class="main-content">
+            <div class="content-box">
+                <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+                <div class="map-header-row">
+                    <h1 class="map-main-title" id="mapTitle">#1. Loading...</h1>
+                    <span class="map-aredl-badge" id="mapAredlBadge" style="display:none;">AREDL -</span>
+                </div>
+
+                <div class="detail-grid">
+                    <div class="video-box" id="videoContainer">
+                        <span>영상을 불러오는 중...</span>
+                    </div>
+
+                    <div class="info-side">
+                        <div class="stat-card" style="border-left: 4px solid var(--accent-cyan);">
+                            <div class="stat-label">First Korean Mobile Victor</div>
+                            <div class="stat-value" id="firstVictorName">-</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-label">Total Victors</div>
+                            <div class="stat-value" id="totalVictorsCount">-</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-label">List Points</div>
+                            <div class="stat-value" id="listPoints">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="victors-btn" onclick="toggleVictorsBox()">
+                    <span>전체 클리어자 목록 (Victors)</span>
+                    <span id="arrowIcon">▼</span>
+                </button>
+                <div class="victors-list-box" id="victorsBox">
+                    <div id="victorsContainer"></div>
+                </div>
             </div>
+        </main>
+    </div>
 
-            <div class="stat-card">
-              <div class="stat-label">List Points</div>
-              <div class="stat-value" id="listPoints">-</div>
-            </div>
-          </div>
-        </div>
+    <script>
+        // LRR 전용 시트 ID
+        const MAIN_SHEET_ID = '14X3a37yIsO42X3XpW1G18C5X1f_xJg-E11218a44k-0'; // LRR 메인 시트 ID
+        const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
 
-        <button class="victors-btn" onclick="toggleVictorsBox()">
-          <span>전체 클리어자 목록 (Victors)</span>
-          <span id="arrowIcon">▼</span>
-        </button>
-        <div class="victors-list-box" id="victorsBox">
-          <div id="victorsContainer"></div>
-        </div>
-      </div>
-    </main>
-  </div>
+        const VIDEO_SHEET_ID = '1S2E14pS6YmH94c7X1-fIeY4_w2C9W3_X-6X19p3X11Y'; // LRR 비디오 시트 ID
+        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json`;
 
-  <script>
-    const MAIN_SHEET_ID = '1yP5sJXHAA_dO0iv74nhx4vaT21J2Rl0cNXdzipsB-Y8';
-    const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
+        let mapDataList = [];
+        let videoMap = {};
 
-    // 요청하신 ID로 변경된 비디오 시트 URL
-    const VIDEO_SHEET_ID = '1tqQoEx0TyMLC1J0q1xbopX5bkkUp76cMVyj5tAXvHLc';
-    const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&gid=1240231056`;
+        async function loadSheetData() {
+            try {
+                const [mainRes, videoRes] = await Promise.allSettled([
+                    fetch(MAIN_SHEET_URL),
+                    fetch(VIDEO_SHEET_URL)
+                ]);
 
-    let mapDataList = [];
-    let videoMap = {};
+                if (videoRes.status === 'fulfilled' && videoRes.value.ok) {
+                    const videoRaw = await videoRes.value.text();
+                    parseVideoSheet(videoRaw);
+                }
 
-    async function loadSheetData() {
-      try {
-        const [mainRes, videoRes] = await Promise.allSettled([
-          fetch(MAIN_SHEET_URL),
-          fetch(VIDEO_SHEET_URL)
-        ]);
+                if (mainRes.status === 'fulfilled' && mainRes.value.ok) {
+                    const mainRaw = await mainRes.value.text();
+                    parseMainSheet(mainRaw);
+                } else {
+                    throw new Error('Main sheet load failed');
+                }
 
-        if (videoRes.status === 'fulfilled' && videoRes.value.ok) {
-          const videoRaw = await videoRes.value.text();
-          parseVideoSheet(videoRaw);
-        }
-
-        if (mainRes.status === 'fulfilled' && mainRes.value.ok) {
-          const mainRaw = await mainRes.value.text();
-          parseMainSheet(mainRaw);
-        } else {
-          throw new Error('Main sheet load failed');
-        }
-
-      } catch (err) {
-        console.error("데이터 로드 실패:", err);
-        document.getElementById('mapTitle').innerText = "데이터 로드 실패";
-      }
-    }
-
-    function parseVideoSheet(rawText) {
-      try {
-        const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
-        const data = JSON.parse(jsonText);
-        const rows = data.table.rows;
-
-        videoMap = {};
-        let currentMap = null;
-
-        for (let i = 0; i < rows.length; i++) {
-          const row = rows[i].c;
-          if (!row) continue;
-
-          const colA = (row[0] && row[0].v !== null) ? String(row[0].v).trim() : '';
-          const colB = (row[1] && row[1].v !== null) ? String(row[1].v).trim() : '';
-          const colC = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
-
-          if (colA !== '' && colA !== '.') {
-            currentMap = colA.toLowerCase();
-            videoMap[currentMap] = { videoUrl: null, victors: [] };
-
-            if (colB !== '' && colB !== '링크' && !colB.includes('유저이름') && !colB.includes('이름')) {
-              const linkVal = colC.startsWith('http') ? colC : null;
-              videoMap[currentMap].victors.push({ name: colB, link: linkVal });
-              if (linkVal) videoMap[currentMap].videoUrl = linkVal;
+            } catch (err) {
+                console.error("데이터 로드 실패:", err);
+                document.getElementById('mapTitle').innerText = "데이터 로드 실패";
             }
-          } 
-          else if (currentMap && colB !== '' && colB !== '.' && colB !== '링크') {
-            if (colB.includes('이름') || colB.includes('유저이름')) continue;
-            const linkVal = colC.startsWith('http') ? colC : null;
-            videoMap[currentMap].victors.push({ name: colB, link: linkVal });
-            if (!videoMap[currentMap].videoUrl && linkVal) videoMap[currentMap].videoUrl = linkVal;
-          }
-        }
-      } catch(e) {
-        console.warn("비디오 시트 파싱 중 오류:", e);
-      }
-    }
-
-    function parseMainSheet(rawText) {
-      const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
-      const data = JSON.parse(jsonText);
-      const rows = data.table.rows;
-
-      mapDataList = [];
-      let currentRank = 1;
-      let foundStart = false;
-
-      for (let i = 0; i < rows.length; i++) {
-        const row = rows[i].c;
-        if (!row || !row[0] || !row[0].v) continue;
-
-        const levelName = String(row[0].v).trim();
-        const levelNameLower = levelName.toLowerCase();
-
-        if (!foundStart) {
-          if (levelNameLower === 'waterfall' || levelNameLower.includes('waterfall') || currentRank > 1) {
-            foundStart = true;
-          } else {
-            if (row[1] && row[1].v !== null) foundStart = true;
-            else continue;
-          }
         }
 
-        if (levelNameLower === 'levels' || levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) continue;
+        // 비디오 시트 파서 (HRR과 동일한 유연한 추출 파싱 로직)
+        function parseVideoSheet(rawText) {
+            try {
+                const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
+                const data = JSON.parse(jsonText);
+                const rows = data.table.rows;
 
-        const rawCCol = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
-        let displayRank = '', badgeText = '';
+                videoMap = {};
+                let currentMap = null;
 
-        if (rawCCol.startsWith('#') || !isNaN(rawCCol)) {
-          displayRank = `#${currentRank}`;
-          badgeText = rawCCol; 
-          currentRank++;
-        } else {
-          displayRank = `-`;
-          badgeText = rawCCol; 
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i].c;
+                    if (!row) continue;
+
+                    const colA = (row[0] && row[0].v !== null) ? String(row[0].v).trim() : '';
+                    const colB = (row[1] && row[1].v !== null) ? String(row[1].v).trim() : '';
+                    const colC = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
+
+                    // 1. A열에 맵 이름이 시작되는 경우
+                    if (colA !== '' && colA !== '.' && !colA.toLowerCase().includes('map') && !colA.includes('맵')) {
+                        currentMap = colA.toLowerCase().trim();
+                        videoMap[currentMap] = {
+                            videoUrl: null,
+                            victors: []
+                        };
+                    }
+
+                    // 2. 현재 맵 블록 내에서 클리어자 및 영상 링크 수집
+                    if (currentMap) {
+                        if (colB !== '' && colB !== '.' && !colB.includes('유저') && !colB.includes('이름')) {
+                            
+                            // C열 또는 B열에서 URL 추출 (http가 포함된 문자열 탐색)
+                            let linkVal = null;
+                            if (colC.includes('http')) linkVal = colC;
+                            else if (colB.includes('http')) linkVal = colB;
+
+                            if (linkVal) {
+                                const httpIndex = linkVal.indexOf('http');
+                                if (httpIndex !== -1) {
+                                    linkVal = linkVal.substring(httpIndex).split(' ')[0];
+                                }
+                            }
+
+                            videoMap[currentMap].victors.push({
+                                name: colB,
+                                link: linkVal
+                            });
+
+                            // 첫 번째 링크를 메인 영상으로 등록
+                            if (!videoMap[currentMap].videoUrl && linkVal) {
+                                videoMap[currentMap].videoUrl = linkVal;
+                            }
+                        }
+                    }
+                }
+            } catch(e) {
+                console.warn("비디오 시트 파싱 중 오류:", e);
+            }
         }
 
-        const matchedKey = Object.keys(videoMap).find(k => k.toLowerCase() === levelNameLower);
-        const customData = matchedKey ? videoMap[matchedKey] : null;
+        // 메인 시트 파서
+        function parseMainSheet(rawText) {
+            const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
+            const data = JSON.parse(jsonText);
+            const rows = data.table.rows;
 
-        mapDataList.push({
-          rank: displayRank,
-          title: levelName,
-          aredl: badgeText,
-          totalVictors: customData ? customData.victors.length.toString() : '0',
-          listPoints: '-',
-          videoUrl: customData ? customData.videoUrl : null,
-          victors: customData ? customData.victors : []
-        });
-      }
+            mapDataList = [];
+            let currentRank = 1;
+            let foundStart = false;
 
-      renderSidebar(mapDataList);
-      handleHashChange();
-    }
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i].c;
+                if (!row || !row[0] || !row[0].v) continue;
 
-    function renderSidebar(data) {
-      const listEl = document.getElementById('mapList');
-      listEl.innerHTML = '';
-      data.forEach((map, index) => {
-        const li = document.createElement('li');
-        li.className = 'map-item';
-        li.onclick = () => { selectMap(index); if (window.innerWidth < 768) toggleSidebar(); };
-        li.innerHTML = `<span class="rank">${map.rank}</span><span class="title">${map.title}</span>`;
-        listEl.appendChild(li);
-      });
-    }
+                const levelName = String(row[0].v).trim();
+                const levelNameLower = levelName.toLowerCase();
 
-    function selectMap(index) {
-      const map = mapDataList[index];
-      if (!map) return;
+                if (!foundStart) {
+                    if (levelNameLower === 'waterfall' || levelNameLower.includes('waterfall') || currentRank > 1) {
+                        foundStart = true;
+                    } else {
+                        if (row[1] && row[1].v !== null) {
+                            foundStart = true;
+                        } else {
+                            continue;
+                        }
+                    }
+                }
 
-      if (window.location.hash !== `#${index + 1}`) {
-        history.replaceState(null, null, `#${index + 1}`);
-      }
+                if (levelNameLower === 'levels' || levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
+                    continue;
+                }
 
-      document.querySelectorAll('.map-item').forEach((el, idx) => el.classList.toggle('active', idx === index));
-      document.getElementById('mapTitle').innerText = `${map.rank !== '-' ? map.rank + '.' : ''} ${map.title}`;
+                const rawCCol = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
 
-      const aredlBadge = document.getElementById('mapAredlBadge');
-      if (map.aredl && map.aredl !== '-' && map.aredl !== '0' && map.aredl !== '') {
-        aredlBadge.innerText = map.aredl.includes('Tier') ? map.aredl : `AREDL ${map.aredl}`;
-        aredlBadge.style.display = 'inline-block';
-      } else {
-        aredlBadge.style.display = 'none';
-      }
+                let displayRank = '';
+                let badgeText = '';
 
-      document.getElementById('totalVictorsCount').innerText = map.totalVictors;
-      document.getElementById('listPoints').innerText = map.listPoints;
+                if (rawCCol.startsWith('#') || !isNaN(rawCCol)) {
+                    displayRank = `#${currentRank}`;
+                    badgeText = rawCCol; 
+                    currentRank++;
+                } else {
+                    displayRank = `-`;
+                    badgeText = rawCCol; 
+                }
 
-      const videoBox = document.getElementById('videoContainer');
-      let targetVideo = map.videoUrl;
+                const matchedKey = Object.keys(videoMap).find(k => k.toLowerCase() === levelNameLower);
+                const customData = matchedKey ? videoMap[matchedKey] : null;
 
-      if (targetVideo && targetVideo.includes('youtu')) {
-        const videoId = extractYoutubeId(targetVideo);
-        videoBox.innerHTML = videoId ? `<iframe src="https://www.youtube.com/embed/${videoId}?vq=hd1080&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>` : `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
-      } else {
-        videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
-      }
+                const finalVideoUrl = customData ? customData.videoUrl : null;
+                const finalVictors = customData ? customData.victors : [];
 
-      document.getElementById('firstVictorName').innerText = map.victors.length > 0 ? map.victors[0].name : '-';
-      renderVictorsList(map.victors);
-    }
+                const calculatedTotalVictors = finalVictors.length.toString();
 
-    function renderVictorsList(victors) {
-      const container = document.getElementById('victorsContainer');
-      container.innerHTML = '';
-      if (!victors || victors.length === 0) {
-        container.innerHTML = '<div style="color:var(--text-sub); font-size:14px;">클리어자가 없습니다.</div>';
-        return;
-      }
-      victors.forEach((v, idx) => {
-        const item = document.createElement('div');
-        item.className = 'victor-item';
-        item.innerHTML = `<span class="victor-rank">${idx + 1}.</span>${(v.link && v.link.startsWith('http')) ? `<a href="${v.link}" target="_blank" class="victor-name has-link">${v.name} 🔗</a>` : `<span class="victor-name">${v.name}</span>`}`;
-        container.appendChild(item);
-      });
-    }
+                mapDataList.push({
+                    rank: displayRank,
+                    title: levelName,
+                    aredl: badgeText,
+                    totalVictors: calculatedTotalVictors,
+                    listPoints: '-',
+                    videoUrl: finalVideoUrl,
+                    victors: finalVictors
+                });
+            }
 
-    function extractYoutubeId(url) {
-      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-      const match = url.match(regExp);
-      return (match && match[2].length === 11) ? match[2] : null;
-    }
+            renderSidebar(mapDataList);
+            handleHashChange();
+        }
 
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('open');
-      document.getElementById('sidebarOverlay').classList.toggle('active');
-    }
+        function renderSidebar(data) {
+            const listEl = document.getElementById('mapList');
+            listEl.innerHTML = '';
+            data.forEach((map) => {
+                const originalIndex = mapDataList.findIndex(m => m.title === map.title);
+                const li = document.createElement('li');
+                li.className = 'map-item';
+                li.onclick = () => {
+                    selectMap(originalIndex);
+                    if (window.innerWidth < 768) toggleSidebar();
+                };
 
-    function toggleVictorsBox() {
-      const box = document.getElementById('victorsBox');
-      box.classList.toggle('active');
-      document.getElementById('arrowIcon').innerText = box.classList.contains('active') ? '▲' : '▼';
-    }
+                li.innerHTML = `
+                    <span class="rank">${map.rank}</span>
+                    <span class="title">${map.title}</span>
+                `;
+                listEl.appendChild(li);
+            });
+        }
 
-    function filterMaps() {
-      const query = document.getElementById('searchInput').value.toLowerCase();
-      const filtered = mapDataList.filter(m => m.title.toLowerCase().includes(query));
-      renderSidebar(filtered);
-    }
+        function selectMap(index) {
+            const map = mapDataList[index];
+            if (!map) return;
 
-    function handleHashChange() {
-      const hash = window.location.hash.replace('#', '');
-      const targetIndex = hash ? parseInt(hash) - 1 : 0;
-      if (mapDataList.length > 0) {
-        selectMap(Math.max(0, Math.min(targetIndex, mapDataList.length - 1)));
-      }
-    }
+            if (window.location.hash !== `#${index + 1}`) {
+                history.replaceState(null, null, `#${index + 1}`);
+            }
 
-    window.addEventListener('hashchange', handleHashChange);
-    loadSheetData();
-  </script>
+            document.querySelectorAll('.map-item').forEach((el, idx) => {
+                const isSelected = idx === index;
+                el.classList.toggle('active', isSelected);
+            });
+
+            document.getElementById('mapTitle').innerText = `${map.rank !== '-' ? map.rank + '.' : ''} ${map.title}`;
+
+            const aredlBadge = document.getElementById('mapAredlBadge');
+            if (map.aredl && map.aredl !== '-' && map.aredl !== '0' && map.aredl !== '') {
+                aredlBadge.innerText = map.aredl.includes('Tier') ? map.aredl : `AREDL ${map.aredl}`;
+                aredlBadge.style.display = 'inline-block';
+            } else {
+                aredlBadge.style.display = 'none';
+            }
+
+            document.getElementById('totalVictorsCount').innerText = map.totalVictors;
+            document.getElementById('listPoints').innerText = map.listPoints;
+
+            const videoBox = document.getElementById('videoContainer');
+            let targetVideo = map.videoUrl;
+
+            if (targetVideo && targetVideo.includes('youtu')) {
+                const videoId = extractYoutubeId(targetVideo);
+                if (videoId) {
+                    videoBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?vq=hd1080&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+                } else {
+                    videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
+                }
+            } else {
+                videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
+            }
+
+            if (map.victors.length > 0) {
+                document.getElementById('firstVictorName').innerText = map.victors[0].name;
+            } else {
+                document.getElementById('firstVictorName').innerText = '-';
+            }
+
+            renderVictorsList(map.victors);
+        }
+
+        function renderVictorsList(victors) {
+            const container = document.getElementById('victorsContainer');
+            container.innerHTML = '';
+
+            if (!victors || victors.length === 0) {
+                container.innerHTML = '<div style="color:var(--text-sub); font-size:14px;">클리어자가 없습니다.</div>';
+                return;
+            }
+
+            victors.forEach((v, idx) => {
+                const item = document.createElement('div');
+                item.className = 'victor-item';
+                const rankSpan = `<span class="victor-rank">${idx + 1}.</span>`;
+
+                let nameEl = (v.link && v.link.startsWith('http'))
+                    ? `<a href="${v.link}" target="_blank" class="victor-name has-link">${v.name} 🔗</a>`
+                    : `<span class="victor-name">${v.name}</span>`;
+
+                item.innerHTML = rankSpan + nameEl;
+                container.appendChild(item);
+            });
+        }
+
+        function extractYoutubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
+        function toggleVictorsBox() {
+            const box = document.getElementById('victorsBox');
+            box.classList.toggle('active');
+            document.getElementById('arrowIcon').innerText = box.classList.contains('active') ? '▲' : '▼';
+        }
+
+        function filterMaps() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = mapDataList.filter(m => m.title.toLowerCase().includes(query));
+            renderSidebar(filtered);
+        }
+
+        function handleHashChange() {
+            const hash = window.location.hash.replace('#', '');
+            const targetIndex = hash ? parseInt(hash) - 1 : 0;
+            if (mapDataList.length > 0) {
+                selectMap(Math.max(0, Math.min(targetIndex, mapDataList.length - 1)));
+            }
+        }
+
+        window.addEventListener('hashchange', handleHashChange);
+
+        loadSheetData();
+    </script>
 </body>
 </html>
