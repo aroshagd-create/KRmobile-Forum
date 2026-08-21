@@ -364,8 +364,9 @@
         const MAIN_SHEET_ID = '1yP5sJXHAA_dO0iv74nhx4vaT21J2Rl0cNXdzipsB-Y8';
         const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
 
+        // 비디오 시트 ID 및 LRR 탭의 gid 반영
         const VIDEO_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8';
-        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json`;
+        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&gid=1240231056`;
 
         let mapDataList = [];
         let videoMap = {};
@@ -466,7 +467,6 @@
                 const levelName = String(row[0].v).trim();
                 const levelNameLower = levelName.toLowerCase();
 
-                // 대소문자 관계없이 Last Update 및 하단 정보 문구 필터링
                 if (levelNameLower === 'levels' || levelNameLower.startsWith('last update') || levelNameLower.startsWith('records & information')) {
                     continue;
                 }
