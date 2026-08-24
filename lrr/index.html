@@ -364,9 +364,9 @@
         const MAIN_SHEET_ID = '1yP5sJXHAA_dO0iv74nhx4vaT21J2Rl0cNXdzipsB-Y8';
         const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
 
-        // 변경된 새 비디오 스프레드시트 ID 반영 (gid=0 적용)
+        // VIDEO_SHEET_URL 끝에 &headers=0 추가하여 1행 데이터 누락 방지
         const VIDEO_SHEET_ID = '1tqQoEx0TyMLC1J0q1xbopX5bkkUp76cMVyj5tAXvHLc';
-        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&gid=0`;
+        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&gid=0&headers=0`;
 
         let mapDataList = [];
         let videoMap = {};
@@ -400,7 +400,7 @@
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
                 const data = JSON.parse(jsonText);
-                const rows = data.table.rows;
+                const rows = data.table.rows || [];
 
                 videoMap = {};
                 let currentMap = null;
@@ -411,10 +411,15 @@
 
                     const colA = (row[0] && row[0].v !== null) ? String(row[0].v).trim() : '';
                     const colB = (row[1] && row[1].v !== null) ? String(row[1].v).trim() : '';
-                    const colC = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
+                    const colC = (row[2] && (row[2].v !== null || row[2].f !== null)) ? String(row[2].v || row[2].f).trim() : '';
+
+                    const colALower = colA.toLowerCase();
+
+                    // 헤더 텍스트인 경우 건너뛰기
+                    if (['맵', '맵 이름', '맵이름', 'level', 'levels', 'map', 'name'].includes(colALower)) continue;
 
                     if (colA !== '' && colA !== '.') {
-                        currentMap = colA.toLowerCase();
+                        currentMap = colALower;
                         videoMap[currentMap] = {
                             videoUrl: null,
                             victors: []
@@ -478,7 +483,7 @@
                         if (row[1] && row[1].v !== null) {
                             foundStart = true;
                         } else {
-                            continue;
+                            foundStart = true; // 유연한 감지를 위해 조정
                         }
                     }
                 }
@@ -497,7 +502,7 @@
                     badgeText = rawCCol; 
                 }
 
-                const matchedKey = Object.keys(videoMap).find(k => k.toLowerCase() === levelNameLower);
+                const matchedKey = Object.keys(videoMap).find(k => k.trim().toLowerCase() === levelNameLower);
                 const customData = matchedKey ? videoMap[matchedKey] : null;
 
                 const finalVideoUrl = customData ? customData.videoUrl : null;
