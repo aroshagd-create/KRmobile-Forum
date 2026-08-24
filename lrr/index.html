@@ -365,7 +365,6 @@
         const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
 
         const VIDEO_SHEET_ID = '1tqQoEx0TyMLC1J0q1xbopX5bkkUp76cMVyj5tAXvHLc';
-        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&sheet=LRR`;
 
         let mapDataList = [];
         let videoMap = {};
@@ -375,8 +374,10 @@
             return String(str).replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ').trim();
         }
 
+        // 영문, 숫자, 한글만 남아 매칭률을 100%로 보장하는 정규화 함수
         function normalizeKey(str) {
-            return cleanStr(str).toLowerCase().replace(/\s+/g, '');
+            if (!str) return '';
+            return cleanStr(str).toLowerCase().replace(/[^a-z0-9가-힣]/g, '');
         }
 
         function extractUrlFromCell(cellObj) {
@@ -400,41 +401,63 @@
             return cleanStr(val || fmt);
         }
 
+        async function fetchVideoData() {
+            // 다중 URL 폴백 (탭 이름 불일치 대비)
+            const candidateUrls = [
+                `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&sheet=LRR`,
+                `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json`,
+                `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&sheet=Sheet1`
+            ];
+
+            for (const url of candidateUrls) {
+                try {
+                    const res = await fetch(url);
+                    if (!res.ok) continue;
+                    const rawText = await res.text();
+                    
+                    const jsonStart = rawText.indexOf('{');
+                    const jsonEnd = rawText.lastIndexOf('}');
+                    if (jsonStart !== -1 && jsonEnd !== -1) {
+                        const jsonText = rawText.substring(jsonStart, jsonEnd + 1);
+                        const data = JSON.parse(jsonText);
+                        if (data && data.table) {
+                            parseVideoSheet(data);
+                            if (Object.keys(videoMap).length > 0) {
+                                console.log("비디오 시트 로드 성공:", url);
+                                return;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn("URL 불러오기 시도 중 실패:", url, e);
+                }
+            }
+            console.error("모든 비디오 시트 URL 로드 실패");
+        }
+
         async function loadSheetData() {
             try {
-                const [mainRes, videoRes] = await Promise.allSettled([
-                    fetch(MAIN_SHEET_URL),
-                    fetch(VIDEO_SHEET_URL)
-                ]);
+                // 1. 비디오 시트 먼저 로드
+                await fetchVideoData();
 
-                if (videoRes.status === 'fulfilled' && videoRes.value.ok) {
-                    const videoRaw = await videoRes.value.text();
-                    parseVideoSheet(videoRaw);
-                } else {
-                    console.error("비디오 시트 로드 실패:", videoRes);
-                }
-
-                if (mainRes.status === 'fulfilled' && mainRes.value.ok) {
-                    const mainRaw = await mainRes.value.text();
+                // 2. 메인 시트 로드
+                const mainRes = await fetch(MAIN_SHEET_URL);
+                if (mainRes.ok) {
+                    const mainRaw = await mainRes.text();
                     parseMainSheet(mainRaw);
                 } else {
-                    throw new Error('메인 시트 데이터 로드 실패');
+                    throw new Error('메인 시트 로드 실패');
                 }
-
             } catch (err) {
                 console.error("데이터 로드 에러:", err);
                 document.getElementById('mapTitle').innerText = "데이터 로드 실패";
             }
         }
 
-        function parseVideoSheet(rawText) {
+        function parseVideoSheet(data) {
             try {
-                const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
-                const data = JSON.parse(jsonText);
-
                 let combinedRows = [];
 
-                // 1. 구글 시트 API가 1행을 cols(컬럼 헤더)로 흡수한 경우 데이터로 보완
                 if (data.table && data.table.cols) {
                     const colLabels = data.table.cols.map(c => c ? cleanStr(c.label) : '');
                     const isDataInCols = colLabels.some(l => l !== '' && !['a','b','c','d','e'].includes(l.toLowerCase()));
@@ -443,7 +466,6 @@
                     }
                 }
 
-                // 2. 일반 rows 가져오기
                 if (data.table && data.table.rows) {
                     data.table.rows.forEach(r => {
                         if (r && r.c) combinedRows.push(r.c);
@@ -453,52 +475,79 @@
                 videoMap = {};
                 let currentMapKey = null;
 
+                const headerKeywords = ['맵', '맵이름', '맵 이름', 'level', 'levels', 'map', 'name', 'rank', 'no', '순위', '링크', '유저', '이름', 'victor', 'player', '클리어자', '영상'];
+
                 for (let i = 0; i < combinedRows.length; i++) {
                     const row = combinedRows[i];
-                    if (!row) continue;
+                    if (!row || !Array.isArray(row)) continue;
 
                     const colA = row[0] ? getCellString(row[0]) : '';
                     const colB = row[1] ? getCellString(row[1]) : '';
-                    const colC_url = extractUrlFromCell(row[2]);
+                    const colC = row[2] ? getCellString(row[2]) : '';
 
-                    const colALower = colA.toLowerCase();
+                    // 현재 행에서 URL 추출
+                    let rowUrl = '';
+                    for (let c = 0; c < row.length; c++) {
+                        const urlMatch = extractUrlFromCell(row[c]);
+                        if (urlMatch && urlMatch.startsWith('http')) {
+                            rowUrl = urlMatch;
+                            break;
+                        }
+                    }
 
-                    // 헤더 단어 건너뛰기
-                    if (['맵', '맵 이름', '맵이름', 'level', 'levels', 'map', 'name'].includes(colALower)) continue;
+                    // 헤더 행 건너뛰기
+                    const rowTextCombined = (colA + ' ' + colB + ' ' + colC).toLowerCase();
+                    if (headerKeywords.some(kw => rowTextCombined.includes(kw) && !rowTextCombined.includes('mewnel'))) {
+                        continue;
+                    }
 
-                    if (colA !== '' && colA !== '.') {
-                        currentMapKey = normalizeKey(colA);
-                        videoMap[currentMapKey] = {
-                            originalName: colA,
-                            videoUrl: null,
-                            victors: []
-                        };
+                    // 1열이 순위(#1, 1 등)인 컬럼 레이아웃 자동 대응
+                    const isCol0Rank = (colA.startsWith('#') || (!isNaN(parseInt(colA)) && parseInt(colA) > 0 && colA.length <= 4));
+                    const mapCandidate = isCol0Rank ? colB : colA;
+                    let victorCandidate = isCol0Rank ? colC : colB;
 
-                        if (colB !== '' && colB !== '.' && !['링크', '유저', '이름', 'victor'].includes(colB.toLowerCase())) {
+                    if (headerKeywords.includes(victorCandidate.toLowerCase())) {
+                        victorCandidate = '';
+                    }
+
+                    if (mapCandidate !== '' && mapCandidate !== '.') {
+                        currentMapKey = normalizeKey(mapCandidate);
+                        if (!videoMap[currentMapKey]) {
+                            videoMap[currentMapKey] = {
+                                originalName: mapCandidate,
+                                videoUrl: null,
+                                victors: []
+                            };
+                        }
+
+                        if (victorCandidate !== '' && victorCandidate !== '.') {
                             videoMap[currentMapKey].victors.push({
-                                name: colB,
-                                link: colC_url || null
+                                name: victorCandidate,
+                                link: rowUrl || null
                             });
-
-                            if (colC_url) {
-                                videoMap[currentMapKey].videoUrl = colC_url;
-                            }
+                        }
+                        if (rowUrl && !videoMap[currentMapKey].videoUrl) {
+                            videoMap[currentMapKey].videoUrl = rowUrl;
                         }
                     } 
-                    else if (currentMapKey && colB !== '' && colB !== '.') {
-                        if (['링크', '유저', '이름', 'victor'].includes(colB.toLowerCase())) continue;
+                    else if (currentMapKey) {
+                        let contVictor = victorCandidate;
+                        if (!contVictor || contVictor === '.') {
+                            contVictor = (colA !== '.' && !isCol0Rank) ? colA : (colB !== '.' ? colB : colC);
+                        }
 
-                        videoMap[currentMapKey].victors.push({
-                            name: colB,
-                            link: colC_url || null
-                        });
+                        if (contVictor !== '' && contVictor !== '.' && !headerKeywords.includes(contVictor.toLowerCase())) {
+                            videoMap[currentMapKey].victors.push({
+                                name: contVictor,
+                                link: rowUrl || null
+                            });
 
-                        if (!videoMap[currentMapKey].videoUrl && colC_url) {
-                            videoMap[currentMapKey].videoUrl = colC_url;
+                            if (rowUrl && !videoMap[currentMapKey].videoUrl) {
+                                videoMap[currentMapKey].videoUrl = rowUrl;
+                            }
                         }
                     }
                 }
-                console.log("비디오 시트 파싱 성공 (videoMap):", videoMap);
             } catch(e) {
                 console.error("비디오 시트 파싱 에러:", e);
             }
@@ -519,7 +568,7 @@
                 const levelName = cleanStr(row[0].v);
                 const normName = normalizeKey(levelName);
 
-                if (normName === 'levels' || normName.startsWith('lastupdate') || normName.startsWith('records&information')) {
+                if (normName === 'levels' || normName.startsWith('lastupdate') || normName.startsWith('records') || normName.startsWith('information')) {
                     continue;
                 }
 
@@ -610,9 +659,9 @@
             if (targetVideo && (targetVideo.includes('youtu') || targetVideo.includes('http'))) {
                 const videoId = extractYoutubeId(targetVideo);
                 if (videoId) {
-                    videoBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?vq=hd1080&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+                    videoBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
                 } else {
-                    videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
+                    videoBox.innerHTML = `<a href="${targetVideo}" target="_blank" style="color:var(--accent-main); text-decoration:underline; font-size:16px;">▶ 영상 보러가기 (외부 링크)</a>`;
                 }
             } else {
                 videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
@@ -650,10 +699,16 @@
             });
         }
 
+        // Shorts(쇼츠) 및 다양한 패턴의 유튜브 URL 지원
         function extractYoutubeId(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
+            if (!url) return null;
+            const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|&v=)([^#&?]*).*/;
+            const match = String(url).match(regExp);
+            if (match && match[2] && match[2].length === 11) {
+                return match[2];
+            }
+            const altMatch = String(url).match(/([a-zA-Z0-9_-]{11})/);
+            return altMatch ? altMatch[1] : null;
         }
 
         function toggleSidebar() {
