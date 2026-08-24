@@ -364,12 +364,34 @@
         const MAIN_SHEET_ID = '1yP5sJXHAA_dO0iv74nhx4vaT21J2Rl0cNXdzipsB-Y8';
         const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
 
-        // VIDEO_SHEET_URL 끝에 &headers=0 추가하여 1행 데이터 누락 방지
         const VIDEO_SHEET_ID = '1tqQoEx0TyMLC1J0q1xbopX5bkkUp76cMVyj5tAXvHLc';
-        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&gid=0&headers=0`;
+        // sheet=LRR 및 headers=0 을 명시하여 LRR 탭의 모든 행을 데이터로 처리
+        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&sheet=LRR&headers=0`;
 
         let mapDataList = [];
         let videoMap = {};
+
+        // 특수 공백(\u00A0 등) 및 양쪽 공백 제거
+        function cleanStr(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ').trim();
+        }
+
+        // 맵 이름 비교용 정규화 (공백 완전 제거 + 소문자화)
+        function normalizeKey(str) {
+            return cleanStr(str).toLowerCase().replace(/\s+/g, '');
+        }
+
+        // 셀 영역 전체(.v 및 .f)에서 http/https 주소를 정규식으로 추출
+        function extractUrlFromCell(cellObj) {
+            if (!cellObj) return '';
+            const val = cellObj.v !== undefined && cellObj.v !== null ? String(cellObj.v) : '';
+            const fmt = cellObj.f !== undefined && cellObj.f !== null ? String(cellObj.f) : '';
+            
+            const combined = val + ' ' + fmt;
+            const match = combined.match(/(https?:\/\/[^\s"',]+)/i);
+            return match ? match[1] : (val.startsWith('http') ? val : '');
+        }
 
         async function loadSheetData() {
             try {
@@ -381,17 +403,19 @@
                 if (videoRes.status === 'fulfilled' && videoRes.value.ok) {
                     const videoRaw = await videoRes.value.text();
                     parseVideoSheet(videoRaw);
+                } else {
+                    console.error("비디오 시트 데이터 가져오기 실패:", videoRes);
                 }
 
                 if (mainRes.status === 'fulfilled' && mainRes.value.ok) {
                     const mainRaw = await mainRes.value.text();
                     parseMainSheet(mainRaw);
                 } else {
-                    throw new Error('Main sheet load failed');
+                    throw new Error('메인 시트 데이터 로드 실패');
                 }
 
             } catch (err) {
-                console.error("데이터 로드 실패:", err);
+                console.error("데이터 로드 중 에러 발생:", err);
                 document.getElementById('mapTitle').innerText = "데이터 로드 실패";
             }
         }
@@ -403,92 +427,81 @@
                 const rows = data.table.rows || [];
 
                 videoMap = {};
-                let currentMap = null;
+                let currentMapKey = null;
 
                 for (let i = 0; i < rows.length; i++) {
                     const row = rows[i].c;
                     if (!row) continue;
 
-                    const colA = (row[0] && row[0].v !== null) ? String(row[0].v).trim() : '';
-                    const colB = (row[1] && row[1].v !== null) ? String(row[1].v).trim() : '';
-                    const colC = (row[2] && (row[2].v !== null || row[2].f !== null)) ? String(row[2].v || row[2].f).trim() : '';
+                    const colA = row[0] ? cleanStr(row[0].v || row[0].f) : '';
+                    const colB = row[1] ? cleanStr(row[1].v || row[1].f) : '';
+                    const colC_url = extractUrlFromCell(row[2]);
 
                     const colALower = colA.toLowerCase();
 
-                    // 헤더 텍스트인 경우 건너뛰기
+                    // 헤더 단어 건너뛰기
                     if (['맵', '맵 이름', '맵이름', 'level', 'levels', 'map', 'name'].includes(colALower)) continue;
 
+                    // A열에 맵 이름이 존재하는 경우 (새로운 맵 개설)
                     if (colA !== '' && colA !== '.') {
-                        currentMap = colALower;
-                        videoMap[currentMap] = {
+                        currentMapKey = normalizeKey(colA);
+                        videoMap[currentMapKey] = {
+                            originalName: colA,
                             videoUrl: null,
                             victors: []
                         };
 
-                        if (colB !== '' && colB !== '링크' && !colB.includes('유저이름') && !colB.includes('이름')) {
-                            const linkVal = colC.startsWith('http') ? colC : null;
-                            videoMap[currentMap].victors.push({
+                        if (colB !== '' && colB !== '.' && !['링크', '유저', '이름', 'victor'].includes(colB.toLowerCase())) {
+                            videoMap[currentMapKey].victors.push({
                                 name: colB,
-                                link: linkVal
+                                link: colC_url || null
                             });
 
-                            if (linkVal) {
-                                videoMap[currentMap].videoUrl = linkVal;
+                            if (colC_url) {
+                                videoMap[currentMapKey].videoUrl = colC_url;
                             }
                         }
                     } 
-                    else if (currentMap && colB !== '' && colB !== '.' && colB !== '링크') {
-                        if (colB.includes('이름') || colB.includes('유저이름')) continue;
+                    // A열은 빈칸이고, B열(유저명)만 존재하는 경우 (해당 맵의 추가 클리어자)
+                    else if (currentMapKey && colB !== '' && colB !== '.') {
+                        if (['링크', '유저', '이름', 'victor'].includes(colB.toLowerCase())) continue;
 
-                        const linkVal = colC.startsWith('http') ? colC : null;
-                        videoMap[currentMap].victors.push({
+                        videoMap[currentMapKey].victors.push({
                             name: colB,
-                            link: linkVal
+                            link: colC_url || null
                         });
 
-                        if (!videoMap[currentMap].videoUrl && linkVal) {
-                            videoMap[currentMap].videoUrl = linkVal;
+                        if (!videoMap[currentMapKey].videoUrl && colC_url) {
+                            videoMap[currentMapKey].videoUrl = colC_url;
                         }
                     }
                 }
+                console.log("비디오 시트 파싱 결과 (videoMap):", videoMap);
             } catch(e) {
-                console.warn("비디오 시트 파싱 중 오류:", e);
+                console.error("비디오 시트 파싱 중 에러:", e);
             }
         }
 
         function parseMainSheet(rawText) {
             const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
             const data = JSON.parse(jsonText);
-            const rows = data.table.rows;
+            const rows = data.table.rows || [];
 
             mapDataList = [];
             let currentRank = 1;
-            let foundStart = false;
 
             for (let i = 0; i < rows.length; i++) {
                 const row = rows[i].c;
                 if (!row || !row[0] || !row[0].v) continue;
 
-                const levelName = String(row[0].v).trim();
-                const levelNameLower = levelName.toLowerCase();
+                const levelName = cleanStr(row[0].v);
+                const normName = normalizeKey(levelName);
 
-                if (levelNameLower === 'levels' || levelNameLower.startsWith('last update') || levelNameLower.startsWith('records & information')) {
+                if (normName === 'levels' || normName.startsWith('lastupdate') || normName.startsWith('records&information')) {
                     continue;
                 }
 
-                if (!foundStart) {
-                    if (levelNameLower === 'waterfall' || levelNameLower.includes('waterfall') || currentRank > 1) {
-                        foundStart = true;
-                    } else {
-                        if (row[1] && row[1].v !== null) {
-                            foundStart = true;
-                        } else {
-                            foundStart = true; // 유연한 감지를 위해 조정
-                        }
-                    }
-                }
-
-                const rawCCol = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
+                const rawCCol = (row[2] && row[2].v !== null) ? cleanStr(row[2].v) : '';
 
                 let displayRank = '';
                 let badgeText = '';
@@ -502,8 +515,8 @@
                     badgeText = rawCCol; 
                 }
 
-                const matchedKey = Object.keys(videoMap).find(k => k.trim().toLowerCase() === levelNameLower);
-                const customData = matchedKey ? videoMap[matchedKey] : null;
+                // 공백이 완벽히 제거된 normName 기준으로 매칭
+                const customData = videoMap[normName] || null;
 
                 const finalVideoUrl = customData ? customData.videoUrl : null;
                 const finalVictors = customData ? customData.victors : [];
@@ -573,7 +586,7 @@
             const videoBox = document.getElementById('videoContainer');
             let targetVideo = map.videoUrl;
 
-            if (targetVideo && targetVideo.includes('youtu')) {
+            if (targetVideo && (targetVideo.includes('youtu') || targetVideo.includes('http'))) {
                 const videoId = extractYoutubeId(targetVideo);
                 if (videoId) {
                     videoBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?vq=hd1080&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
