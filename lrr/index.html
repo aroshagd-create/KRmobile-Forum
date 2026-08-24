@@ -365,32 +365,39 @@
         const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
 
         const VIDEO_SHEET_ID = '1tqQoEx0TyMLC1J0q1xbopX5bkkUp76cMVyj5tAXvHLc';
-        // sheet=LRR 및 headers=0 을 명시하여 LRR 탭의 모든 행을 데이터로 처리
-        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&sheet=LRR&headers=0`;
+        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&sheet=LRR`;
 
         let mapDataList = [];
         let videoMap = {};
 
-        // 특수 공백(\u00A0 등) 및 양쪽 공백 제거
         function cleanStr(str) {
             if (str === null || str === undefined) return '';
             return String(str).replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ').trim();
         }
 
-        // 맵 이름 비교용 정규화 (공백 완전 제거 + 소문자화)
         function normalizeKey(str) {
             return cleanStr(str).toLowerCase().replace(/\s+/g, '');
         }
 
-        // 셀 영역 전체(.v 및 .f)에서 http/https 주소를 정규식으로 추출
         function extractUrlFromCell(cellObj) {
             if (!cellObj) return '';
+            if (typeof cellObj === 'string') {
+                const m = cellObj.match(/(https?:\/\/[^\s"',]+)/i);
+                return m ? m[1] : (cellObj.startsWith('http') ? cellObj : '');
+            }
             const val = cellObj.v !== undefined && cellObj.v !== null ? String(cellObj.v) : '';
             const fmt = cellObj.f !== undefined && cellObj.f !== null ? String(cellObj.f) : '';
-            
             const combined = val + ' ' + fmt;
             const match = combined.match(/(https?:\/\/[^\s"',]+)/i);
             return match ? match[1] : (val.startsWith('http') ? val : '');
+        }
+
+        function getCellString(cellObj) {
+            if (!cellObj) return '';
+            if (typeof cellObj === 'string') return cleanStr(cellObj);
+            const val = cellObj.v !== undefined && cellObj.v !== null ? String(cellObj.v) : '';
+            const fmt = cellObj.f !== undefined && cellObj.f !== null ? String(cellObj.f) : '';
+            return cleanStr(val || fmt);
         }
 
         async function loadSheetData() {
@@ -404,7 +411,7 @@
                     const videoRaw = await videoRes.value.text();
                     parseVideoSheet(videoRaw);
                 } else {
-                    console.error("비디오 시트 데이터 가져오기 실패:", videoRes);
+                    console.error("비디오 시트 로드 실패:", videoRes);
                 }
 
                 if (mainRes.status === 'fulfilled' && mainRes.value.ok) {
@@ -415,7 +422,7 @@
                 }
 
             } catch (err) {
-                console.error("데이터 로드 중 에러 발생:", err);
+                console.error("데이터 로드 에러:", err);
                 document.getElementById('mapTitle').innerText = "데이터 로드 실패";
             }
         }
@@ -424,17 +431,34 @@
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
                 const data = JSON.parse(jsonText);
-                const rows = data.table.rows || [];
+
+                let combinedRows = [];
+
+                // 1. 구글 시트 API가 1행을 cols(컬럼 헤더)로 흡수한 경우 데이터로 보완
+                if (data.table && data.table.cols) {
+                    const colLabels = data.table.cols.map(c => c ? cleanStr(c.label) : '');
+                    const isDataInCols = colLabels.some(l => l !== '' && !['a','b','c','d','e'].includes(l.toLowerCase()));
+                    if (isDataInCols) {
+                        combinedRows.push(colLabels.map(str => ({ v: str, f: str })));
+                    }
+                }
+
+                // 2. 일반 rows 가져오기
+                if (data.table && data.table.rows) {
+                    data.table.rows.forEach(r => {
+                        if (r && r.c) combinedRows.push(r.c);
+                    });
+                }
 
                 videoMap = {};
                 let currentMapKey = null;
 
-                for (let i = 0; i < rows.length; i++) {
-                    const row = rows[i].c;
+                for (let i = 0; i < combinedRows.length; i++) {
+                    const row = combinedRows[i];
                     if (!row) continue;
 
-                    const colA = row[0] ? cleanStr(row[0].v || row[0].f) : '';
-                    const colB = row[1] ? cleanStr(row[1].v || row[1].f) : '';
+                    const colA = row[0] ? getCellString(row[0]) : '';
+                    const colB = row[1] ? getCellString(row[1]) : '';
                     const colC_url = extractUrlFromCell(row[2]);
 
                     const colALower = colA.toLowerCase();
@@ -442,7 +466,6 @@
                     // 헤더 단어 건너뛰기
                     if (['맵', '맵 이름', '맵이름', 'level', 'levels', 'map', 'name'].includes(colALower)) continue;
 
-                    // A열에 맵 이름이 존재하는 경우 (새로운 맵 개설)
                     if (colA !== '' && colA !== '.') {
                         currentMapKey = normalizeKey(colA);
                         videoMap[currentMapKey] = {
@@ -462,7 +485,6 @@
                             }
                         }
                     } 
-                    // A열은 빈칸이고, B열(유저명)만 존재하는 경우 (해당 맵의 추가 클리어자)
                     else if (currentMapKey && colB !== '' && colB !== '.') {
                         if (['링크', '유저', '이름', 'victor'].includes(colB.toLowerCase())) continue;
 
@@ -476,9 +498,9 @@
                         }
                     }
                 }
-                console.log("비디오 시트 파싱 결과 (videoMap):", videoMap);
+                console.log("비디오 시트 파싱 성공 (videoMap):", videoMap);
             } catch(e) {
-                console.error("비디오 시트 파싱 중 에러:", e);
+                console.error("비디오 시트 파싱 에러:", e);
             }
         }
 
@@ -515,7 +537,6 @@
                     badgeText = rawCCol; 
                 }
 
-                // 공백이 완벽히 제거된 normName 기준으로 매칭
                 const customData = videoMap[normName] || null;
 
                 const finalVideoUrl = customData ? customData.videoUrl : null;
