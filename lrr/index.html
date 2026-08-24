@@ -364,9 +364,9 @@
         const MAIN_SHEET_ID = '1yP5sJXHAA_dO0iv74nhx4vaT21J2Rl0cNXdzipsB-Y8';
         const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
 
-        // 이미지에 나온 시트 ID (12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8) 및 탭명(LRR) 적용
+        // 비디오 시트 (headers=0을 추가하여 1행부터 바로 데이터로 인식하도록 처리)
         const VIDEO_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8';
-        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&sheet=LRR`;
+        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&sheet=LRR&headers=0`;
 
         let mapDataList = [];
         let videoMap = {};
@@ -432,33 +432,20 @@
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
                 const data = JSON.parse(jsonText);
-
-                let combinedRows = [];
-
-                if (data.table && data.table.cols) {
-                    const colLabels = data.table.cols.map(c => c ? cleanStr(c.label) : '');
-                    const isDataInCols = colLabels.some(l => l !== '' && !['a','b','c','d','e'].includes(l.toLowerCase()));
-                    if (isDataInCols) {
-                        combinedRows.push(colLabels.map(str => ({ v: str, f: str })));
-                    }
-                }
-
-                if (data.table && data.table.rows) {
-                    data.table.rows.forEach(r => {
-                        if (r && r.c) combinedRows.push(r.c);
-                    });
-                }
+                const rows = (data.table && data.table.rows) ? data.table.rows : [];
 
                 videoMap = {};
                 let currentMapKey = null;
 
-                for (let i = 0; i < combinedRows.length; i++) {
-                    const row = combinedRows[i];
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i].c;
                     if (!row) continue;
 
                     const colA = row[0] ? getCellString(row[0]) : '';
                     const colB = row[1] ? getCellString(row[1]) : '';
-                    const colC_url = extractUrlFromCell(row[2]);
+                    
+                    // C열(row[2]) 또는 D열(row[3]) 중 URL이 존재하는 열 감지
+                    const colC_url = extractUrlFromCell(row[2]) || extractUrlFromCell(row[3]);
 
                     const colALower = colA.toLowerCase();
 
