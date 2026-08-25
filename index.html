@@ -20,13 +20,11 @@
       --text-main: #f8fafc;
       --text-sub: #94a3b8;
     }
-
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-
     body {
       background-color: var(--bg-dark);
       color: var(--text-main);
@@ -40,7 +38,6 @@
       display: flex;
       flex-direction: column;
     }
-
     header {
       background: rgba(18, 24, 36, 0.85);
       backdrop-filter: blur(12px);
@@ -54,7 +51,6 @@
       top: 0;
       z-index: 1000;
     }
-
     .logo {
       font-family: "Orbitron", sans-serif;
       font-size: 22px;
@@ -64,13 +60,12 @@
       cursor: pointer;
       text-decoration: none;
     }
-
     .pc-menu {
       display: flex;
       gap: 36px;
       list-style: none;
+      align-items: center;
     }
-
     .pc-menu a {
       color: var(--text-sub);
       text-decoration: none;
@@ -78,11 +73,9 @@
       font-weight: 600;
       transition: color 0.2s;
     }
-
     .pc-menu a:hover {
       color: var(--text-main);
     }
-
     .main-wrapper {
       width: 100%;
       max-width: 1280px;
@@ -94,11 +87,9 @@
       flex-grow: 1;
       justify-content: center;
     }
-
     .info-section {
       text-align: center;
     }
-
     .info-title {
       font-family: "Orbitron", sans-serif;
       font-size: 64px;
@@ -112,20 +103,17 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-
     .info-desc {
       font-size: 21px;
       color: var(--text-sub);
       line-height: 1.6;
       word-break: keep-all;
     }
-
     .cards-container {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 36px;
     }
-
     .card {
       background: var(--panel-bg);
       border: 1px solid var(--panel-border);
@@ -137,18 +125,15 @@
       min-height: 280px;
       transition: transform 0.25s;
     }
-
     .card:hover {
       transform: translateY(-4px);
     }
-
     .card-header {
       display: flex;
       align-items: center;
       gap: 14px;
       margin-bottom: 20px;
     }
-
     .card-badge {
       font-family: "Orbitron";
       font-size: 13px;
@@ -156,17 +141,14 @@
       padding: 6px 14px;
       border-radius: 8px;
     }
-
     .badge-hrr {
       background: rgba(0, 242, 254, 0.15);
       color: var(--accent-cyan);
     }
-
     .badge-lrr {
       background: rgba(255, 159, 67, 0.15);
       color: var(--accent-orange);
     }
-
     .btn {
       display: block;
       width: 100%;
@@ -181,30 +163,24 @@
       margin-top: 24px;
       transition: opacity 0.2s;
     }
-
     .btn:active {
       opacity: 0.85;
     }
-
     .btn-hrr {
       background: var(--accent-cyan);
       color: #000;
     }
-
     .btn-lrr {
       background: var(--accent-orange);
       color: #000;
     }
-
     .page-section {
       display: none;
       width: 100%;
     }
-
     .page-section.active {
       display: block;
     }
-
     /* 모바일 반응형 스타일 최적화 */
     @media (max-width: 768px) {
       header {
@@ -213,6 +189,9 @@
       }
       .logo {
         font-size: 18px;
+      }
+      .pc-menu {
+        gap: 16px;
       }
       .pc-menu a {
         font-size: 14px;
@@ -259,6 +238,16 @@
       <li>
         <a href="#" onclick="showSection('ranking')">포인트 랭킹</a>
       </li>
+      <!-- ✅ 기록 등재 메뉴 추가 -->
+      <li>
+        <a
+          href="https://forms.gle/Mm6PbzDz7Esd3yvW8"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          기록 등재
+        </a>
+      </li>
       <li>
         <a
           href="https://discord.gg/ENxdraDTvw"
@@ -270,7 +259,6 @@
       </li>
     </ul>
   </header>
-
   <div id="homeView" class="page-section active">
     <div class="main-wrapper">
       <section class="info-section">
@@ -280,7 +268,6 @@
           원하시는 주사율 리스트를 선택해 접속하세요.
         </p>
       </section>
-
       <div class="cards-container">
         <div class="card">
           <div>
@@ -301,7 +288,6 @@
           </div>
           <a href="/hrr/" class="btn btn-hrr">HRR 리스트 바로가기 →</a>
         </div>
-
         <div class="card">
           <div>
             <div class="card-header">
@@ -324,7 +310,6 @@
       </div>
     </div>
   </div>
-
   <div id="rankingView" class="page-section">
     <div class="main-wrapper" style="text-align: center;">
       <h2
@@ -348,13 +333,11 @@
       </button>
     </div>
   </div>
-
   <script>
     function showSection(name) {
       document
         .querySelectorAll(".page-section")
         .forEach((sec) => sec.classList.remove("active"));
-
       if (name === "ranking") {
         document.getElementById("rankingView").classList.add("active");
       } else {
