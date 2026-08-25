@@ -321,13 +321,13 @@
         </main>
     </div>
     <script>
-        // ✅ LRR 메인 시트 — 원본 그대로 유지
+        // ✅ LRR 메인 시트 — 그대로 유지
         const MAIN_SHEET_ID = '1yP5sJXHAA_dO0iv74nhx4vaT21J2Rl0cNXdzipsB-Y8';
         const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
         
-        // ✅ 비디오 시트 — sheet=LRR / headers=0 만 제거 (링크 ID는 그대로!)
+        // ✅ LRR 탭 gid(1240231056) 정확히 지정!
         const VIDEO_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8';
-        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json`;
+        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&gid=1240231056`;
         
         let mapDataList = [];
         let videoMap = {};
@@ -354,7 +354,6 @@
             }
         }
 
-        // ✅ 파싱 로직만 HRR 버전으로 교체 (안정성↑)
         function parseVideoSheet(rawText) {
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
@@ -402,7 +401,6 @@
             }
         }
 
-        // ✅ 메인 시트 파서는 LRR 원본 로직 유지
         function parseMainSheet(rawText) {
             const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
             const data = JSON.parse(jsonText);
