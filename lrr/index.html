@@ -321,11 +321,11 @@
         </main>
     </div>
     <script>
-        // ✅ LRR 메인 시트 — 그대로 유지
+        // ✅ LRR 메인 시트
         const MAIN_SHEET_ID = '1yP5sJXHAA_dO0iv74nhx4vaT21J2Rl0cNXdzipsB-Y8';
         const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
         
-        // ✅ LRR 탭 gid(1240231056) 정확히 지정!
+        // ✅ LRR 탭 gid 지정
         const VIDEO_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8';
         const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&gid=1240231056`;
         
@@ -354,6 +354,7 @@
             }
         }
 
+        // ✅ 비디오 시트 파싱 (개선된 버전)
         function parseVideoSheet(rawText) {
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
@@ -364,18 +365,18 @@
                 for (let i = 0; i < rows.length; i++) {
                     const row = rows[i].c;
                     if (!row) continue;
-                    const colA = (row[0] && row[0].v !== null) ? String(row[0].v).trim() : '';
-                    const colB = (row[1] && row[1].v !== null) ? String(row[1].v).trim() : '';
+                    const colA = (row[0] && row[0].v !== null) ? String(row[0].v).trim().replace(/\s+/g, ' ') : '';
+                    const colB = (row[1] && row[1].v !== null) ? String(row[1].v).trim().replace(/\s+/g, ' ') : '';
                     const colC = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
                     
                     if (colA !== '' && colA !== '.') {
-                        currentMap = colA.toLowerCase();
+                        currentMap = colA.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
                         videoMap[currentMap] = {
                             videoUrl: null,
                             victors: []
                         };
                         if (colB !== '' && colB !== '링크' && !colB.includes('유저이름') && !colB.includes('이름')) {
-                            const linkVal = colC.startsWith('http') ? colC : null;
+                            const linkVal = extractYoutubeId(colC) ? colC : null;
                             videoMap[currentMap].victors.push({
                                 name: colB,
                                 link: linkVal
@@ -386,7 +387,7 @@
                         }
                     } else if (currentMap && colB !== '' && colB !== '.' && colB !== '링크') {
                         if (colB.includes('이름') || colB.includes('유저이름')) continue;
-                        const linkVal = colC.startsWith('http') ? colC : null;
+                        const linkVal = extractYoutubeId(colC) ? colC : null;
                         videoMap[currentMap].victors.push({
                             name: colB,
                             link: linkVal
@@ -401,6 +402,16 @@
             }
         }
 
+        // ✅ 유튜브 링크 ID 추출 (si= 파라미터도 정상 처리)
+        function extractYoutubeId(url) {
+            if (!url) return null;
+            let match = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+            if (match && match[1]) return match[1];
+            match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([a-zA-Z0-9_-]{11})/);
+            return (match && match[2]) ? match[2] : null;
+        }
+
+        // ✅ 메인 시트 파싱 — 마지막 정보 행 자동 제외 추가됨!
         function parseMainSheet(rawText) {
             const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
             const data = JSON.parse(jsonText);
@@ -413,6 +424,14 @@
                 if (!row || !row[0] || !row[0].v) continue;
                 const levelName = String(row[0].v).trim();
                 const levelNameLower = levelName.toLowerCase();
+
+                // ✅ 마지막 정보 행은 맵 목록에서 제외
+                if (levelNameLower.startsWith('last update') || 
+                    levelName.startsWith('Records & Information') ||
+                    levelName.startsWith('최종 수정') ||
+                    levelName.startsWith('출처')) {
+                    continue;
+                }
                 
                 if (!foundStart) {
                     if (levelNameLower === 'waterfall' || levelNameLower.includes('waterfall') || currentRank > 1) {
@@ -426,7 +445,7 @@
                     }
                 }
 
-                if (levelNameLower === 'levels' || levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
+                if (levelNameLower === 'levels' || levelName.startsWith('Last update')) {
                     continue;
                 }
 
@@ -538,12 +557,6 @@
                 item.innerHTML = rankSpan + nameEl;
                 container.appendChild(item);
             });
-        }
-
-        function extractYoutubeId(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
         }
 
         function toggleSidebar() {
