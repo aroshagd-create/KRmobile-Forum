@@ -17,7 +17,7 @@
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
             --map-item-height: 48px;
-            --sidebar-width: 340px; /* ✅ 사이드바 너비 고정 */
+            --sidebar-width: 340px;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
@@ -67,7 +67,6 @@
             min-height: calc(100vh - 72px);
             width: 100%;
         }
-        /* ✅ 오버레이 */
         .sidebar-overlay {
             display: none;
             position: fixed;
@@ -79,32 +78,24 @@
             z-index: 99;
         }
         .sidebar-overlay.active { display: block; }
-
-        /* ✅ 사이드바: 항상 고정 */
         .sidebar {
             width: var(--sidebar-width);
             background: var(--panel-bg);
             border-right: 1px solid var(--panel-border);
             display: flex;
             flex-direction: column;
-            position: fixed; /* ✅ 화면에 고정 */
+            position: fixed;
             top: 72px;
             left: 0;
             height: calc(100vh - 72px);
             z-index: 100;
             transition: transform 0.3s ease;
-            transform: translateX(0); /* ✅ 기본으로 보이도록 */
+            transform: translateX(0);
         }
-        /* ✅ 모바일에서는 숨기고 토글로 열도록 */
         @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-            .sidebar.open {
-                transform: translateX(0);
-            }
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
         }
-
         .sidebar-header {
             padding: 16px;
             border-bottom: 1px solid var(--panel-border);
@@ -198,8 +189,6 @@
             flex-shrink: 0;
             margin: 0 auto 12px auto;
         }
-
-        /* ✅ 메인 콘텐츠: 사이드바 너비만큼 오른쪽으로 밀기 */
         .main-content {
             flex-grow: 1;
             padding: 40px 32px;
@@ -216,7 +205,6 @@
                 padding: 24px 16px;
             }
         }
-
         .content-box {
             width: 100%;
             max-width: 800px;
@@ -324,13 +312,8 @@
         .victor-rank { font-family: 'Orbitron'; color: var(--text-sub); font-size: 13px; width: 30px; }
         .victor-name { font-size: 15px; color: var(--text-main); text-decoration: none; }
         .victor-name.has-link { text-decoration: underline; color: var(--accent-cyan); cursor: pointer; }
-
-        /* ✅ 모바일 */
         @media (max-width: 768px) {
-            header {
-                padding: 0 16px;
-                height: 64px;
-            }
+            header { padding: 0 16px; height: 64px; }
             .logo { font-size: 16px; margin: 0; padding: 4px 8px; }
             .header-right { font-size: 13px; padding: 4px 8px; }
             .sidebar-overlay { top: 64px; height: calc(100vh - 64px); }
@@ -411,88 +394,145 @@
         const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json`;
         const ITEM_HEIGHT = 48;
         const BUFFER = 8;
+        const CACHE_KEY_MAIN = 'hrr_main_data';
+        const CACHE_KEY_VIDEO = 'hrr_video_data';
+        const CACHE_TTL = 10 * 60 * 1000; // 10분
         let mapDataList = [];
         let filteredList = [];
         let videoMap = {};
         let selectedIndex = -1;
 
+        // ========== ✅ 캐시 관리 함수 ==========
+        function saveToCache(key, data) {
+            try {
+                const payload = {
+                    timestamp: Date.now(),
+                    data: data
+                };
+                localStorage.setItem(key, JSON.stringify(payload));
+            } catch (e) {
+                console.warn('캐시 저장 실패:', e);
+            }
+        }
+
+        function loadFromCache(key) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (!raw) return null;
+                const payload = JSON.parse(raw);
+                if (Date.now() - payload.timestamp > CACHE_TTL) return null;
+                return payload.data;
+            } catch (e) {
+                return null;
+            }
+        }
+
         // ========== 초기화 ==========
         async function loadSheetData() {
+            // 1. 캐시 우선 로드
+            const cachedMain = loadFromCache(CACHE_KEY_MAIN);
+            const cachedVideo = loadFromCache(CACHE_KEY_VIDEO);
+            let hasCached = false;
+
+            if (cachedMain) {
+                applyMainData(cachedMain);
+                hasCached = true;
+            }
+            if (cachedVideo) {
+                videoMap = cachedVideo;
+                hasCached = true;
+            }
+
+            if (hasCached) {
+                console.log('✅ 캐시 데이터 로드 완료');
+            }
+
+            // 2. 백그라운드에서 최신 데이터 불러와 갱신
             try {
                 const [mainRes, videoRes] = await Promise.allSettled([
                     fetch(MAIN_SHEET_URL),
                     fetch(VIDEO_SHEET_URL)
                 ]);
+
+                let needRerender = false;
+
                 if (videoRes.status === 'fulfilled' && videoRes.value.ok) {
-                    parseVideoSheet(await videoRes.value.text());
+                    const freshVideo = parseVideoSheetRaw(await videoRes.value.text());
+                    if (JSON.stringify(freshVideo) !== JSON.stringify(videoMap)) {
+                        videoMap = freshVideo;
+                        saveToCache(CACHE_KEY_VIDEO, videoMap);
+                        needRerender = true;
+                    }
                 }
+
                 if (mainRes.status === 'fulfilled' && mainRes.value.ok) {
-                    parseMainSheet(await mainRes.value.text());
-                } else {
-                    throw new Error('Main sheet load failed');
+                    const freshMain = parseMainSheetRaw(await mainRes.value.text());
+                    if (JSON.stringify(freshMain) !== JSON.stringify(mapDataList)) {
+                        saveToCache(CACHE_KEY_MAIN, freshMain);
+                        applyMainData(freshMain);
+                        needRerender = true;
+                    }
+                }
+
+                if (needRerender) {
+                    console.log('✅ 최신 데이터로 갱신됨');
+                    handleHashChange();
                 }
             } catch (err) {
-                console.error("데이터 로드 실패:", err);
-                document.getElementById('mapTitle').innerText = "데이터 로드 실패";
+                console.warn('시트 갱신 실패, 캐시 유지:', err);
+                if (!hasCached) {
+                    document.getElementById('mapTitle').innerText = "데이터 로드 실패";
+                }
             }
         }
 
-        // ========== 비디오 시트 파싱 (숫자 이름 완벽 지원) ==========
-        function parseVideoSheet(rawText) {
+        // ========== ✅ 파싱 원형 분리 (캐시/실시간 공통 사용) ==========
+        function parseVideoSheetRaw(rawText) {
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
                 const data = JSON.parse(jsonText);
                 const rows = data.table.rows;
-                videoMap = {};
+                const map = {};
                 let currentMap = null;
                 const HEADER_PATTERN = /^(이름|유저이름|링크|비디오|영상)$/i;
 
                 for (let i = 0; i < rows.length; i++) {
                     const row = rows[i].c;
                     if (!row) continue;
-
                     const colA = (row[0]?.v != null) ? String(row[0].v).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, ' ').toLowerCase() : '';
                     const colB = (row[1]?.v != null) ? String(row[1].v).trim() : '';
                     const colC = (row[2]?.v != null) ? String(row[2].v).trim() : '';
 
                     if (colA !== '' && colA !== '.') {
                         currentMap = colA;
-                        videoMap[currentMap] = { videoUrl: null, victors: [] };
+                        map[currentMap] = { videoUrl: null, victors: [] };
                         if (colB !== '' && !HEADER_PATTERN.test(colB)) {
                             const linkVal = extractYoutubeId(colC) ? colC : null;
-                            videoMap[currentMap].victors.push({ name: colB, link: linkVal });
-                            if (linkVal && !videoMap[currentMap].videoUrl) {
-                                videoMap[currentMap].videoUrl = linkVal;
+                            map[currentMap].victors.push({ name: colB, link: linkVal });
+                            if (linkVal && !map[currentMap].videoUrl) {
+                                map[currentMap].videoUrl = linkVal;
                             }
                         }
                     } else if (currentMap && colB !== '' && colB !== '.' && !HEADER_PATTERN.test(colB)) {
                         const linkVal = extractYoutubeId(colC) ? colC : null;
-                        videoMap[currentMap].victors.push({ name: colB, link: linkVal });
-                        if (!videoMap[currentMap].videoUrl && linkVal) {
-                            videoMap[currentMap].videoUrl = linkVal;
+                        map[currentMap].victors.push({ name: colB, link: linkVal });
+                        if (!map[currentMap].videoUrl && linkVal) {
+                            map[currentMap].videoUrl = linkVal;
                         }
                     }
                 }
-            } catch(e) {
-                console.warn("비디오 시트 파싱 오류:", e);
+                return map;
+            } catch (e) {
+                console.warn("비디오 파싱 오류:", e);
+                return {};
             }
         }
 
-        // ========== 유튜브 ID 추출 ==========
-        function extractYoutubeId(url) {
-            if (!url) return null;
-            let m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
-            if (m) return m[1];
-            m = url.match(/(?:v=|\/embed\/|\/watch\?v=)([a-zA-Z0-9_-]{11})/);
-            return m ? m[1] : null;
-        }
-
-        // ========== 메인 시트 파싱 ==========
-        function parseMainSheet(rawText) {
+        function parseMainSheetRaw(rawText) {
             const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
             const data = JSON.parse(jsonText);
             const rows = data.table.rows;
-            mapDataList = [];
+            const list = [];
             let currentRank = 1;
             let foundStart = false;
 
@@ -531,7 +571,7 @@
                 const customData = videoMap[normName] || null;
                 const finalVictors = customData?.victors || [];
 
-                mapDataList.push({
+                list.push({
                     rank: displayRank,
                     title: levelName,
                     aredl: badgeText,
@@ -541,9 +581,22 @@
                     victors: finalVictors
                 });
             }
-            filteredList = [...mapDataList];
+            return list;
+        }
+
+        function applyMainData(list) {
+            mapDataList = list;
+            filteredList = [...list];
             initVirtualScroll();
-            handleHashChange();
+        }
+
+        // ========== 유튜브 ID 추출 ==========
+        function extractYoutubeId(url) {
+            if (!url) return null;
+            let m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+            if (m) return m[1];
+            m = url.match(/(?:v=|\/embed\/|\/watch\?v=)([a-zA-Z0-9_-]{11})/);
+            return m ? m[1] : null;
         }
 
         // ========== 가상 스크롤 ==========
@@ -551,6 +604,7 @@
             const wrapper = document.getElementById('mapListWrapper');
             const phantom = document.getElementById('mapListPhantom');
             phantom.style.height = `${filteredList.length * ITEM_HEIGHT}px`;
+            wrapper.removeEventListener('scroll', renderVisibleItems);
             wrapper.addEventListener('scroll', renderVisibleItems);
             renderVisibleItems();
         }
