@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HRR List - KRM FORUM</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- ✅ 폰트 최적화: display=swap 추가 + preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet" />
     <style>
         :root {
             --bg-dark: #0a0d14;
@@ -16,10 +17,10 @@
             --accent-orange: #ff9f43;
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
+            --map-item-height: 48px; /* ✅ 맵 하나의 높이 고정 = 가상스크롤 핵심 */
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
+        html { scroll-behavior: smooth; } /* ✅ 부드러운 스크롤 */
         body {
             background-color: var(--bg-dark);
             color: var(--text-main);
@@ -29,13 +30,16 @@
             flex-direction: column;
             overflow-x: hidden;
         }
-
+        a:focus, button:focus, input:focus {
+            outline: 2px solid var(--accent-cyan);
+            outline-offset: 1px;
+        }
         header {
             background: rgba(18, 24, 36, 0.85);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--panel-border);
-            height: 64px;
-            padding: 0 20px;
+            height: 72px;
+            padding: 0 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -43,56 +47,65 @@
             top: 0;
             z-index: 1000;
         }
-
-        .logo { font-family: 'Orbitron'; font-size: 18px; font-weight: 900; color: var(--accent-cyan); text-decoration: none; }
-        .header-right { font-family: 'Orbitron'; font-size: 14px; font-weight: 800; color: var(--accent-cyan); text-decoration: none; }
-
+        .logo {
+            font-family: 'Orbitron';
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--accent-cyan);
+            text-decoration: none;
+            padding: 8px 12px;
+            margin: -8px;
+        }
+        .header-right {
+            font-family: 'Orbitron';
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            text-decoration: none;
+            padding: 8px 12px;
+        }
         .container {
             display: flex;
             flex-grow: 1;
-            min-height: calc(100vh - 64px);
+            min-height: calc(100vh - 72px);
             position: relative;
-            justify-content: center;
+            justify-content: flex-start;
             width: 100%;
         }
-
         .sidebar-overlay {
             display: none;
             position: fixed;
-            top: 64px;
+            top: 72px;
             left: 0;
             width: 100%;
-            height: calc(100vh - 64px);
+            height: calc(100vh - 72px);
             background: rgba(0, 0, 0, 0.6);
             z-index: 99;
         }
         .sidebar-overlay.active { display: block; }
-
         .sidebar {
-            width: 300px;
+            width: 340px;
             background: var(--panel-bg);
             border-right: 1px solid var(--panel-border);
             display: flex;
             flex-direction: column;
             transition: transform 0.3s ease;
             position: fixed;
-            height: calc(100vh - 64px);
+            height: calc(100vh - 72px);
             z-index: 100;
             left: 0;
-            top: 64px;
+            top: 72px;
             transform: translateX(-100%);
         }
-
         .sidebar.open { transform: translateX(0); }
-
         .sidebar-header {
             padding: 16px;
             border-bottom: 1px solid var(--panel-border);
             display: flex;
             gap: 8px;
             align-items: center;
+            flex-shrink: 0;
         }
-
         .search-input {
             width: 100%;
             padding: 10px 14px;
@@ -102,7 +115,6 @@
             color: #fff;
             font-size: 14px;
         }
-
         .close-sidebar-btn {
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid var(--panel-border);
@@ -117,21 +129,54 @@
             font-size: 18px;
             flex-shrink: 0;
         }
-
-        .map-list { flex-grow: 1; overflow-y: auto; list-style: none; }
+        /* ✅ 가상 스크롤 컨테이너 */
+        .map-list-wrapper {
+            flex-grow: 1;
+            overflow-y: auto;
+            position: relative;
+        }
+        .map-list-phantom {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            background: transparent;
+            pointer-events: none;
+        }
+        .map-list-visible {
+            position: absolute;
+            left: 0;
+            right: 0;
+        }
         .map-item {
-            padding: 14px 18px;
+            height: var(--map-item-height);
+            padding: 0 18px;
             border-bottom: 1px solid var(--panel-border);
             cursor: pointer;
             transition: background 0.2s;
             display: flex;
             align-items: center;
             gap: 12px;
+            will-change: background;
         }
-        .map-item:hover, .map-item.active { background: rgba(0, 242, 254, 0.08); }
-        .map-item .rank { font-family: 'Orbitron'; color: var(--accent-cyan); font-weight: 800; font-size: 14px; flex-shrink: 0; min-width: 40px; }
-        .map-item .title { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
+        .map-item:hover, .map-item.active {
+            background: rgba(0, 242, 254, 0.08);
+        }
+        .map-item .rank {
+            font-family: 'Orbitron';
+            color: var(--accent-cyan);
+            font-weight: 800;
+            font-size: 14px;
+            flex-shrink: 0;
+            min-width: 44px;
+        }
+        .map-item .title {
+            font-weight: 700;
+            font-size: 15px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         .toggle-btn {
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
@@ -147,67 +192,60 @@
             flex-shrink: 0;
             margin: 0 auto 12px auto;
         }
-
         .main-content {
             flex-grow: 1;
-            padding: 24px 16px;
+            padding: 40px 32px;
             display: flex;
             flex-direction: column;
             align-items: center;
             width: 100%;
         }
-
-        .content-box { 
-            width: 100%; 
-            max-width: 800px; 
+        .content-box {
+            width: 100%;
+            max-width: 800px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-
         .map-header-row {
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             margin-bottom: 24px;
             width: 100%;
-            text-align: center;
+            text-align: left;
         }
-
         .map-main-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: clamp(20px, 6vw, 32px);
+            font-size: clamp(22px, 5vw, 36px);
             font-weight: 900;
             word-break: keep-all;
             overflow-wrap: break-word;
-            text-align: center;
+            text-align: left;
             line-height: 1.3;
             margin-bottom: 10px;
             width: 100%;
         }
-
         .map-aredl-badge {
             font-family: 'Orbitron';
-            color: var(--accent-orange);
-            font-size: 14px;
+            color: var(--accent-cyan);
+            font-size: 16px;
             font-weight: 800;
-            background: rgba(255, 159, 67, 0.12);
+            background: rgba(0, 242, 254, 0.15);
             padding: 4px 12px;
             border-radius: 6px;
-            border: 1px solid rgba(255, 159, 67, 0.3);
+            border: 1px solid rgba(0, 242, 254, 0.3);
             display: inline-block;
         }
-
         .detail-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: 16fr 9fr;
+            gap: 24px;
+            margin-bottom: 28px;
             width: 100%;
-            align-items: center;
+            align-items: flex-start;
         }
-
         .video-box {
             width: 100%;
             aspect-ratio: 16 / 9;
@@ -220,30 +258,25 @@
             justify-content: center;
             color: var(--text-sub);
         }
-
         .video-box iframe { width: 100%; height: 100%; border: none; }
-
         .info-side { display: flex; flex-direction: column; gap: 12px; width: 100%; }
-
         .stat-card {
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
             border-radius: 14px;
-            padding: 16px;
+            padding: 18px;
             width: 100%;
         }
-
-        .stat-label { font-size: 12px; color: var(--text-sub); margin-bottom: 4px; font-weight: 600; }
-        .stat-value { font-size: 18px; font-weight: 800; word-break: break-all; }
-
+        .stat-label { font-size: 13px; color: var(--text-sub); margin-bottom: 6px; font-weight: 600; }
+        .stat-value { font-size: 20px; font-weight: 800; word-break: break-all; }
         .victors-btn {
             width: 100%;
-            padding: 14px 16px;
+            padding: 16px;
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
             color: var(--text-main);
-            border-radius: 12px;
-            font-size: 15px;
+            border-radius: 14px;
+            font-size: 16px;
             font-weight: 700;
             cursor: pointer;
             text-align: left;
@@ -251,21 +284,18 @@
             justify-content: space-between;
             align-items: center;
         }
-
         .victors-list-box {
             display: none;
             margin-top: 10px;
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
-            border-radius: 12px;
-            max-height: 240px;
+            border-radius: 14px;
+            max-height: 280px;
             overflow-y: auto;
-            padding: 14px 16px;
+            padding: 16px 20px;
             width: 100%;
         }
-
         .victors-list-box.active { display: block; }
-
         .victor-item {
             padding: 8px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
@@ -273,51 +303,55 @@
             gap: 10px;
             align-items: center;
         }
-
         .victor-item:last-child { border-bottom: none; }
         .victor-rank { font-family: 'Orbitron'; color: var(--text-sub); font-size: 13px; width: 30px; }
         .victor-name { font-size: 15px; color: var(--text-main); text-decoration: none; }
         .victor-name.has-link { text-decoration: underline; color: var(--accent-cyan); cursor: pointer; }
 
-        @media (min-width: 768px) {
-            header { padding: 0 32px; height: 72px; }
-            .logo { font-size: 20px; }
-            .container { justify-content: flex-start; }
+        /* ✅ 모바일 반응형 */
+        @media (max-width: 768px) {
+            header {
+                padding: 0 16px;
+                height: 64px;
+            }
+            .logo { font-size: 16px; margin: 0; padding: 4px 8px; }
+            .header-right { font-size: 13px; padding: 4px 8px; }
+            .sidebar { width: 300px; height: calc(100vh - 64px); top: 64px; }
+            .sidebar-overlay { top: 64px; height: calc(100vh - 64px); }
+            .main-content { padding: 24px 16px; }
+            .map-main-title { font-size: 26px; }
+            .map-aredl-badge { font-size: 14px; }
+            .detail-grid { grid-template-columns: 1fr; gap: 16px; }
+            .stat-card { padding: 16px; }
+            .stat-value { font-size: 18px; }
+            .toggle-btn { display: flex; margin: 0 auto 16px; }
+        }
+        @media (min-width: 769px) {
             .sidebar-overlay { display: none !important; }
-            .sidebar { position: relative; transform: translateX(0) !important; width: 340px; height: calc(100vh - 72px); top: 0; }
+            .sidebar { position: relative; transform: translateX(0) !important; }
             .close-sidebar-btn { display: none; }
             .toggle-btn { display: none; }
-            .main-content { padding: 40px; }
-            .map-header-row { align-items: flex-start; text-align: left; }
-            .map-main-title { font-size: 36px; text-align: left; }
-            .map-aredl-badge { font-size: 18px; padding: 4px 12px; }
-            .detail-grid { display: grid; grid-template-columns: 16fr 9fr; gap: 24px; margin-bottom: 28px; }
-            .stat-card { padding: 20px; border-radius: 16px; }
-            .stat-label { font-size: 13px; margin-bottom: 6px; }
-            .stat-value { font-size: 22px; }
-            .victors-btn { padding: 16px; border-radius: 14px; font-size: 16px; }
-            .victors-list-box { padding: 16px 20px; border-radius: 14px; max-height: 280px; }
         }
     </style>
 </head>
 <body>
-
     <header>
         <a href="/" class="logo">KRM FORUM</a>
-        <a href="/" class="header-right">HRR LIST</a>
+        <a href="/hrr/" class="header-right">HRR LIST</a>
     </header>
-
     <div class="container">
         <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <input type="text" class="search-input" id="searchInput" placeholder="맵 이름 검색..." oninput="filterMaps()">
+                <input type="text" class="search-input" id="searchInput" placeholder="맵 이름 검색..." oninput="filterMaps()" />
                 <button class="close-sidebar-btn" onclick="toggleSidebar()">✕</button>
             </div>
-            <ul class="map-list" id="mapList"></ul>
+            <!-- ✅ 가상 스크롤 구조로 변경 -->
+            <div class="map-list-wrapper" id="mapListWrapper">
+                <div class="map-list-phantom" id="mapListPhantom"></div>
+                <div class="map-list-visible" id="mapListVisible"></div>
+            </div>
         </aside>
-
         <main class="main-content">
             <div class="content-box">
                 <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
@@ -325,30 +359,25 @@
                     <h1 class="map-main-title" id="mapTitle">#1. Loading...</h1>
                     <span class="map-aredl-badge" id="mapAredlBadge" style="display:none;">AREDL -</span>
                 </div>
-
                 <div class="detail-grid">
                     <div class="video-box" id="videoContainer">
                         <span>영상을 불러오는 중...</span>
                     </div>
-
                     <div class="info-side">
                         <div class="stat-card" style="border-left: 4px solid var(--accent-cyan);">
                             <div class="stat-label">First Korean HRR Mobile Victor</div>
                             <div class="stat-value" id="firstVictorName">-</div>
                         </div>
-
                         <div class="stat-card">
                             <div class="stat-label">Total Victors</div>
                             <div class="stat-value" id="totalVictorsCount">-</div>
                         </div>
-
                         <div class="stat-card">
                             <div class="stat-label">List Points</div>
                             <div class="stat-value" id="listPoints">-</div>
                         </div>
                     </div>
                 </div>
-
                 <button class="victors-btn" onclick="toggleVictorsBox()">
                     <span>전체 클리어자 목록 (Victors)</span>
                     <span id="arrowIcon">▼</span>
@@ -361,206 +390,197 @@
     </div>
 
     <script>
+        // ========== 설정 ==========
         const MAIN_SHEET_ID = '1f1lwB1kbOpD4IWBiTf-D3wDeqpCA5nz-fkNIhr4ZO14';
         const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
-
-        // 변경된 새로운 비디오 시트 ID 적용
         const VIDEO_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8';
         const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json`;
 
-        let mapDataList = [];
-        let videoMap = {};
+        const ITEM_HEIGHT = 48; // 맵 하나 높이
+        const BUFFER = 8; // 보이는 영역 위아래 미리 그려줄 개수
 
+        let mapDataList = [];       // 전체 원본 데이터
+        let filteredList = [];      // 검색 후 필터링된 데이터
+        let videoMap = {};
+        let selectedIndex = -1;
+
+        // ========== 초기화 ==========
         async function loadSheetData() {
             try {
                 const [mainRes, videoRes] = await Promise.allSettled([
                     fetch(MAIN_SHEET_URL),
                     fetch(VIDEO_SHEET_URL)
                 ]);
-
                 if (videoRes.status === 'fulfilled' && videoRes.value.ok) {
-                    const videoRaw = await videoRes.value.text();
-                    parseVideoSheet(videoRaw);
+                    parseVideoSheet(await videoRes.value.text());
                 }
-
                 if (mainRes.status === 'fulfilled' && mainRes.value.ok) {
-                    const mainRaw = await mainRes.value.text();
-                    parseMainSheet(mainRaw);
+                    parseMainSheet(await mainRes.value.text());
                 } else {
                     throw new Error('Main sheet load failed');
                 }
-
             } catch (err) {
                 console.error("데이터 로드 실패:", err);
                 document.getElementById('mapTitle').innerText = "데이터 로드 실패";
             }
         }
 
-        // 비디오 시트 파서 (클리어자 목록 분석 및 첫 번째 클리어자 링크를 메인 영상으로 지정)
+        // ========== 비디오 시트 파싱 ==========
         function parseVideoSheet(rawText) {
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
                 const data = JSON.parse(jsonText);
                 const rows = data.table.rows;
-
                 videoMap = {};
                 let currentMap = null;
-
                 for (let i = 0; i < rows.length; i++) {
                     const row = rows[i].c;
                     if (!row) continue;
+                    const colA = (row[0]?.v != null) ? String(row[0].v).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, ' ') : '';
+                    const colB = (row[1]?.v != null) ? String(row[1].v).trim().replace(/\s+/g, ' ') : '';
+                    const colC = (row[2]?.v != null) ? String(row[2].v).trim() : '';
 
-                    const colA = (row[0] && row[0].v !== null) ? String(row[0].v).trim() : '';
-                    const colB = (row[1] && row[1].v !== null) ? String(row[1].v).trim() : '';
-                    const colC = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
-
-                    // 1. A열에 맵 이름이 있는 경우 (새로운 맵 블록 시작)
                     if (colA !== '' && colA !== '.') {
                         currentMap = colA.toLowerCase();
-                        videoMap[currentMap] = {
-                            videoUrl: null,
-                            victors: []
-                        };
-
-                        // 첫 줄의 B열에 유저 이름이 있는 경우 처리
-                        if (colB !== '' && colB !== '링크' && !colB.includes('유저이름') && !colB.includes('이름')) {
-                            const linkVal = colC.startsWith('http') ? colC : null;
-                            videoMap[currentMap].victors.push({
-                                name: colB,
-                                link: linkVal
-                            });
-
-                            // 첫 번째 클리어자의 링크가 존재하면 메인 영상으로 자동 지정
-                            if (linkVal) {
-                                videoMap[currentMap].videoUrl = linkVal;
-                            }
+                        videoMap[currentMap] = { videoUrl: null, victors: [] };
+                        if (colB !== '' && !/링크|유저이름|이름/.test(colB)) {
+                            const linkVal = extractYoutubeId(colC) ? colC : null;
+                            videoMap[currentMap].victors.push({ name: colB, link: linkVal });
+                            if (linkVal) videoMap[currentMap].videoUrl = linkVal;
                         }
-                    } 
-                    // 2. A열이 비어있거나 '.'이고, 현재 맵이 지정되어 있는 경우 (클리어자 목록)
-                    else if (currentMap && colB !== '' && colB !== '.' && colB !== '링크') {
-                        // 안내 문구인 경우는 무시
-                        if (colB.includes('이름') || colB.includes('유저이름')) continue;
-
-                        const linkVal = colC.startsWith('http') ? colC : null;
-                        videoMap[currentMap].victors.push({
-                            name: colB,
-                            link: linkVal
-                        });
-
-                        // 아직 메인 영상이 없고, 이후 클리어자 중 첫 번째로 링크가 있는 사람이 있다면 메인 영상으로 지정
+                    } else if (currentMap && colB !== '' && colB !== '.' && colB !== '링크') {
+                        if (/이름|유저이름/.test(colB)) continue;
+                        const linkVal = extractYoutubeId(colC) ? colC : null;
+                        videoMap[currentMap].victors.push({ name: colB, link: linkVal });
                         if (!videoMap[currentMap].videoUrl && linkVal) {
                             videoMap[currentMap].videoUrl = linkVal;
                         }
                     }
                 }
-            } catch(e) {
-                console.warn("비디오 시트 파싱 중 오류:", e);
-            }
+            } catch(e) { console.warn("비디오 시트 파싱 오류:", e); }
         }
 
-        // 메인 시트 파서 (순위와 맵 이름만 가져옴)
+        // ========== 유튜브 ID 추출 개선 ==========
+        function extractYoutubeId(url) {
+            if (!url) return null;
+            let m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+            if (m) return m[1];
+            m = url.match(/(?:v=|\/embed\/|\/watch\?v=)([a-zA-Z0-9_-]{11})/);
+            return m ? m[1] : null;
+        }
+
+        // ========== 메인 시트 파싱 ==========
         function parseMainSheet(rawText) {
             const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
             const data = JSON.parse(jsonText);
             const rows = data.table.rows;
-
             mapDataList = [];
             let currentRank = 1;
             let foundStart = false;
 
             for (let i = 0; i < rows.length; i++) {
                 const row = rows[i].c;
-                if (!row || !row[0] || !row[0].v) continue;
-
+                if (!row?.[0]?.v) continue;
                 const levelName = String(row[0].v).trim();
                 const levelNameLower = levelName.toLowerCase();
+
+                // ✅ 마지막 정보 행 제외
+                if (levelNameLower.startsWith('last update') || 
+                    levelName.startsWith('Records & Information') ||
+                    levelName.startsWith('최종 수정') ||
+                    levelName.startsWith('출처')) continue;
 
                 if (!foundStart) {
                     if (levelNameLower === 'waterfall' || levelNameLower.includes('waterfall') || currentRank > 1) {
                         foundStart = true;
-                    } else {
-                        if (row[1] && row[1].v !== null) {
-                            foundStart = true;
-                        } else {
-                            continue;
-                        }
-                    }
+                    } else if (row[1]?.v != null) {
+                        foundStart = true;
+                    } else continue;
                 }
+                if (levelNameLower === 'levels') continue;
 
-                if (levelNameLower === 'levels' || levelName.startsWith('Last update') || levelName.startsWith('Records & Information')) {
-                    continue;
-                }
-
-                const rawCCol = (row[2] && row[2].v !== null) ? String(row[2].v).trim() : '';
-
-                let displayRank = '';
-                let badgeText = '';
-
+                const rawCCol = (row[2]?.v != null) ? String(row[2].v).trim() : '';
+                let displayRank = '', badgeText = '';
                 if (rawCCol.startsWith('#') || !isNaN(rawCCol)) {
                     displayRank = `#${currentRank}`;
-                    badgeText = rawCCol; 
+                    badgeText = rawCCol;
                     currentRank++;
                 } else {
                     displayRank = `-`;
-                    badgeText = rawCCol; 
+                    badgeText = rawCCol;
                 }
 
-                const matchedKey = Object.keys(videoMap).find(k => k.toLowerCase() === levelNameLower);
-                const customData = matchedKey ? videoMap[matchedKey] : null;
-
-                const finalVideoUrl = customData ? customData.videoUrl : null;
-                const finalVictors = customData ? customData.victors : [];
-
-                // Total Victors를 비디오 시트의 클리어자 목록 개수로 계산
-                const calculatedTotalVictors = finalVictors.length.toString();
+                const normName = levelName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                const customData = videoMap[normName] || null;
+                const finalVictors = customData?.victors || [];
 
                 mapDataList.push({
                     rank: displayRank,
                     title: levelName,
                     aredl: badgeText,
-                    totalVictors: calculatedTotalVictors,
+                    totalVictors: String(finalVictors.length),
                     listPoints: '-',
-                    videoUrl: finalVideoUrl,
+                    videoUrl: customData?.videoUrl || null,
                     victors: finalVictors
                 });
             }
 
-            renderSidebar(mapDataList);
+            filteredList = [...mapDataList];
+            initVirtualScroll();
             handleHashChange();
         }
 
-        function renderSidebar(data) {
-            const listEl = document.getElementById('mapList');
-            listEl.innerHTML = '';
-            data.forEach((map) => {
-                const originalIndex = mapDataList.findIndex(m => m.title === map.title);
-                const li = document.createElement('li');
-                li.className = 'map-item';
-                li.onclick = () => {
-                    selectMap(originalIndex);
-                    if (window.innerWidth < 768) toggleSidebar();
-                };
+        // ========== ✅ 가상 스크롤 핵심 ==========
+        function initVirtualScroll() {
+            const wrapper = document.getElementById('mapListWrapper');
+            const phantom = document.getElementById('mapListPhantom');
 
-                li.innerHTML = `
-                    <span class="rank">${map.rank}</span>
-                    <span class="title">${map.title}</span>
-                `;
-                listEl.appendChild(li);
-            });
+            // 전체 높이만 미리 정해두고 실제 아이템은 보이는 것만 렌더링
+            phantom.style.height = `${filteredList.length * ITEM_HEIGHT}px`;
+            wrapper.addEventListener('scroll', renderVisibleItems);
+            renderVisibleItems();
         }
 
+        function renderVisibleItems() {
+            const wrapper = document.getElementById('mapListWrapper');
+            const visible = document.getElementById('mapListVisible');
+            const scrollTop = wrapper.scrollTop;
+            const wrapperHeight = wrapper.clientHeight;
+
+            const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - BUFFER);
+            const endIndex = Math.min(filteredList.length - 1, Math.ceil((scrollTop + wrapperHeight) / ITEM_HEIGHT) + BUFFER);
+
+            visible.style.transform = `translateY(${startIndex * ITEM_HEIGHT}px)`;
+            visible.innerHTML = '';
+
+            const fragment = document.createDocumentFragment();
+            for (let i = startIndex; i <= endIndex; i++) {
+                const map = filteredList[i];
+                const li = document.createElement('div');
+                li.className = `map-item ${selectedIndex === mapDataList.indexOf(map) ? 'active' : ''}`;
+                li.style.height = `${ITEM_HEIGHT}px`;
+                li.onclick = () => {
+                    selectMap(mapDataList.indexOf(map));
+                    if (window.innerWidth < 770) toggleSidebar();
+                };
+                li.innerHTML = `
+                    <span class="rank">${map.rank}</span>
+                    <span class="title" title="${map.title}">${map.title}</span>
+                `;
+                fragment.appendChild(li);
+            }
+            visible.appendChild(fragment);
+        }
+
+        // ========== 맵 선택 ==========
         function selectMap(index) {
+            if (!mapDataList[index]) return;
+            selectedIndex = index;
             const map = mapDataList[index];
-            if (!map) return;
 
             if (window.location.hash !== `#${index + 1}`) {
                 history.replaceState(null, null, `#${index + 1}`);
             }
-
-            document.querySelectorAll('.map-item').forEach((el, idx) => {
-                const isSelected = idx === index;
-                el.classList.toggle('active', isSelected);
-            });
 
             document.getElementById('mapTitle').innerText = `${map.rank !== '-' ? map.rank + '.' : ''} ${map.title}`;
 
@@ -576,86 +596,81 @@
             document.getElementById('listPoints').innerText = map.listPoints;
 
             const videoBox = document.getElementById('videoContainer');
-            let targetVideo = map.videoUrl;
-
-            if (targetVideo && targetVideo.includes('youtu')) {
-                const videoId = extractYoutubeId(targetVideo);
-                if (videoId) {
-                    videoBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?vq=hd1080&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-                } else {
-                    videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
-                }
+            const videoId = map.videoUrl ? extractYoutubeId(map.videoUrl) : null;
+            if (videoId) {
+                videoBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?vq=hd1080&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
             } else {
                 videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
             }
 
-            if (map.victors.length > 0) {
-                document.getElementById('firstVictorName').innerText = map.victors[0].name;
-            } else {
-                document.getElementById('firstVictorName').innerText = '-';
-            }
-
+            document.getElementById('firstVictorName').innerText = map.victors[0]?.name || '-';
             renderVictorsList(map.victors);
+            renderVisibleItems(); // 사이드바 활성화 표시 갱신
         }
 
+        // ========== 클리어자 목록 ==========
         function renderVictorsList(victors) {
             const container = document.getElementById('victorsContainer');
             container.innerHTML = '';
-
-            if (!victors || victors.length === 0) {
+            if (!victors?.length) {
                 container.innerHTML = '<div style="color:var(--text-sub); font-size:14px;">클리어자가 없습니다.</div>';
                 return;
             }
-
             victors.forEach((v, idx) => {
                 const item = document.createElement('div');
                 item.className = 'victor-item';
-                const rankSpan = `<span class="victor-rank">${idx + 1}.</span>`;
-
-                let nameEl = (v.link && v.link.startsWith('http'))
+                const nameEl = (v.link?.startsWith('http'))
                     ? `<a href="${v.link}" target="_blank" class="victor-name has-link">${v.name} 🔗</a>`
                     : `<span class="victor-name">${v.name}</span>`;
-
-                item.innerHTML = rankSpan + nameEl;
+                item.innerHTML = `<span class="victor-rank">${idx + 1}.</span>${nameEl}`;
                 container.appendChild(item);
             });
         }
 
-        function extractYoutubeId(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
+        // ========== 검색 ==========
+        function filterMaps() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            filteredList = q
+                ? mapDataList.filter(m => m.title.toLowerCase().includes(q))
+                : [...mapDataList];
+
+            const phantom = document.getElementById('mapListPhantom');
+            phantom.style.height = `${filteredList.length * ITEM_HEIGHT}px`;
+            document.getElementById('mapListWrapper').scrollTop = 0;
+            renderVisibleItems();
         }
 
+        // ========== 사이드바 / 토글 ==========
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('active');
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
         }
-
         function toggleVictorsBox() {
             const box = document.getElementById('victorsBox');
             box.classList.toggle('active');
             document.getElementById('arrowIcon').innerText = box.classList.contains('active') ? '▲' : '▼';
         }
 
-        function filterMaps() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = mapDataList.filter(m => m.title.toLowerCase().includes(query));
-            renderSidebar(filtered);
-        }
-
+        // ========== 해시 이동 ==========
         function handleHashChange() {
-            const hash = window.location.hash.replace('#', '');
+            const hash = window.location.hash.slice(1);
             const targetIndex = hash ? parseInt(hash) - 1 : 0;
             if (mapDataList.length > 0) {
                 selectMap(Math.max(0, Math.min(targetIndex, mapDataList.length - 1)));
+
+                // 선택된 맵이 화면에 보이도록 스크롤 이동
+                const wrapper = document.getElementById('mapListWrapper');
+                const visibleTop = wrapper.scrollTop;
+                const visibleBottom = visibleTop + wrapper.clientHeight;
+                const itemTop = targetIndex * ITEM_HEIGHT;
+                const itemBottom = itemTop + ITEM_HEIGHT;
+
+                if (itemTop < visibleTop) wrapper.scrollTop = itemTop;
+                else if (itemBottom > visibleBottom) wrapper.scrollTop = itemBottom - wrapper.clientHeight;
             }
         }
 
         window.addEventListener('hashchange', handleHashChange);
-
         loadSheetData();
     </script>
 </body>
