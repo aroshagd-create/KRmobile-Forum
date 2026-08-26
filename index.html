@@ -1,158 +1,381 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KRM FORUM</title>
-    <!-- ✅ 5분 캐싱 설정 -->
-    <meta http-equiv="Cache-Control" content="public, max-age=300">
-    <meta http-equiv="Pragma" content="cache">
-    <meta http-equiv="Expires" content="300">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-dark: #0a0d14;
-            --panel-bg: #121824;
-            --panel-border: rgba(255, 255, 255, 0.08);
-            --accent-main: #FF9900;
-            --accent-orange: #ff9f43;
-            --text-main: #f8fafc;
-            --text-sub: #94a3b8;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html { scroll-behavior: smooth; }
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            font-family: 'Pretendard', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        a:focus, button:focus {
-            outline: 2px solid var(--accent-main);
-            outline-offset: 1px;
-        }
-        header {
-            background: rgba(18, 24, 36, 0.85);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--panel-border);
-            height: 72px;
-            padding: 0 32px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        .logo {
-            font-family: 'Orbitron';
-            font-size: 24px;
-            font-weight: 900;
-            color: var(--accent-main);
-            text-decoration: none;
-        }
-        .container {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-            max-width: 900px;
-            margin: 0 auto;
-            width: 100%;
-        }
-        .main-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: clamp(28px, 8vw, 48px);
-            font-weight: 900;
-            color: var(--accent-main);
-            margin-bottom: 12px;
-            text-align: center;
-        }
-        .sub-title {
-            font-size: 18px;
-            color: var(--text-sub);
-            margin-bottom: 48px;
-            text-align: center;
-        }
-        .menu-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            width: 100%;
-        }
-        .menu-card {
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            border-radius: 16px;
-            padding: 28px 24px;
-            text-decoration: none;
-            color: var(--text-main);
-            transition: all 0.25s ease;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .menu-card:hover {
-            border-color: var(--accent-main);
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(255, 153, 0, 0.12);
-            background: rgba(255, 153, 0, 0.04);
-        }
-        .menu-card-title {
-            font-family: 'Orbitron';
-            font-size: 22px;
-            font-weight: 800;
-            color: var(--accent-main);
-        }
-        .menu-card-desc {
-            font-size: 14px;
-            color: var(--text-sub);
-            line-height: 1.5;
-        }
-        footer {
-            padding: 24px;
-            text-align: center;
-            color: var(--text-sub);
-            font-size: 13px;
-            border-top: 1px solid var(--panel-border);
-            margin-top: auto;
-        }
-        @media (max-width: 768px) {
-            header { padding: 0 16px; height: 64px; }
-            .logo { font-size: 20px; }
-            .menu-grid { grid-template-columns: 1fr; }
-            .menu-card { padding: 24px 20px; }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KRM FORUM</title>
+  <!-- ✅ 5분 캐싱 설정 -->
+  <meta http-equiv="Cache-Control" content="public, max-age=300">
+  <meta http-equiv="Pragma" content="cache">
+  <meta http-equiv="Expires" content="300">
+
+  <!-- ✅ 폰트 & 외부 도메인 미리 연결 (최적화) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://docs.google.com" crossorigin />
+  <link rel="preconnect" href="https://discord.com" crossorigin />
+  <!-- ✅ 폰트에 &display=swap 추가 → 로딩중 텍스트 자연스럽게 -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Pretendard:wght@400;600;800&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --bg-dark: #0a0d14;
+      --panel-bg: #121824;
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --accent-cyan: #00f2fe;
+      --accent-orange: #ff9f43;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --menu-padding: 8px 12px;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html {
+      scroll-behavior: smooth; /* ✅ 부드러운 스크롤 */
+    }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: "Pretendard", sans-serif;
+      min-height: 100vh;
+      background-image: radial-gradient(
+        circle at 50% 20%,
+        rgba(0, 242, 254, 0.08) 0%,
+        transparent 65%
+      );
+      display: flex;
+      flex-direction: column;
+    }
+    a:focus, button:focus {
+      outline: 2px solid var(--accent-cyan); /* ✅ 키보드 포커스 표시 */
+      outline-offset: 2px;
+    }
+    header {
+      background: rgba(18, 24, 36, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--panel-border);
+      height: 72px;
+      padding: 0 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    .logo {
+      font-family: "Orbitron", sans-serif;
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--accent-cyan);
+      letter-spacing: 1.5px;
+      text-decoration: none;
+      padding: var(--menu-padding);
+      margin: -8px;
+    }
+    .pc-menu {
+      display: flex;
+      gap: 8px;
+      list-style: none;
+      align-items: center;
+    }
+    .pc-menu a {
+      color: var(--text-sub);
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 600;
+      transition: color 0.2s, background 0.2s;
+      padding: var(--menu-padding); /* ✅ 클릭/터치 영역 확대 */
+      border-radius: 8px;
+    }
+    .pc-menu a:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .main-wrapper {
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 60px 32px 100px;
+      display: flex;
+      flex-direction: column;
+      gap: 52px;
+      flex-grow: 1;
+      justify-content: center;
+    }
+    .info-section {
+      text-align: center;
+    }
+    .info-title {
+      font-family: "Orbitron", sans-serif;
+      font-size: 64px;
+      font-weight: 900;
+      margin-bottom: 24px;
+      background: linear-gradient(180deg, #ffffff 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .info-desc {
+      font-size: 21px;
+      color: var(--text-sub);
+      line-height: 1.6;
+      word-break: keep-all;
+    }
+    .cards-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+    }
+    .card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 24px;
+      padding: 44px 38px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 280px;
+      transition: transform 0.25s;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .card-badge {
+      font-family: "Orbitron";
+      font-size: 13px;
+      font-weight: 800;
+      padding: 6px 14px;
+      border-radius: 8px;
+    }
+    .badge-hrr {
+      background: rgba(0, 242, 254, 0.15);
+      color: var(--accent-cyan);
+    }
+    .badge-lrr {
+      background: rgba(255, 159, 67, 0.15);
+      color: var(--accent-orange);
+    }
+    .card-header h2 {
+      font-size: 28px;
+    }
+    .card p {
+      color: var(--text-sub);
+      font-size: 17px;
+      line-height: 1.6;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 18px 0;
+      border-radius: 14px;
+      font-size: 17px;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      margin-top: 24px;
+      transition: opacity 0.2s;
+    }
+    .btn:active {
+      opacity: 0.85;
+    }
+    .btn-hrr {
+      background: var(--accent-cyan);
+      color: #000;
+    }
+    .btn-lrr {
+      background: var(--accent-orange);
+      color: #000;
+    }
+    .page-section {
+      display: none;
+      width: 100%;
+    }
+    .page-section.active {
+      display: block;
+    }
+    .ranking-container {
+      text-align: center;
+    }
+    .ranking-title {
+      font-family: "Orbitron";
+      color: var(--accent-cyan);
+      font-size: 48px;
+    }
+    .ranking-desc {
+      color: var(--text-sub);
+      margin-top: 16px;
+      font-size: 18px;
+    }
+    .back-btn {
+      margin: 30px auto 0;
+      max-width: 280px;
+    }
+
+    /* ✅ 모바일 반응형 최적화 */
+    @media (max-width: 768px) {
+      header {
+        padding: 0 16px;
+        height: 64px;
+      }
+      .logo {
+        font-size: 16px;
+        margin: 0;
+        padding: 4px 8px;
+      }
+      .pc-menu {
+        gap: 2px;
+      }
+      .pc-menu a {
+        font-size: 13px;
+        padding: 6px 8px;
+      }
+      .main-wrapper {
+        padding: 30px 16px 60px;
+        gap: 32px;
+      }
+      .info-title {
+        font-size: 38px;
+      }
+      .info-desc {
+        font-size: 16px;
+      }
+      .cards-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      .card {
+        padding: 28px 20px;
+        min-height: auto;
+        border-radius: 18px;
+      }
+      .card-header h2 {
+        font-size: 20px;
+      }
+      .card p {
+        font-size: 15px;
+      }
+      .btn {
+        padding: 14px 0;
+        font-size: 15px;
+        margin-top: 20px;
+        border-radius: 12px;
+      }
+      .ranking-title {
+        font-size: 32px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <a href="/" class="logo">KRM FORUM</a>
-    </header>
-    <main class="container">
-        <h1 class="main-title">KRM FORUM</h1>
-        <p class="sub-title">Korean Record Master Forum — 리스트 선택</p>
-        
-        <div class="menu-grid">
-            <a href="/hrr/" class="menu-card">
-                <div class="menu-card-title">HRR LIST</div>
-                <div class="menu-card-desc">Hardest Remaining Records — 가장 어려운 맵 순위</div>
-            </a>
-            <a href="/lrr/" class="menu-card">
-                <div class="menu-card-title">LRR LIST</div>
-                <div class="menu-card-desc">Longest Remaining Records — 가장 오래 깨지지 않은 기록</div>
-            </a>
-        </div>
-    </main>
-    <footer>
-        © 2025 KRM FORUM. All rights reserved.
-    </footer>
+  <header>
+    <a href="/" class="logo">KRM FORUM</a>
+    <ul class="pc-menu">
+      <li>
+        <a href="#" onclick="showSection('ranking')">포인트 랭킹</a>
+      </li>
+      <li>
+        <!-- ✅ 기록 등재: 구글폼 링크 연결 완료 -->
+        <a
+          href="https://forms.gle/Mm6PbzDz7Esd3yvW8"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          기록 등재
+        </a>
+      </li>
+      <li>
+        <!-- ✅ 디스코드 링크 연결 완료 -->
+        <a
+          href="https://discord.gg/ENxdraDTvw"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Discord
+        </a>
+      </li>
+    </ul>
+  </header>
+
+  <!-- ✅ 메인 화면 -->
+  <div id="homeView" class="page-section active">
+    <div class="main-wrapper">
+      <section class="info-section">
+        <h1 class="info-title">KRM FORUM</h1>
+        <p class="info-desc">
+          지오메트리 대시 한국 모바일 포럼에 오신 것을 환영합니다!<br />
+          원하시는 주사율 리스트를 선택해 접속하세요.
+        </p>
+      </section>
+      <div class="cards-container">
+        <article class="card">
+          <div>
+            <div class="card-header">
+              <span class="card-badge badge-hrr">90Hz+</span>
+              <h2>📱 HRR List</h2>
+            </div>
+            <p>
+              고주사율(90Hz 이상) 모바일 기기로 달성한 등재 맵 목록 및
+              클리어 순위표를 확인합니다.
+            </p>
+          </div>
+          <a href="/hrr/" class="btn btn-hrr">HRR 리스트 바로가기 →</a>
+        </article>
+        <article class="card">
+          <div>
+            <div class="card-header">
+              <span class="card-badge badge-lrr">60Hz</span>
+              <h2>📱 LRR List</h2>
+            </div>
+            <p>
+              저주사율(60Hz 이하) 모바일 기기로 달성한 등재 맵 목록 및
+              클리어 순위표를 확인합니다.
+            </p>
+          </div>
+          <a href="/lrr/" class="btn btn-lrr">LRR 리스트 바로가기 →</a>
+        </article>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ 랭킹 화면 -->
+  <div id="rankingView" class="page-section">
+    <div class="main-wrapper ranking-container">
+      <h2 class="ranking-title">Soon...</h2>
+      <p class="ranking-desc">
+        포인트 랭킹 기능은 현재 준비 중입니다.
+      </p>
+      <button
+        class="btn btn-hrr back-btn"
+        onclick="showSection('home')"
+      >
+        ← 메인으로 돌아가기
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // ✅ 섹션 전환 로직 간결화
+    function showSection(name) {
+      document.querySelectorAll(".page-section").forEach(sec => {
+        sec.classList.remove("active");
+      });
+      const targetId = name === "ranking" ? "rankingView" : "homeView";
+      document.getElementById(targetId).classList.add("active");
+      window.scrollTo(0, 0); // ✅ 전환시 맨 위로
+    }
+  </script>
 </body>
 </html>
