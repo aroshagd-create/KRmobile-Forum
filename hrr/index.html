@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HRR List - KRM FORUM</title>
-    <!-- ✅ 폰트 최적화: display=swap 추가 + preconnect -->
+    <!-- ✅ 폰트 최적화 -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet" />
@@ -17,10 +17,10 @@
             --accent-orange: #ff9f43;
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
-            --map-item-height: 48px; /* ✅ 맵 하나의 높이 고정 = 가상스크롤 핵심 */
+            --map-item-height: 48px;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        html { scroll-behavior: smooth; } /* ✅ 부드러운 스크롤 */
+        html { scroll-behavior: smooth; }
         body {
             background-color: var(--bg-dark);
             color: var(--text-main);
@@ -129,7 +129,6 @@
             font-size: 18px;
             flex-shrink: 0;
         }
-        /* ✅ 가상 스크롤 컨테이너 */
         .map-list-wrapper {
             flex-grow: 1;
             overflow-y: auto;
@@ -307,7 +306,7 @@
         .victor-rank { font-family: 'Orbitron'; color: var(--text-sub); font-size: 13px; width: 30px; }
         .victor-name { font-size: 15px; color: var(--text-main); text-decoration: none; }
         .victor-name.has-link { text-decoration: underline; color: var(--accent-cyan); cursor: pointer; }
-
+        
         /* ✅ 모바일 반응형 */
         @media (max-width: 768px) {
             header {
@@ -346,7 +345,6 @@
                 <input type="text" class="search-input" id="searchInput" placeholder="맵 이름 검색..." oninput="filterMaps()" />
                 <button class="close-sidebar-btn" onclick="toggleSidebar()">✕</button>
             </div>
-            <!-- ✅ 가상 스크롤 구조로 변경 -->
             <div class="map-list-wrapper" id="mapListWrapper">
                 <div class="map-list-phantom" id="mapListPhantom"></div>
                 <div class="map-list-visible" id="mapListVisible"></div>
@@ -388,19 +386,16 @@
             </div>
         </main>
     </div>
-
     <script>
         // ========== 설정 ==========
         const MAIN_SHEET_ID = '1f1lwB1kbOpD4IWBiTf-D3wDeqpCA5nz-fkNIhr4ZO14';
         const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
         const VIDEO_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8';
         const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json`;
-
-        const ITEM_HEIGHT = 48; // 맵 하나 높이
-        const BUFFER = 8; // 보이는 영역 위아래 미리 그려줄 개수
-
-        let mapDataList = [];       // 전체 원본 데이터
-        let filteredList = [];      // 검색 후 필터링된 데이터
+        const ITEM_HEIGHT = 48;
+        const BUFFER = 8;
+        let mapDataList = [];
+        let filteredList = [];
         let videoMap = {};
         let selectedIndex = -1;
 
@@ -425,7 +420,7 @@
             }
         }
 
-        // ========== 비디오 시트 파싱 ==========
+        // ========== ✅ 비디오 시트 파싱 (숫자 이름 완벽 지원) ==========
         function parseVideoSheet(rawText) {
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
@@ -433,23 +428,37 @@
                 const rows = data.table.rows;
                 videoMap = {};
                 let currentMap = null;
+
+                // 헤더 행 필터용 패턴
+                const HEADER_PATTERN = /^(이름|유저이름|링크|비디오|영상)$/i;
+
                 for (let i = 0; i < rows.length; i++) {
                     const row = rows[i].c;
                     if (!row) continue;
-                    const colA = (row[0]?.v != null) ? String(row[0].v).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, ' ') : '';
-                    const colB = (row[1]?.v != null) ? String(row[1].v).trim().replace(/\s+/g, ' ') : '';
+
+                    // ✅ 값을 항상 문자열로 변환 → 숫자도 그대로 이름으로 인식
+                    const colA = (row[0]?.v != null) ? String(row[0].v).trim() : '';
+                    const colB = (row[1]?.v != null) ? String(row[1].v).trim() : '';
                     const colC = (row[2]?.v != null) ? String(row[2].v).trim() : '';
 
+                    // ===== 새로운 맵 시작 =====
                     if (colA !== '' && colA !== '.') {
-                        currentMap = colA.toLowerCase();
+                        // 맵 이름 정규화 키
+                        currentMap = colA.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, ' ').toLowerCase();
                         videoMap[currentMap] = { videoUrl: null, victors: [] };
-                        if (colB !== '' && !/링크|유저이름|이름/.test(colB)) {
+
+                        // ✅ 바로 아래 행이 클리어자인 경우 (숫자 이름 포함)
+                        if (colB !== '' && !HEADER_PATTERN.test(colB)) {
                             const linkVal = extractYoutubeId(colC) ? colC : null;
                             videoMap[currentMap].victors.push({ name: colB, link: linkVal });
-                            if (linkVal) videoMap[currentMap].videoUrl = linkVal;
+                            if (linkVal && !videoMap[currentMap].videoUrl) {
+                                videoMap[currentMap].videoUrl = linkVal;
+                            }
                         }
-                    } else if (currentMap && colB !== '' && colB !== '.' && colB !== '링크') {
-                        if (/이름|유저이름/.test(colB)) continue;
+                    }
+                    // ===== 기존 맵에 클리어자 추가 =====
+                    else if (currentMap && colB !== '' && colB !== '.' && !HEADER_PATTERN.test(colB)) {
+                        // ✅ 숫자, 문자, 특수문자 조합 모두 이름으로 인식
                         const linkVal = extractYoutubeId(colC) ? colC : null;
                         videoMap[currentMap].victors.push({ name: colB, link: linkVal });
                         if (!videoMap[currentMap].videoUrl && linkVal) {
@@ -457,10 +466,12 @@
                         }
                     }
                 }
-            } catch(e) { console.warn("비디오 시트 파싱 오류:", e); }
+            } catch(e) {
+                console.warn("비디오 시트 파싱 오류:", e);
+            }
         }
 
-        // ========== 유튜브 ID 추출 개선 ==========
+        // ========== 유튜브 ID 추출 ==========
         function extractYoutubeId(url) {
             if (!url) return null;
             let m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
@@ -484,7 +495,6 @@
                 const levelName = String(row[0].v).trim();
                 const levelNameLower = levelName.toLowerCase();
 
-                // ✅ 마지막 정보 행 제외
                 if (levelNameLower.startsWith('last update') || 
                     levelName.startsWith('Records & Information') ||
                     levelName.startsWith('최종 수정') ||
@@ -524,18 +534,15 @@
                     victors: finalVictors
                 });
             }
-
             filteredList = [...mapDataList];
             initVirtualScroll();
             handleHashChange();
         }
 
-        // ========== ✅ 가상 스크롤 핵심 ==========
+        // ========== 가상 스크롤 ==========
         function initVirtualScroll() {
             const wrapper = document.getElementById('mapListWrapper');
             const phantom = document.getElementById('mapListPhantom');
-
-            // 전체 높이만 미리 정해두고 실제 아이템은 보이는 것만 렌더링
             phantom.style.height = `${filteredList.length * ITEM_HEIGHT}px`;
             wrapper.addEventListener('scroll', renderVisibleItems);
             renderVisibleItems();
@@ -546,13 +553,10 @@
             const visible = document.getElementById('mapListVisible');
             const scrollTop = wrapper.scrollTop;
             const wrapperHeight = wrapper.clientHeight;
-
             const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - BUFFER);
             const endIndex = Math.min(filteredList.length - 1, Math.ceil((scrollTop + wrapperHeight) / ITEM_HEIGHT) + BUFFER);
-
             visible.style.transform = `translateY(${startIndex * ITEM_HEIGHT}px)`;
             visible.innerHTML = '';
-
             const fragment = document.createDocumentFragment();
             for (let i = startIndex; i <= endIndex; i++) {
                 const map = filteredList[i];
@@ -577,13 +581,11 @@
             if (!mapDataList[index]) return;
             selectedIndex = index;
             const map = mapDataList[index];
-
             if (window.location.hash !== `#${index + 1}`) {
                 history.replaceState(null, null, `#${index + 1}`);
             }
 
             document.getElementById('mapTitle').innerText = `${map.rank !== '-' ? map.rank + '.' : ''} ${map.title}`;
-
             const aredlBadge = document.getElementById('mapAredlBadge');
             if (map.aredl && map.aredl !== '-' && map.aredl !== '0' && map.aredl !== '') {
                 aredlBadge.innerText = map.aredl.includes('Tier') ? map.aredl : `AREDL ${map.aredl}`;
@@ -605,10 +607,10 @@
 
             document.getElementById('firstVictorName').innerText = map.victors[0]?.name || '-';
             renderVictorsList(map.victors);
-            renderVisibleItems(); // 사이드바 활성화 표시 갱신
+            renderVisibleItems();
         }
 
-        // ========== 클리어자 목록 ==========
+        // ========== 클리어자 목록 렌더링 ==========
         function renderVictorsList(victors) {
             const container = document.getElementById('victorsContainer');
             container.innerHTML = '';
@@ -627,49 +629,45 @@
             });
         }
 
-        // ========== 검색 ==========
+        // ========== 검색 필터 ==========
         function filterMaps() {
             const q = document.getElementById('searchInput').value.toLowerCase();
             filteredList = q
                 ? mapDataList.filter(m => m.title.toLowerCase().includes(q))
                 : [...mapDataList];
-
             const phantom = document.getElementById('mapListPhantom');
             phantom.style.height = `${filteredList.length * ITEM_HEIGHT}px`;
             document.getElementById('mapListWrapper').scrollTop = 0;
             renderVisibleItems();
         }
 
-        // ========== 사이드바 / 토글 ==========
+        // ========== 사이드바 토글 ==========
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('sidebarOverlay').classList.toggle('active');
         }
+
         function toggleVictorsBox() {
             const box = document.getElementById('victorsBox');
             box.classList.toggle('active');
             document.getElementById('arrowIcon').innerText = box.classList.contains('active') ? '▲' : '▼';
         }
 
-        // ========== 해시 이동 ==========
+        // ========== URL 해시로 맵 이동 ==========
         function handleHashChange() {
             const hash = window.location.hash.slice(1);
             const targetIndex = hash ? parseInt(hash) - 1 : 0;
             if (mapDataList.length > 0) {
                 selectMap(Math.max(0, Math.min(targetIndex, mapDataList.length - 1)));
-
-                // 선택된 맵이 화면에 보이도록 스크롤 이동
                 const wrapper = document.getElementById('mapListWrapper');
                 const visibleTop = wrapper.scrollTop;
                 const visibleBottom = visibleTop + wrapper.clientHeight;
                 const itemTop = targetIndex * ITEM_HEIGHT;
                 const itemBottom = itemTop + ITEM_HEIGHT;
-
                 if (itemTop < visibleTop) wrapper.scrollTop = itemTop;
                 else if (itemBottom > visibleBottom) wrapper.scrollTop = itemBottom - wrapper.clientHeight;
             }
         }
-
         window.addEventListener('hashchange', handleHashChange);
         loadSheetData();
     </script>
