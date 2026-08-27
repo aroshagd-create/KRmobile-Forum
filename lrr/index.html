@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -6,15 +5,14 @@
     <title>LRR List - KRM FORUM</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.css" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" />
     <style>
         :root {
             --bg-dark: #0a0d14;
             --panel-bg: #121824;
             --panel-border: rgba(255, 255, 255, 0.08);
-            --accent-cyan: #00f2fe;
-            --accent-pink: #FFB7E0; /* 🌸 벚꽃 핑크 */
+            --accent-main: #FFB7E0; /* 🌸 벚꽃 핑크 */
             --accent-orange: #ff9f43;
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
@@ -31,7 +29,7 @@
             overflow-x: hidden;
         }
         a:focus, button:focus, input:focus {
-            outline: 2px solid #E2E8F0;
+            outline: 2px solid var(--accent-main);
             outline-offset: 1px;
         }
         header {
@@ -51,7 +49,7 @@
             font-family: 'Orbitron';
             font-size: 20px;
             font-weight: 900;
-            color: #E2E8F0;
+            color: #E2E8F0; /* ✅ 로고는 원래 색 그대로 유지 */
             text-decoration: none;
             padding: 8px 12px;
             margin: -8px;
@@ -60,7 +58,7 @@
             font-family: 'Orbitron';
             font-size: 14px;
             font-weight: 800;
-            color: var(--accent-pink);
+            color: var(--accent-main);
             text-decoration: none;
             padding: 8px 12px;
         }
@@ -159,11 +157,11 @@
             will-change: background;
         }
         .map-item:hover, .map-item.active {
-            background: rgba(255, 183, 224, 0.12);
+            background: rgba(255, 183, 224, 0.12); /* ✅ 핑크 호버 배경 */
         }
         .map-item .rank {
             font-family: 'Orbitron';
-            color: var(--accent-pink);
+            color: var(--accent-main);
             font-weight: 800;
             font-size: 14px;
             flex-shrink: 0;
@@ -236,7 +234,7 @@
         }
         .map-aredl-badge {
             font-family: 'Orbitron';
-            color: var(--accent-orange);
+            color: var(--accent-orange); /* ✅ AREDL은 주황색 그대로 유지 */
             font-size: 16px;
             font-weight: 800;
             background: rgba(255, 159, 67, 0.12);
@@ -273,7 +271,7 @@
             border-radius: 14px;
             padding: 18px;
             width: 100%;
-            border-left: 4px solid var(--accent-pink);
+            border-left: 4px solid var(--accent-main); /* ✅ 핑크 테두리 */
         }
         .stat-label { font-size: 13px; color: var(--text-sub); margin-bottom: 6px; font-weight: 600; }
         .stat-value { font-size: 20px; font-weight: 800; word-break: break-all; }
@@ -314,7 +312,7 @@
         .victor-item:last-child { border-bottom: none; }
         .victor-rank { font-family: 'Orbitron'; color: var(--text-sub); font-size: 13px; width: 30px; }
         .victor-name { font-size: 15px; color: var(--text-main); text-decoration: none; }
-        .victor-name.has-link { text-decoration: underline; color: var(--accent-pink); cursor: pointer; }
+        .victor-name.has-link { text-decoration: underline; color: var(--accent-main); cursor: pointer; } /* ✅ 핑크 링크 */
         @media (max-width: 768px) {
             header { padding: 0 16px; height: 64px; }
             .logo { font-size: 16px; margin: 0; padding: 4px 8px; }
@@ -324,7 +322,6 @@
             .close-sidebar-btn { display: flex; }
             .toggle-btn { display: flex; margin: 0 auto 16px; }
             .map-main-title { font-size: 26px; }
-            .map-aredl-badge { font-size: 14px; }
             .detail-grid { grid-template-columns: 1fr; gap: 16px; }
             .stat-card { padding: 16px; }
             .stat-value { font-size: 18px; }
@@ -390,22 +387,23 @@
         </main>
     </div>
     <script>
-        // ========== 시트 ID ==========
+        // ========== LRR 시트 정보 ==========
         const MAIN_SHEET_ID = '1yP5sJXHAA_dO0iv74nhx4vaT21J2Rl0cNXdzipsB-Y8';
         const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
         const VIDEO_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8';
-        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json`;
+        const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&gid=1240231056`;
         const ITEM_HEIGHT = 48;
         const BUFFER = 8;
+        // ✅ 캐시 설정
         const CACHE_KEY_MAIN = 'lrr_main_data';
         const CACHE_KEY_VIDEO = 'lrr_video_data';
-        const CACHE_TTL = 10 * 60 * 1000;
+        const CACHE_TTL = 10 * 60 * 1000; // 10분
         let mapDataList = [];
         let filteredList = [];
         let videoMap = {};
         let selectedIndex = -1;
 
-        // ========== 캐시 관리 ==========
+        // ========== ✅ 캐시 관리 함수 ==========
         function saveToCache(key, data) {
             try {
                 const payload = { timestamp: Date.now(), data };
@@ -422,15 +420,17 @@
             } catch (e) { return null; }
         }
 
-        // ========== 초기화 ==========
+        // ========== 초기화 (캐시 우선 로드) ==========
         async function loadSheetData() {
+            // 1. 캐시 먼저 로드해서 즉시 표시
             const cachedMain = loadFromCache(CACHE_KEY_MAIN);
             const cachedVideo = loadFromCache(CACHE_KEY_VIDEO);
             let hasCached = false;
             if (cachedMain) { applyMainData(cachedMain); hasCached = true; }
             if (cachedVideo) { videoMap = cachedVideo; hasCached = true; }
-            if (hasCached) console.log('✅ 캐시 데이터 로드 완료');
+            if (hasCached) console.log('✅ LRR 캐시 로드 완료');
 
+            // 2. 백그라운드에서 최신 데이터 확인 & 갱신
             try {
                 const [mainRes, videoRes] = await Promise.allSettled([
                     fetch(MAIN_SHEET_URL),
@@ -454,16 +454,18 @@
                     }
                 }
                 if (needRerender) {
-                    console.log('✅ 최신 데이터로 갱신됨');
+                    console.log('✅ LRR 최신 데이터로 갱신됨');
                     handleHashChange();
                 }
             } catch (err) {
-                console.warn('시트 갱신 실패:', err);
-                if (!hasCached) document.getElementById('mapTitle').innerText = "데이터 로드 실패";
+                console.warn('시트 갱신 실패, 캐시 유지:', err);
+                if (!hasCached) {
+                    document.getElementById('mapTitle').innerText = "데이터 로드 실패";
+                }
             }
         }
 
-        // ========== 파싱 ==========
+        // ========== ✅ 파싱 로직 분리 (캐시/실시간 공통) ==========
         function parseVideoSheetRaw(rawText) {
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
@@ -493,7 +495,7 @@
                     }
                 }
                 return map;
-            } catch (e) { console.warn("비디오 파싱 오류:", e); return {}; }
+            } catch(e) { console.warn("비디오 파싱 오류:", e); return {}; }
         }
 
         function parseMainSheetRaw(rawText) {
@@ -549,6 +551,7 @@
             initVirtualScroll();
         }
 
+        // ========== 유튜브 ID 추출 ==========
         function extractYoutubeId(url) {
             if (!url) return null;
             let m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
@@ -597,7 +600,9 @@
             if (!mapDataList[index]) return;
             selectedIndex = index;
             const map = mapDataList[index];
-            if (window.location.hash !== `#${index + 1}`) history.replaceState(null, null, `#${index + 1}`);
+            if (window.location.hash !== `#${index + 1}`) {
+                history.replaceState(null, null, `#${index + 1}`);
+            }
             document.getElementById('mapTitle').innerText = `${map.rank !== '-' ? map.rank + '.' : ''} ${map.title}`;
             const aredlBadge = document.getElementById('mapAredlBadge');
             if (map.aredl && map.aredl !== '-' && map.aredl !== '0' && map.aredl !== '') {
@@ -620,7 +625,7 @@
             renderVisibleItems();
         }
 
-        // ========== 클리어자 목록 ==========
+        // ========== 클리어자 목록 렌더링 ==========
         function renderVictorsList(victors) {
             const container = document.getElementById('victorsContainer');
             container.innerHTML = '';
@@ -660,7 +665,7 @@
             document.getElementById('arrowIcon').innerText = box.classList.contains('active') ? '▲' : '▼';
         }
 
-        // ========== URL 해시 ==========
+        // ========== URL 해시로 맵 이동 ==========
         function handleHashChange() {
             const hash = window.location.hash.slice(1);
             const targetIndex = hash ? parseInt(hash) - 1 : 0;
