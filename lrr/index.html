@@ -49,7 +49,7 @@
             font-family: 'Orbitron';
             font-size: 20px;
             font-weight: 900;
-            color: #E2E8F0; /* ✅ 로고는 원래 색 그대로 유지 */
+            color: #E2E8F0;
             text-decoration: none;
             padding: 8px 12px;
             margin: -8px;
@@ -157,7 +157,7 @@
             will-change: background;
         }
         .map-item:hover, .map-item.active {
-            background: rgba(255, 183, 224, 0.12); /* ✅ 핑크 호버 배경 */
+            background: rgba(255, 183, 224, 0.12);
         }
         .map-item .rank {
             font-family: 'Orbitron';
@@ -234,7 +234,7 @@
         }
         .map-aredl-badge {
             font-family: 'Orbitron';
-            color: var(--accent-orange); /* ✅ AREDL은 주황색 그대로 유지 */
+            color: var(--accent-orange);
             font-size: 16px;
             font-weight: 800;
             background: rgba(255, 159, 67, 0.12);
@@ -271,7 +271,7 @@
             border-radius: 14px;
             padding: 18px;
             width: 100%;
-            border-left: 4px solid var(--accent-main); /* ✅ 핑크 테두리 */
+            border-left: 4px solid var(--accent-main);
         }
         .stat-label { font-size: 13px; color: var(--text-sub); margin-bottom: 6px; font-weight: 600; }
         .stat-value { font-size: 20px; font-weight: 800; word-break: break-all; }
@@ -312,7 +312,7 @@
         .victor-item:last-child { border-bottom: none; }
         .victor-rank { font-family: 'Orbitron'; color: var(--text-sub); font-size: 13px; width: 30px; }
         .victor-name { font-size: 15px; color: var(--text-main); text-decoration: none; }
-        .victor-name.has-link { text-decoration: underline; color: var(--accent-main); cursor: pointer; } /* ✅ 핑크 링크 */
+        .victor-name.has-link { text-decoration: underline; color: var(--accent-main); cursor: pointer; }
         @media (max-width: 768px) {
             header { padding: 0 16px; height: 64px; }
             .logo { font-size: 16px; margin: 0; padding: 4px 8px; }
@@ -394,16 +394,14 @@
         const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json&gid=1240231056`;
         const ITEM_HEIGHT = 48;
         const BUFFER = 8;
-        // ✅ 캐시 설정
         const CACHE_KEY_MAIN = 'lrr_main_data';
         const CACHE_KEY_VIDEO = 'lrr_video_data';
-        const CACHE_TTL = 10 * 60 * 1000; // 10분
+        const CACHE_TTL = 10 * 60 * 1000;
         let mapDataList = [];
         let filteredList = [];
         let videoMap = {};
         let selectedIndex = -1;
 
-        // ========== ✅ 캐시 관리 함수 ==========
         function saveToCache(key, data) {
             try {
                 const payload = { timestamp: Date.now(), data };
@@ -420,17 +418,25 @@
             } catch (e) { return null; }
         }
 
-        // ========== 초기화 (캐시 우선 로드) ==========
         async function loadSheetData() {
-            // 1. 캐시 먼저 로드해서 즉시 표시
             const cachedMain = loadFromCache(CACHE_KEY_MAIN);
             const cachedVideo = loadFromCache(CACHE_KEY_VIDEO);
             let hasCached = false;
-            if (cachedMain) { applyMainData(cachedMain); hasCached = true; }
-            if (cachedVideo) { videoMap = cachedVideo; hasCached = true; }
-            if (hasCached) console.log('✅ LRR 캐시 로드 완료');
+            if (cachedMain) {
+                applyMainData(cachedMain);
+                hasCached = true;
+            }
+            if (cachedVideo) {
+                videoMap = cachedVideo;
+                hasCached = true;
+            }
 
-            // 2. 백그라운드에서 최신 데이터 확인 & 갱신
+            // ✅ 캐시가 있으면 먼저 맵 표시 (무한로딩 방지)
+            if (hasCached) {
+                console.log('✅ LRR 캐시 로드 완료');
+                handleHashChange();
+            }
+
             try {
                 const [mainRes, videoRes] = await Promise.allSettled([
                     fetch(MAIN_SHEET_URL),
@@ -465,7 +471,6 @@
             }
         }
 
-        // ========== ✅ 파싱 로직 분리 (캐시/실시간 공통) ==========
         function parseVideoSheetRaw(rawText) {
             try {
                 const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
@@ -551,7 +556,6 @@
             initVirtualScroll();
         }
 
-        // ========== 유튜브 ID 추출 ==========
         function extractYoutubeId(url) {
             if (!url) return null;
             let m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
@@ -560,7 +564,6 @@
             return m ? m[1] : null;
         }
 
-        // ========== 가상 스크롤 ==========
         function initVirtualScroll() {
             const wrapper = document.getElementById('mapListWrapper');
             const phantom = document.getElementById('mapListPhantom');
@@ -595,7 +598,6 @@
             visible.appendChild(fragment);
         }
 
-        // ========== 맵 선택 ==========
         function selectMap(index) {
             if (!mapDataList[index]) return;
             selectedIndex = index;
@@ -625,7 +627,6 @@
             renderVisibleItems();
         }
 
-        // ========== 클리어자 목록 렌더링 ==========
         function renderVictorsList(victors) {
             const container = document.getElementById('victorsContainer');
             container.innerHTML = '';
@@ -644,7 +645,6 @@
             });
         }
 
-        // ========== 검색 필터 ==========
         function filterMaps() {
             const q = document.getElementById('searchInput').value.toLowerCase();
             filteredList = q ? mapDataList.filter(m => m.title.toLowerCase().includes(q)) : [...mapDataList];
@@ -654,7 +654,6 @@
             renderVisibleItems();
         }
 
-        // ========== 사이드바 토글 ==========
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('sidebarOverlay').classList.toggle('active');
@@ -665,7 +664,6 @@
             document.getElementById('arrowIcon').innerText = box.classList.contains('active') ? '▲' : '▼';
         }
 
-        // ========== URL 해시로 맵 이동 ==========
         function handleHashChange() {
             const hash = window.location.hash.slice(1);
             const targetIndex = hash ? parseInt(hash) - 1 : 0;
