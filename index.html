@@ -8,24 +8,21 @@
   <meta http-equiv="Cache-Control" content="public, max-age=300">
   <meta http-equiv="Pragma" content="cache">
   <meta http-equiv="Expires" content="300">
-
   <!-- ✅ 폰트 & 외부 도메인 미리 연결 (최적화) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://docs.google.com" crossorigin />
   <link rel="preconnect" href="https://discord.com" crossorigin />
-  <!-- ✅ 폰트에 &display=swap 추가 → 로딩중 텍스트 자연스럽게 -->
-  <link
-    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Pretendard:wght@400;600;800&display=swap"
-    rel="stylesheet"
-  />
+  <!-- ✅ Pretendard는 CDN으로 정상 불러오기 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" />
   <style>
     :root {
       --bg-dark: #0a0d14;
       --panel-bg: #121824;
       --panel-border: rgba(255, 255, 255, 0.08);
       --accent-cyan: #00f2fe;
-      --accent-orange: #ff9f43;
+      --accent-red: #C62828;
       --text-main: #f8fafc;
       --text-sub: #94a3b8;
       --menu-padding: 8px 12px;
@@ -36,7 +33,7 @@
       padding: 0;
     }
     html {
-      scroll-behavior: smooth; /* ✅ 부드러운 스크롤 */
+      scroll-behavior: smooth;
     }
     body {
       background-color: var(--bg-dark);
@@ -52,7 +49,7 @@
       flex-direction: column;
     }
     a:focus, button:focus {
-      outline: 2px solid var(--accent-cyan); /* ✅ 키보드 포커스 표시 */
+      outline: 2px solid var(--accent-cyan);
       outline-offset: 2px;
     }
     header {
@@ -90,7 +87,7 @@
       font-size: 16px;
       font-weight: 600;
       transition: color 0.2s, background 0.2s;
-      padding: var(--menu-padding); /* ✅ 클릭/터치 영역 확대 */
+      padding: var(--menu-padding);
       border-radius: 8px;
     }
     .pc-menu a:hover {
@@ -163,8 +160,8 @@
       color: var(--accent-cyan);
     }
     .badge-lrr {
-      background: rgba(255, 159, 67, 0.15);
-      color: var(--accent-orange);
+      background: rgba(198, 40, 40, 0.15);
+      color: var(--accent-red);
     }
     .card-header h2 {
       font-size: 28px;
@@ -196,8 +193,8 @@
       color: #000;
     }
     .btn-lrr {
-      background: var(--accent-orange);
-      color: #000;
+      background: var(--accent-red);
+      color: #fff;
     }
     .page-section {
       display: none;
@@ -223,8 +220,6 @@
       margin: 30px auto 0;
       max-width: 280px;
     }
-
-    /* ✅ 모바일 반응형 최적화 */
     @media (max-width: 768px) {
       header {
         padding: 0 16px;
@@ -287,7 +282,6 @@
         <a href="#" onclick="showSection('ranking')">포인트 랭킹</a>
       </li>
       <li>
-        <!-- ✅ 기록 등재: 구글폼 링크 연결 완료 -->
         <a
           href="https://forms.gle/Mm6PbzDz7Esd3yvW8"
           target="_blank"
@@ -297,7 +291,6 @@
         </a>
       </li>
       <li>
-        <!-- ✅ 디스코드 링크 연결 완료 -->
         <a
           href="https://discord.gg/ENxdraDTvw"
           target="_blank"
@@ -308,8 +301,6 @@
       </li>
     </ul>
   </header>
-
-  <!-- ✅ 메인 화면 -->
   <div id="homeView" class="page-section active">
     <div class="main-wrapper">
       <section class="info-section">
@@ -349,8 +340,6 @@
       </div>
     </div>
   </div>
-
-  <!-- ✅ 랭킹 화면 -->
   <div id="rankingView" class="page-section">
     <div class="main-wrapper ranking-container">
       <h2 class="ranking-title">Soon...</h2>
@@ -365,16 +354,14 @@
       </button>
     </div>
   </div>
-
   <script>
-    // ✅ 섹션 전환 로직 간결화
     function showSection(name) {
       document.querySelectorAll(".page-section").forEach(sec => {
         sec.classList.remove("active");
       });
       const targetId = name === "ranking" ? "rankingView" : "homeView";
       document.getElementById(targetId).classList.add("active");
-      window.scrollTo(0, 0); // ✅ 전환시 맨 위로
+      window.scrollTo(0, 0);
     }
   </script>
 </body>
