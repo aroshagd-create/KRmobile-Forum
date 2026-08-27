@@ -4,16 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>KRM FORUM</title>
-  <!-- ✅ 5분 캐싱 설정 -->
   <meta http-equiv="Cache-Control" content="public, max-age=300">
   <meta http-equiv="Pragma" content="cache">
   <meta http-equiv="Expires" content="300">
-  <!-- ✅ 폰트 & 외부 도메인 미리 연결 (최적화) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://docs.google.com" crossorigin />
   <link rel="preconnect" href="https://discord.com" crossorigin />
-  <!-- ✅ Pretendard는 CDN으로 정상 불러오기 -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" />
   <style>
@@ -23,6 +20,8 @@
       --panel-border: rgba(255, 255, 255, 0.08);
       --accent-cyan: #00f2fe;
       --accent-red: #C62828;
+      --logo-color: #E2E8F0;
+      --focus-outline: #E2E8F0;
       --text-main: #f8fafc;
       --text-sub: #94a3b8;
       --menu-padding: 8px 12px;
@@ -49,7 +48,7 @@
       flex-direction: column;
     }
     a:focus, button:focus {
-      outline: 2px solid var(--accent-cyan);
+      outline: 2px solid var(--focus-outline);
       outline-offset: 2px;
     }
     header {
@@ -69,7 +68,7 @@
       font-family: "Orbitron", sans-serif;
       font-size: 22px;
       font-weight: 900;
-      color: var(--accent-cyan);
+      color: var(--logo-color);
       letter-spacing: 1.5px;
       text-decoration: none;
       padding: var(--menu-padding);
