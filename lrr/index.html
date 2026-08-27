@@ -12,7 +12,7 @@
             --bg-dark: #0a0d14;
             --panel-bg: #121824;
             --panel-border: rgba(255, 255, 255, 0.08);
-            --accent-main: #FFB7E0; /* 🌸 벚꽃 핑크 */
+            --accent-main: #FFB7E0;
             --accent-orange: #ff9f43;
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
@@ -28,8 +28,9 @@
             min-height: 100vh;
             overflow-x: hidden;
         }
+        /* ✅ 모든 포커스 테두리를 흰색으로 통일 */
         a:focus, button:focus, input:focus {
-            outline: 2px solid var(--accent-main);
+            outline: 2px solid #ffffff;
             outline-offset: 1px;
         }
         header {
@@ -387,7 +388,6 @@
         </main>
     </div>
     <script>
-        // ========== LRR 시트 정보 ==========
         const MAIN_SHEET_ID = '1yP5sJXHAA_dO0iv74nhx4vaT21J2Rl0cNXdzipsB-Y8';
         const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
         const VIDEO_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8';
@@ -431,12 +431,12 @@
                 hasCached = true;
             }
 
-            // ✅ 캐시가 있으면 먼저 맵 표시 (무한로딩 방지)
             if (hasCached) {
                 console.log('✅ LRR 캐시 로드 완료');
                 handleHashChange();
             }
 
+            let firstLoadComplete = false;
             try {
                 const [mainRes, videoRes] = await Promise.allSettled([
                     fetch(MAIN_SHEET_URL),
@@ -458,13 +458,16 @@
                         applyMainData(freshMain);
                         needRerender = true;
                     }
+                    if (!hasCached && mapDataList.length > 0) {
+                        firstLoadComplete = true;
+                    }
                 }
-                if (needRerender) {
-                    console.log('✅ LRR 최신 데이터로 갱신됨');
+                if (needRerender || firstLoadComplete) {
+                    console.log('✅ LRR 데이터 로드 완료, 맵 표시');
                     handleHashChange();
                 }
             } catch (err) {
-                console.warn('시트 갱신 실패, 캐시 유지:', err);
+                console.warn('시트 로드 실패:', err);
                 if (!hasCached) {
                     document.getElementById('mapTitle').innerText = "데이터 로드 실패";
                 }
