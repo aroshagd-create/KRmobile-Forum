@@ -6,7 +6,9 @@
     <title>HRR List - KRM FORUM</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet" />
+    <!-- ✅ Pretendard는 CDN으로 정상 불러오기 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" />
     <style>
         :root {
             --bg-dark: #0a0d14;
@@ -29,7 +31,7 @@
             overflow-x: hidden;
         }
         a:focus, button:focus, input:focus {
-            outline: 2px solid var(--accent-cyan);
+            outline: 2px solid #E2E8F0;
             outline-offset: 1px;
         }
         header {
@@ -49,7 +51,7 @@
             font-family: 'Orbitron';
             font-size: 20px;
             font-weight: 900;
-            color: var(--accent-cyan);
+            color: #E2E8F0;
             text-decoration: none;
             padding: 8px 12px;
             margin: -8px;
@@ -234,13 +236,13 @@
         }
         .map-aredl-badge {
             font-family: 'Orbitron';
-            color: var(--accent-cyan);
+            color: var(--accent-orange);
             font-size: 16px;
             font-weight: 800;
-            background: rgba(0, 242, 254, 0.15);
+            background: rgba(255, 159, 67, 0.12);
             padding: 4px 12px;
             border-radius: 6px;
-            border: 1px solid rgba(0, 242, 254, 0.3);
+            border: 1px solid rgba(255, 159, 67, 0.3);
             display: inline-block;
         }
         .detail-grid {
@@ -272,6 +274,7 @@
             padding: 18px;
             width: 100%;
         }
+        .stat-card { border-left: 4px solid var(--accent-cyan); }
         .stat-label { font-size: 13px; color: var(--text-sub); margin-bottom: 6px; font-weight: 600; }
         .stat-value { font-size: 20px; font-weight: 800; word-break: break-all; }
         .victors-btn {
@@ -401,7 +404,6 @@
         let filteredList = [];
         let videoMap = {};
         let selectedIndex = -1;
-
         // ========== ✅ 캐시 관리 함수 ==========
         function saveToCache(key, data) {
             try {
@@ -414,7 +416,6 @@
                 console.warn('캐시 저장 실패:', e);
             }
         }
-
         function loadFromCache(key) {
             try {
                 const raw = localStorage.getItem(key);
@@ -426,14 +427,12 @@
                 return null;
             }
         }
-
         // ========== 초기화 ==========
         async function loadSheetData() {
             // 1. 캐시 우선 로드
             const cachedMain = loadFromCache(CACHE_KEY_MAIN);
             const cachedVideo = loadFromCache(CACHE_KEY_VIDEO);
             let hasCached = false;
-
             if (cachedMain) {
                 applyMainData(cachedMain);
                 hasCached = true;
@@ -442,20 +441,16 @@
                 videoMap = cachedVideo;
                 hasCached = true;
             }
-
             if (hasCached) {
                 console.log('✅ 캐시 데이터 로드 완료');
             }
-
             // 2. 백그라운드에서 최신 데이터 불러와 갱신
             try {
                 const [mainRes, videoRes] = await Promise.allSettled([
                     fetch(MAIN_SHEET_URL),
                     fetch(VIDEO_SHEET_URL)
                 ]);
-
                 let needRerender = false;
-
                 if (videoRes.status === 'fulfilled' && videoRes.value.ok) {
                     const freshVideo = parseVideoSheetRaw(await videoRes.value.text());
                     if (JSON.stringify(freshVideo) !== JSON.stringify(videoMap)) {
@@ -464,7 +459,6 @@
                         needRerender = true;
                     }
                 }
-
                 if (mainRes.status === 'fulfilled' && mainRes.value.ok) {
                     const freshMain = parseMainSheetRaw(await mainRes.value.text());
                     if (JSON.stringify(freshMain) !== JSON.stringify(mapDataList)) {
@@ -473,7 +467,6 @@
                         needRerender = true;
                     }
                 }
-
                 if (needRerender) {
                     console.log('✅ 최신 데이터로 갱신됨');
                     handleHashChange();
@@ -485,7 +478,6 @@
                 }
             }
         }
-
         // ========== ✅ 파싱 원형 분리 (캐시/실시간 공통 사용) ==========
         function parseVideoSheetRaw(rawText) {
             try {
@@ -495,14 +487,12 @@
                 const map = {};
                 let currentMap = null;
                 const HEADER_PATTERN = /^(이름|유저이름|링크|비디오|영상)$/i;
-
                 for (let i = 0; i < rows.length; i++) {
                     const row = rows[i].c;
                     if (!row) continue;
                     const colA = (row[0]?.v != null) ? String(row[0].v).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, ' ').toLowerCase() : '';
                     const colB = (row[1]?.v != null) ? String(row[1].v).trim() : '';
                     const colC = (row[2]?.v != null) ? String(row[2].v).trim() : '';
-
                     if (colA !== '' && colA !== '.') {
                         currentMap = colA;
                         map[currentMap] = { videoUrl: null, victors: [] };
@@ -527,7 +517,6 @@
                 return {};
             }
         }
-
         function parseMainSheetRaw(rawText) {
             const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
             const data = JSON.parse(jsonText);
@@ -535,18 +524,15 @@
             const list = [];
             let currentRank = 1;
             let foundStart = false;
-
             for (let i = 0; i < rows.length; i++) {
                 const row = rows[i].c;
                 if (!row?.[0]?.v) continue;
                 const levelName = String(row[0].v).trim();
                 const levelNameLower = levelName.toLowerCase();
-
                 if (levelNameLower.startsWith('last update') || 
                     levelName.startsWith('Records & Information') ||
                     levelName.startsWith('최종 수정') ||
                     levelName.startsWith('출처')) continue;
-
                 if (!foundStart) {
                     if (levelNameLower === 'waterfall' || levelNameLower.includes('waterfall') || currentRank > 1) {
                         foundStart = true;
@@ -555,7 +541,6 @@
                     } else continue;
                 }
                 if (levelNameLower === 'levels') continue;
-
                 const rawCCol = (row[2]?.v != null) ? String(row[2].v).trim() : '';
                 let displayRank = '', badgeText = '';
                 if (rawCCol.startsWith('#') || !isNaN(rawCCol)) {
@@ -566,11 +551,9 @@
                     displayRank = `-`;
                     badgeText = rawCCol;
                 }
-
                 const normName = levelName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, ' ').toLowerCase();
                 const customData = videoMap[normName] || null;
                 const finalVictors = customData?.victors || [];
-
                 list.push({
                     rank: displayRank,
                     title: levelName,
@@ -583,13 +566,11 @@
             }
             return list;
         }
-
         function applyMainData(list) {
             mapDataList = list;
             filteredList = [...list];
             initVirtualScroll();
         }
-
         // ========== 유튜브 ID 추출 ==========
         function extractYoutubeId(url) {
             if (!url) return null;
@@ -598,7 +579,6 @@
             m = url.match(/(?:v=|\/embed\/|\/watch\?v=)([a-zA-Z0-9_-]{11})/);
             return m ? m[1] : null;
         }
-
         // ========== 가상 스크롤 ==========
         function initVirtualScroll() {
             const wrapper = document.getElementById('mapListWrapper');
@@ -608,7 +588,6 @@
             wrapper.addEventListener('scroll', renderVisibleItems);
             renderVisibleItems();
         }
-
         function renderVisibleItems() {
             const wrapper = document.getElementById('mapListWrapper');
             const visible = document.getElementById('mapListVisible');
@@ -636,7 +615,6 @@
             }
             visible.appendChild(fragment);
         }
-
         // ========== 맵 선택 ==========
         function selectMap(index) {
             if (!mapDataList[index]) return;
@@ -645,7 +623,6 @@
             if (window.location.hash !== `#${index + 1}`) {
                 history.replaceState(null, null, `#${index + 1}`);
             }
-
             document.getElementById('mapTitle').innerText = `${map.rank !== '-' ? map.rank + '.' : ''} ${map.title}`;
             const aredlBadge = document.getElementById('mapAredlBadge');
             if (map.aredl && map.aredl !== '-' && map.aredl !== '0' && map.aredl !== '') {
@@ -654,10 +631,8 @@
             } else {
                 aredlBadge.style.display = 'none';
             }
-
             document.getElementById('totalVictorsCount').innerText = map.totalVictors;
             document.getElementById('listPoints').innerText = map.listPoints;
-
             const videoBox = document.getElementById('videoContainer');
             const videoId = map.videoUrl ? extractYoutubeId(map.videoUrl) : null;
             if (videoId) {
@@ -665,12 +640,10 @@
             } else {
                 videoBox.innerHTML = `<span style="color:#64748b;">등록된 영상이 없습니다.</span>`;
             }
-
             document.getElementById('firstVictorName').innerText = map.victors[0]?.name || '-';
             renderVictorsList(map.victors);
             renderVisibleItems();
         }
-
         // ========== 클리어자 목록 렌더링 ==========
         function renderVictorsList(victors) {
             const container = document.getElementById('victorsContainer');
@@ -689,7 +662,6 @@
                 container.appendChild(item);
             });
         }
-
         // ========== 검색 필터 ==========
         function filterMaps() {
             const q = document.getElementById('searchInput').value.toLowerCase();
@@ -701,19 +673,16 @@
             document.getElementById('mapListWrapper').scrollTop = 0;
             renderVisibleItems();
         }
-
         // ========== 사이드바 토글 ==========
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('sidebarOverlay').classList.toggle('active');
         }
-
         function toggleVictorsBox() {
             const box = document.getElementById('victorsBox');
             box.classList.toggle('active');
             document.getElementById('arrowIcon').innerText = box.classList.contains('active') ? '▲' : '▼';
         }
-
         // ========== URL 해시로 맵 이동 ==========
         function handleHashChange() {
             const hash = window.location.hash.slice(1);
