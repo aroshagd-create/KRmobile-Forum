@@ -14,7 +14,7 @@
             --panel-bg: #121824;
             --panel-border: rgba(255, 255, 255, 0.08);
             --accent-cyan: #00f2fe;
-            --accent-red: #C62828;
+            --accent-pink: #FFB7E0; /* 🌸 벚꽃 핑크 */
             --accent-orange: #ff9f43;
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
@@ -60,7 +60,7 @@
             font-family: 'Orbitron';
             font-size: 14px;
             font-weight: 800;
-            color: var(--accent-red);
+            color: var(--accent-pink);
             text-decoration: none;
             padding: 8px 12px;
         }
@@ -159,11 +159,11 @@
             will-change: background;
         }
         .map-item:hover, .map-item.active {
-            background: rgba(198, 40, 40, 0.08);
+            background: rgba(255, 183, 224, 0.12);
         }
         .map-item .rank {
             font-family: 'Orbitron';
-            color: var(--accent-red);
+            color: var(--accent-pink);
             font-weight: 800;
             font-size: 14px;
             flex-shrink: 0;
@@ -273,8 +273,8 @@
             border-radius: 14px;
             padding: 18px;
             width: 100%;
+            border-left: 4px solid var(--accent-pink);
         }
-        .stat-card { border-left: 4px solid var(--accent-red); }
         .stat-label { font-size: 13px; color: var(--text-sub); margin-bottom: 6px; font-weight: 600; }
         .stat-value { font-size: 20px; font-weight: 800; word-break: break-all; }
         .victors-btn {
@@ -314,7 +314,7 @@
         .victor-item:last-child { border-bottom: none; }
         .victor-rank { font-family: 'Orbitron'; color: var(--text-sub); font-size: 13px; width: 30px; }
         .victor-name { font-size: 15px; color: var(--text-main); text-decoration: none; }
-        .victor-name.has-link { text-decoration: underline; color: var(--accent-red); cursor: pointer; }
+        .victor-name.has-link { text-decoration: underline; color: var(--accent-pink); cursor: pointer; }
         @media (max-width: 768px) {
             header { padding: 0 16px; height: 64px; }
             .logo { font-size: 16px; margin: 0; padding: 4px 8px; }
@@ -365,7 +365,7 @@
                         <span>영상을 불러오는 중...</span>
                     </div>
                     <div class="info-side">
-                        <div class="stat-card" style="border-left: 4px solid var(--accent-red);">
+                        <div class="stat-card">
                             <div class="stat-label">First Korean LRR Mobile Victor</div>
                             <div class="stat-value" id="firstVictorName">-</div>
                         </div>
@@ -390,10 +390,10 @@
         </main>
     </div>
     <script>
-        // ========== 설정 ==========
-        const MAIN_SHEET_ID = '워크시트ID';
+        // ========== 시트 ID ==========
+        const MAIN_SHEET_ID = '1yP5sJXHAA_dO0iv74nhx4vaT21J2Rl0cNXdzipsB-Y8';
         const MAIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MAIN_SHEET_ID}/gviz/tq?tqx=out:json`;
-        const VIDEO_SHEET_ID = '영상시트ID';
+        const VIDEO_SHEET_ID = '12q_IKRxveTruikwBjPMGWxCavBjlp9jaTMX-KLCbcF8';
         const VIDEO_SHEET_URL = `https://docs.google.com/spreadsheets/d/${VIDEO_SHEET_ID}/gviz/tq?tqx=out:json`;
         const ITEM_HEIGHT = 48;
         const BUFFER = 8;
@@ -404,6 +404,7 @@
         let filteredList = [];
         let videoMap = {};
         let selectedIndex = -1;
+
         // ========== 캐시 관리 ==========
         function saveToCache(key, data) {
             try {
@@ -420,6 +421,7 @@
                 return payload.data;
             } catch (e) { return null; }
         }
+
         // ========== 초기화 ==========
         async function loadSheetData() {
             const cachedMain = loadFromCache(CACHE_KEY_MAIN);
@@ -427,7 +429,8 @@
             let hasCached = false;
             if (cachedMain) { applyMainData(cachedMain); hasCached = true; }
             if (cachedVideo) { videoMap = cachedVideo; hasCached = true; }
-            if (hasCached) console.log('✅ 캐시 로드 완료');
+            if (hasCached) console.log('✅ 캐시 데이터 로드 완료');
+
             try {
                 const [mainRes, videoRes] = await Promise.allSettled([
                     fetch(MAIN_SHEET_URL),
@@ -459,6 +462,7 @@
                 if (!hasCached) document.getElementById('mapTitle').innerText = "데이터 로드 실패";
             }
         }
+
         // ========== 파싱 ==========
         function parseVideoSheetRaw(rawText) {
             try {
@@ -491,6 +495,7 @@
                 return map;
             } catch (e) { console.warn("비디오 파싱 오류:", e); return {}; }
         }
+
         function parseMainSheetRaw(rawText) {
             const jsonText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
             const data = JSON.parse(jsonText);
@@ -537,11 +542,13 @@
             }
             return list;
         }
+
         function applyMainData(list) {
             mapDataList = list;
             filteredList = [...list];
             initVirtualScroll();
         }
+
         function extractYoutubeId(url) {
             if (!url) return null;
             let m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
@@ -549,6 +556,7 @@
             m = url.match(/(?:v=|\/embed\/|\/watch\?v=)([a-zA-Z0-9_-]{11})/);
             return m ? m[1] : null;
         }
+
         // ========== 가상 스크롤 ==========
         function initVirtualScroll() {
             const wrapper = document.getElementById('mapListWrapper');
@@ -558,6 +566,7 @@
             wrapper.addEventListener('scroll', renderVisibleItems);
             renderVisibleItems();
         }
+
         function renderVisibleItems() {
             const wrapper = document.getElementById('mapListWrapper');
             const visible = document.getElementById('mapListVisible');
@@ -582,6 +591,7 @@
             }
             visible.appendChild(fragment);
         }
+
         // ========== 맵 선택 ==========
         function selectMap(index) {
             if (!mapDataList[index]) return;
@@ -609,6 +619,7 @@
             renderVictorsList(map.victors);
             renderVisibleItems();
         }
+
         // ========== 클리어자 목록 ==========
         function renderVictorsList(victors) {
             const container = document.getElementById('victorsContainer');
@@ -627,6 +638,7 @@
                 container.appendChild(item);
             });
         }
+
         // ========== 검색 필터 ==========
         function filterMaps() {
             const q = document.getElementById('searchInput').value.toLowerCase();
@@ -636,6 +648,7 @@
             document.getElementById('mapListWrapper').scrollTop = 0;
             renderVisibleItems();
         }
+
         // ========== 사이드바 토글 ==========
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
@@ -646,6 +659,7 @@
             box.classList.toggle('active');
             document.getElementById('arrowIcon').innerText = box.classList.contains('active') ? '▲' : '▼';
         }
+
         // ========== URL 해시 ==========
         function handleHashChange() {
             const hash = window.location.hash.slice(1);
