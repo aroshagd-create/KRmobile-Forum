@@ -432,12 +432,10 @@
                 videoMap = cachedVideo;
                 hasCached = true;
             }
-
             if (hasCached) {
                 console.log('✅ HRR 캐시 로드 완료');
                 handleHashChange();
             }
-
             let firstLoadComplete = false;
             try {
                 const [mainRes, videoRes] = await Promise.allSettled([
@@ -503,31 +501,47 @@
                 const map = {};
                 let currentMap = null;
                 const HEADER_PATTERN = /^(이름|유저이름|링크|비디오|영상)$/i;
+                let firstVictorHasLink = false; // ✅ 첫 클리어자 링크 유무 추적
+
                 for (let i = 0; i < rows.length; i++) {
                     const row = rows[i].c;
                     if (!row) continue;
                     const colA = (row[0]?.v != null) ? String(row[0].v).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, ' ').toLowerCase() : '';
                     const colB = (row[1]?.v != null) ? String(row[1].v).trim() : '';
                     const colC = (row[2]?.v != null) ? String(row[2].v).trim() : '';
-                    
+
                     // ✅ 유효한 URL이면 그대로 저장 (유튜브 외 링크도 허용)
                     const linkVal = isValidUrl(colC) ? colC : null;
-                    
+                    // ✅ 유튜브 링크 확인
+                    const isYoutube = extractYoutubeId(colC) ? true : false;
+
                     if (colA !== '' && colA !== '.') {
                         currentMap = colA;
                         map[currentMap] = { videoUrl: null, victors: [] };
+                        firstVictorHasLink = false; // ✅ 새로운 맵 시작할 때 초기화
+
+                        // ✅ 첫 번째 클리어자
                         if (colB !== '' && !HEADER_PATTERN.test(colB)) {
                             map[currentMap].victors.push({ name: colB, link: linkVal });
-                            // ✅ 영상은 유튜브 링크만 임베드용으로 사용
-                            if (linkVal && extractYoutubeId(linkVal) && !map[currentMap].videoUrl) {
+                            // ✅ 첫 클리어자에게 링크가 있고 유튜브면 → 영상으로 사용
+                            if (linkVal && isYoutube) {
                                 map[currentMap].videoUrl = linkVal;
+                                firstVictorHasLink = true;
+                            }
+                            // ✅ 첫 클리어자에게 링크 없으면 → 영상은 null 유지, 다음 사람 링크 절대 사용하지 않음
+                            else {
+                                firstVictorHasLink = false;
                             }
                         }
-                    } else if (currentMap && colB !== '' && colB !== '.' && !HEADER_PATTERN.test(colB)) {
+                    }
+                    // ✅ 두 번째 이후 클리어자
+                    else if (currentMap && colB !== '' && colB !== '.' && !HEADER_PATTERN.test(colB)) {
                         map[currentMap].victors.push({ name: colB, link: linkVal });
-                        if (!map[currentMap].videoUrl && linkVal && extractYoutubeId(linkVal)) {
+                        // ✅ 첫 클리어자에게 링크가 있었을 때만 → 다음 사람 링크로 영상 채우기 허용
+                        if (firstVictorHasLink && !map[currentMap].videoUrl && linkVal && isYoutube) {
                             map[currentMap].videoUrl = linkVal;
                         }
+                        // ❌ 첫 클리어자에게 링크가 없었으면 → 절대 영상으로 사용하지 않음
                     }
                 }
                 return map;
